@@ -1,0 +1,71 @@
+.hero-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.services-title {
+    text-align: center;
+    margin: 50px 0;
+    font-size: 2rem;
+    font-weight: bold;
+    outline: none; 
+    user-select: none;
+}
+
+.cards {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+    outline: none; 
+    user-select: none;
+}
+
+.card-wrapper {
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.top-card {
+    width: 66%;
+}
+
+.three-cards {
+    display: flex;
+    justify-content: space-between;
+    width: 66%;
+    gap: 40px;
+}
+
+.three-cards .card-wrapper {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .top-card,
+    .three-cards {
+        width: 90%;
+    }
+
+    .three-cards {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card-wrapper {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .services-title {
+        font-size: 1.5rem;
+        margin: 20px 0;
+    }
+
+    .card-wrapper {
+        padding: 10px;
+    }
+}

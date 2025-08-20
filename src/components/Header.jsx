@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import "./header.css"
 import homeImg from "./assets/home.png"
@@ -6,9 +6,11 @@ import homeImg from "./assets/home.png"
 function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
 
+    const navigate = useNavigate();
+
     return (
         <header>
-            <h1><Link to="/">Профи Дом</Link></h1>
+            <h1><Link to="/">Профи Дом-Русе</Link></h1>
 
             <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
                 ☰
@@ -20,7 +22,8 @@ function Header() {
                     <li><Link to="/for-us">За нас</Link></li>
                     <li><Link to="/documents">Документи</Link></li>
                     <li><Link to="/contacts">Контакти</Link></li>
-                    <button><Link to="/login">Вход за клиенти</Link></button>
+                    <button onClick={() => navigate("/login")}>Вход за клиенти</button>
+
                 </ul>
             </div>
         </header>

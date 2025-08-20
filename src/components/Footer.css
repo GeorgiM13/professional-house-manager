@@ -1,6 +1,6 @@
 footer {
-    margin-top: 100px;
-    background-color: #f8f8f8;
+    margin-top: auto;
+    background-color: #525252;
     border-top: 2px solid #ddd;
     outline: none; 
     user-select: none;
@@ -9,7 +9,7 @@ footer {
 footer .footer-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -21,12 +21,12 @@ footer .footer-container {
 footer h2 {
     margin-bottom: 10px;
     font-size: 18px;
-    color: #333;
+    color: #f8f8f8;
 }
 
 footer p {
     margin: 5px 0;
-    color: #555;
+    color: #f8f8f8;
 }
 
 footer ul {
@@ -41,11 +41,15 @@ footer li {
 
 footer a {
     text-decoration: none;
-    color: #333;
+    color: #f8f8f8;
 }
 
 footer a:hover {
     color: #0073e6;
+}
+
+.copyright {
+    margin-top: 20px;
 }
 
 @media (max-width: 768px) {

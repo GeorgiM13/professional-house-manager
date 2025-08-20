@@ -1,0 +1,110 @@
+.fees-page {
+    padding: 20px;
+    margin-left: 20px;
+    background-color: rgba(0, 17, 255, 0.05);
+    border-radius: 30px;
+    min-height: 100vh;
+}
+
+.fees-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.fees-header h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.fees-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 0.95rem;
+}
+
+.fees-table thead {
+    background-color: #f7f9fc;
+}
+
+.fees-table th {
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 600;
+    color: #444;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.fees-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.fees-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.fees-table tbody tr:hover {
+    background-color: #eef5ff;
+}
+
+.fees-table td {
+    padding: 12px 15px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.fees-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.status-new {
+    background-color: #dc2626d5;
+    color: white;
+}
+
+.status-done {
+    background-color: #16a34acc;
+    color: white;
+}
+
+.pay-button {
+    background-color: #2563eb;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.pay-button:hover {
+    background-color: #1e40af;
+}
+
+@media (max-width: 768px) {
+    .fees-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -1,0 +1,127 @@
+.expenses-page {
+    padding: 20px;
+    margin-left: 20px;
+    outline: none;
+    user-select: none;
+    background-color: rgba(0, 17, 255, 0.05);
+    border-radius: 30px;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+.expenses-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.expenses-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2937;
+}
+
+.expenses-header button {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: #2563eb;
+    color: white;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.expenses-header button:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+}
+
+.expenses-table {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 0.9rem;
+}
+
+.expenses-table thead {
+    background-color: #f7f9fc;
+}
+
+.expenses-table th,
+.expenses-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    text-align: center;
+}
+
+.expenses-table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.expenses-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.expenses-table tbody tr:nth-child(even) {
+    background-color: #f8f9fc;
+}
+
+.expenses-table tbody tr:hover {
+    background-color: #eef5ff;
+}
+
+.no-expenses {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+}
+
+.expense-row:hover {
+    background-color: #f8fafc;
+    cursor: pointer;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 12px;
+}
+
+.status-paid {
+    background-color: #16a34a;
+    color: white;
+}
+
+.status-unpaid {
+    background-color: #dc2626;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .expenses-table {
+        width: 95%;
+        font-size: 0.85rem;
+    }
+
+    .expenses-table th,
+    .expenses-table td {
+        padding: 8px 6px;
+    }
+}

@@ -1,0 +1,134 @@
+.buildings-page {
+    padding: 20px;
+    margin-left: 20px;
+    outline: none;
+    user-select: none;
+    background-color: rgba(0, 17, 255, 0.05);
+    border-radius: 30px;
+    min-height: 100vh;
+}
+
+.buildings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+
+.add-building-button::before {
+    content: "+";
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.add-building-button {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: #2563eb; 
+    color: white;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-building-button:hover {
+    background-color: #1d4ed8;
+}
+
+.buildings-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 0.95rem;
+}
+
+.buildings-table thead {
+    background-color: #f7f9fc;
+}
+
+.buildings-table th {
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 600;
+    color: #444;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.buildings-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.buildings-table tbody tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+
+.buildings-table tbody tr:hover {
+    background-color: #eef5ff;
+    cursor: pointer;
+}
+
+.buildings-table td {
+    padding: 12px 15px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.buildings-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.building-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f7f9fc;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.building-label {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.building-info {
+    color: #334155;
+}
+
+.buildings-page > p,
+.buildings-table td[colspan] {
+    text-align: center;
+    padding: 1rem;
+    color: #64748b;
+}
+
+@media (max-width: 768px) {
+    .buildings-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .add-building-button {
+        width: 100%;
+    }
+
+    .building-badge {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

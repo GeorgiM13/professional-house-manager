@@ -42,6 +42,8 @@ import UserReportDetails from "./client/subpages/ReportDetails"
 import UserExpensesDetails from "./client/subpages/ExpensesDetails"
 
 import EditProfile from "./EditProfile"
+import Buildings from "./admin/subpages/Buildings"
+import AddBuilding from "./admin/subpages/AddBuilding"
 
 
 
@@ -81,6 +83,8 @@ function App() {
                             <Route path="editexpense/:id" element={<EditExpense />} />
                             <Route path="buildingcash" element={<AdminBuildingCash />} />
                             <Route path="profile/change" element={<EditProfile />} />
+                            <Route path="buildings" element={<Buildings />} />
+                            <Route path="addbuilding" element={<AddBuilding />} />
                         </Route>
 
                         <Route path="/client/*" element={

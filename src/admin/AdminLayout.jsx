@@ -45,9 +45,9 @@ export default function AdminLayout() {
                         </button>
                         {dropdownOpen && (
                             <div className="dropdown-menu">
-                                <Link to="/admin/profile/email" className="dropdown-link">Смени имейл</Link>
-                                <Link to="/admin/profile/username" className="dropdown-link">Смени потребителско име</Link>
-                                <Link to="/admin/profile/password" className="dropdown-link">Смени парола</Link>
+                                <Link to="/admin/profile/change" className="dropdown-link">Промяна на данни</Link>
+                                <Link to="/admin/profile/username" className="dropdown-link">Добавяне на сграда</Link>
+                                <Link to="/admin/profile/password" className="dropdown-link">Добавяне на потребител</Link>
                                 <button onClick={handleLogout} className="dropdown-link">Излизане</button>
                             </div>
                         )}

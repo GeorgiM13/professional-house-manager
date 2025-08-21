@@ -44,9 +44,7 @@ export default function UserLayout() {
                         </button>
                         {dropdownOpen && (
                             <div className="dropdown-menu">
-                                <Link to="/client/profile/email" className="dropdown-link">Смени имейл</Link>
-                                <Link to="/client/profile/username" className="dropdown-link">Смени потребителско име</Link>
-                                <Link to="/client/profile/password" className="dropdown-link">Смени парола</Link>
+                                <Link to="/client/profile/change" className="dropdown-link">Промяна на данни</Link>
                                 <button onClick={handleLogout} className="dropdown-link">Излизане</button>
                             </div>
                         )}

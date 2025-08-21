@@ -41,6 +41,8 @@ import UserAddReport from "./client/subpages/AddReport"
 import UserReportDetails from "./client/subpages/ReportDetails"
 import UserExpensesDetails from "./client/subpages/ExpensesDetails"
 
+import EditProfile from "./EditProfile"
+
 
 
 
@@ -78,6 +80,7 @@ function App() {
                             <Route path="addexpense" element={<AddExpense />} />
                             <Route path="editexpense/:id" element={<EditExpense />} />
                             <Route path="buildingcash" element={<AdminBuildingCash />} />
+                            <Route path="profile/change" element={<EditProfile />} />
                         </Route>
 
                         <Route path="/client/*" element={
@@ -94,6 +97,7 @@ function App() {
                             <Route path="expenses" element={<UserExpenses />} />
                             <Route path="expense/:id" element={<UserExpensesDetails />} />
                             <Route path="buildingCash" element={<UserBuildingCash />} />
+                            <Route path="profile/change" element={<EditProfile />} />
                         </Route>
                     </Routes>
                 </main>

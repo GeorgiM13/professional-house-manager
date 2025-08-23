@@ -19,20 +19,27 @@ function AddUserReport() {
         async function fetchBuildings() {
             if (!user) return;
 
-            if (buildingCache.current[user.id]) {
-                setBuildings(buildingCache.current[user.id]);
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from("user_buildings")
+            const { data: apartmentsData, error: apartmentsError } = await supabase
+                .from("apartments")
                 .select(`building:building_id (id,name,address)`)
                 .eq("user_id", user.id);
 
-            if (!error) {
-                const mapped = (data || []).map((ub) => ub.building).filter(Boolean);
-                setBuildings(mapped);
-                buildingCache.current[user.id] = mapped;
+
+            const { data: garagesData, error: garagesError } = await supabase
+                .from("garages")
+                .select(`building:building_id (id,name,address)`)
+                .eq("user_id", user.id);
+
+            if (!apartmentsError && !garagesError) {
+                const allBuildings = [
+                    ...(apartmentsData || []).map(a => a.building),
+                    ...(garagesData || []).map(g => g.building)
+                ]
+
+                const uniqueBuildings = Array.from(new Map(allBuildings.map(b => [b.id, b])).values());
+
+                setBuildings(uniqueBuildings);
+
             }
         }
 
@@ -98,15 +105,15 @@ function AddUserReport() {
                         ))}
                     </select>
                 )}
+                <label>Относно</label>
                 <input
-                    placeholder="Относно"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     required
                 />
 
+                <label>Описание</label>
                 <textarea
-                    placeholder="Описание"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     required

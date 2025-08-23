@@ -99,7 +99,7 @@ function EditEvent() {
     return (
         <div className="edit-event-container">
             <h1 className="page-title">Редакция на събитие</h1>
-            <form onSubmit={handleSubmit} className="event-form">
+            <form onSubmit={handleSubmit} className="edit-event-form">
         
                 <label>Състояние</label>
                 <select
@@ -143,7 +143,7 @@ function EditEvent() {
                     ))}
                 </select>
 
-                <div className="form-buttons">
+                <div className="edit-form-buttons">
                     <button type="submit" className="btn primary">Запази</button>
                     <button type="button" className="btn secondary" onClick={() => navigate(-2)}>Отказ</button>
                     <button type="button" className="btn danger" onClick={handleDelete}>Изтрий</button>

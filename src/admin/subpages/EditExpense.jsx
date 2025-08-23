@@ -149,7 +149,7 @@ function EditExpense() {
     <div className="edit-expense-container">
       <h1 className="page-title">Редакция на разход</h1>
 
-      <form className="expense-form" onSubmit={handleSubmit}>
+      <form className="edit-expense-form" onSubmit={handleSubmit}>
         <div className={`form-group ${errors.type ? 'has-error' : ''}`}>
           <label htmlFor="type">Вид разход *</label>
           <select
@@ -254,11 +254,11 @@ function EditExpense() {
         </div>
 
         <div className="form-buttons">
-          <button type="button" className="btn secondary" onClick={() => navigate("/admin/expenses")}>
-            Отказ
-          </button>
           <button type="submit" className="btn primary" disabled={loading}>
             {loading ? 'Запазване...' : 'Запази промените'}
+          </button>
+          <button type="button" className="btn secondary" onClick={() => navigate("/admin/expenses")}>
+            Отказ
           </button>
           <button type="button" className="btn danger" onClick={handleDelete} disabled={loading}>
             Изтрий разход

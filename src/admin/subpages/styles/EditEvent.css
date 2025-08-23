@@ -15,21 +15,21 @@
     color: #222;
 }
 
-.event-form {
+.edit-event-form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.event-form label {
+.edit-event-form label {
     font-weight: 500;
     color: #333;
     margin-bottom: 5px;
 }
 
-.event-form input,
-.event-form select,
-.event-form textarea {
+.edit-event-form input,
+.edit-event-form select,
+.edit-event-form textarea {
     padding: 10px 14px;
     border-radius: 8px;
     border: 1px solid #ddd;
@@ -37,9 +37,9 @@
     transition: all 0.2s ease-in-out;
 }
 
-.event-form input:focus,
-.event-form select:focus,
-.event-form textarea:focus {
+.edit-event-form input:focus,
+.edit-event-form select:focus,
+.edit-event-form textarea:focus {
     border-color: #4f46e5;
     outline: none;
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
@@ -50,11 +50,11 @@ textarea {
     min-height: 100px;
 }
 
-.form-buttons {
+.edit-form-buttons {
     display: flex;
     justify-content: space-between;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 20px;
+    margin-top: 25px;
 }
 
 .btn {

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import "./header.css"
 import homeImg from "./assets/home.png"
+import logoImg from "./assets/logo.svg"
 
 function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -10,7 +11,7 @@ function Header() {
 
     return (
         <header>
-            <h1><Link to="/">Профи Дом-Русе</Link></h1>
+            <h1 className="logo-header"><Link to="/"><img className="logoimg" src={logoImg} /></Link></h1>
 
             <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
                 ☰

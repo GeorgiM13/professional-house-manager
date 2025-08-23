@@ -205,13 +205,7 @@ function AddExpense() {
                 </div>
 
                 <div className="form-actions">
-                    <button
-                        type="button"
-                        className="secondary-button"
-                        onClick={() => navigate("/admin/expenses")}
-                    >
-                        Отказ
-                    </button>
+                    
                     <button
                         type="submit"
                         className="primary-button"
@@ -223,6 +217,13 @@ function AddExpense() {
                                 Запазване...
                             </>
                         ) : 'Запази разход'}
+                    </button>
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => navigate("/admin/expenses")}
+                    >
+                        Отказ
                     </button>
                 </div>
             </form>

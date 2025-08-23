@@ -4,18 +4,18 @@
     padding: 2rem;
 }
 
-.form-header {
+.add-building-form-header {
     margin-bottom: 2rem;
     text-align: center;
 }
 
-.form-header h2 {
+.add-building-form-header h2 {
     font-size: 1.8rem;
     color: #2d3748;
     margin-bottom: 0.5rem;
 }
 
-.form-header p {
+.add-building-form-header p {
     color: #718096;
     font-size: 1rem;
 }
@@ -24,43 +24,53 @@
     background: white;
     border-radius: 12px;
     padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
 }
 
-.form-group {
+.add-building-form-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.form-group label {
+.add-building-form-group label {
     font-weight: 500;
     color: #4a5568;
     font-size: 0.95rem;
 }
 
-.form-group input {
+.add-building-form-group input {
     padding: 0.75rem;
     border: 1px solid #e2e8f0;
-    border-radius: 20px;
+    border-radius: 8px;
     font-size: 1rem;
     transition: all 0.2s;
 }
 
-.form-group input:focus {
+.add-building-form-group input:focus {
     border-color: #4299e1;
     outline: none;
     box-shadow: 0 0 0 3px rgba(66,153,225,0.2);
 }
 
-.form-actions {
+.has-error input {
+    border-color: #e53e3e;
+}
+
+.has-error input:focus {
+    box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+}
+
+.add-building-form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid #edf2f7;
+    grid-column: 1 / -1;
 }
 
 .primary-button {
@@ -72,6 +82,9 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .primary-button:hover {
@@ -94,10 +107,10 @@
 }
 
 .succes-message {
-    margin-top: 1rem;
+    grid-column: 1 / -1;
     color: #38a169;
+    margin-top: 1rem;
     font-weight: 500;
-    text-align: center;
 }
 
 @media (max-width: 768px) {
@@ -105,7 +118,11 @@
         padding: 1rem;
     }
 
-    .form-actions {
+    .add-building-form {
+        grid-template-columns: 1fr;
+    }
+
+    .add-building-form-actions {
         flex-direction: column-reverse;
     }
 

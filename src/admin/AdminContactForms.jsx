@@ -44,7 +44,8 @@ function AdminContactForms() {
 
       <div className="events-subheader">
         <div className="left">
-          <span>Преглед на всички съобщения, получени чрез контактната форма</span>
+          <span>Съобщения, получени от контактна форма</span>
+          <p>Преглед на всички съобщения</p>
         </div>
       </div>
 

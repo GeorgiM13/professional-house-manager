@@ -1,54 +1,45 @@
-.add-event-container {
+.add-user-building-container {
     max-width: 800px;
-    margin: 0 auto;
+    margin: 40px auto;
     padding: 2rem;
 }
 
-.form-header {
-    margin-bottom: 2rem;
+.add-user-building-container h1 {
     text-align: center;
-}
-
-.form-header h1 {
     font-size: 1.8rem;
     color: #2d3748;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 
-.form-header p {
-    color: #718096;
-    font-size: 1rem;
-}
-
-.event-form {
+.add-user-building-form {
     background: white;
     border-radius: 12px;
     padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
-.form-grid {
+.add-user-building-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
-.form-group {
+.add-user-building-form-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 1rem;
 }
 
-.form-group label {
+.add-user-building-form-group label {
     font-weight: 500;
     color: #4a5568;
     font-size: 0.95rem;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.add-user-building-form-group input,
+.add-user-building-form-group select {
     padding: 0.75rem;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -56,23 +47,20 @@
     transition: all 0.2s;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.add-user-building-form-group input:focus,
+.add-user-building-form-group select:focus {
     border-color: #4299e1;
     outline: none;
     box-shadow: 0 0 0 3px rgba(66,153,225,0.2);
 }
 
 .has-error input,
-.has-error select,
-.has-error textarea {
+.has-error select {
     border-color: #e53e3e;
 }
 
 .has-error input:focus,
-.has-error select:focus,
-.has-error textarea:focus {
+.has-error select:focus {
     box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
 }
 
@@ -82,15 +70,15 @@
     margin-top: 0.25rem;
 }
 
-.form-actions {
+.add-user-building-form-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    padding-top: 1rem;
     border-top: 1px solid #edf2f7;
+    padding-top: 1rem;
 }
 
-.primary-button {
+.add-user-building-btn-primary {
     background-color: #4299e1;
     color: white;
     padding: 0.75rem 1.5rem;
@@ -99,21 +87,15 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }
 
-.primary-button:hover {
+.add-user-building-btn-primary:hover {
     background-color: #3182ce;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
-.primary-button:disabled {
-    background-color: #a0aec0;
-    cursor: not-allowed;
-}
-
-.secondary-button {
+.add-user-building-btn-secondary {
     background-color: #edf2f7;
     color: #2d3748;
     padding: 0.75rem 1.5rem;
@@ -124,34 +106,23 @@
     transition: all 0.2s;
 }
 
-.secondary-button:hover {
+.add-user-building-btn-secondary:hover {
     background-color: #e2e8f0;
-}
-
-.form-group textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-.form-group.full-width {
-    grid-column: 1 / -1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 @media (max-width: 768px) {
-    .add-event-container {
+    .add-user-building-container {
         padding: 1rem;
     }
 
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-actions {
+    .add-user-building-form-buttons {
         flex-direction: column-reverse;
     }
 
-    .primary-button,
-    .secondary-button {
+    .add-user-building-btn-primary,
+    .add-user-building-btn-secondary {
         width: 100%;
         justify-content: center;
     }

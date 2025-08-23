@@ -1,39 +1,38 @@
-.edit-expense-container {
+.edit-building-container {
     max-width: 600px;
     margin: 40px auto;
     padding: 30px;
     background: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     animation: fadeIn 0.3s ease-in-out;
 }
 
-.page-title {
+.edit-building-container h2 {
     font-size: 1.8rem;
     text-align: center;
     margin-bottom: 25px;
     color: #222;
 }
 
-.edit-expense-form {
+.edit-building-form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.form-group label {
+.edit-building-form label {
     font-weight: 500;
     color: #333;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.form-group input,
-.form-group select {
+.edit-building-form input,
+.edit-building-form select,
+.edit-building-form textarea {
     padding: 10px 14px;
     border-radius: 8px;
     border: 1px solid #ddd;
@@ -41,23 +40,17 @@
     transition: all 0.2s ease-in-out;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.edit-building-form input:focus,
+.edit-building-form select:focus,
+.edit-building-form textarea:focus {
     border-color: #4f46e5;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
 
-.input-with-icon {
-    position: relative;
-}
-
-.input-with-icon .currency {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
+textarea {
+    resize: vertical;
+    min-height: 100px;
 }
 
 .form-buttons {
@@ -79,6 +72,7 @@
 
 .btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 .primary {
@@ -91,48 +85,30 @@
     color: #333;
 }
 
+.danger {
+    background-color: #dc2626;
+    color: white;
+}
+
 .btn:active {
     transform: translateY(0);
     opacity: 0.85;
 }
 
-.error {
-    border-color: #dc2626 !important;
-}
-
-.error-message {
-    color: #dc2626;
-    font-size: 0.85rem;
-    margin-top: 2px;
-}
-
-.loading-text {
+.message {
     text-align: center;
-    font-size: 1.2rem;
-    color: #666;
-    padding: 40px 0;
+    margin-top: 15px;
+    font-size: 1rem;
+    color: #555;
 }
 
 @keyframes fadeIn {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-@media (max-width: 768px) {
-    .edit-expense-container {
-        margin: 20px;
-        padding: 20px;
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
-  
-    .page-title {
-        font-size: 1.5rem;
-    }
-  
-    .form-buttons {
-        flex-direction: column;
-    }
-  
-    .btn {
-        width: 100%;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

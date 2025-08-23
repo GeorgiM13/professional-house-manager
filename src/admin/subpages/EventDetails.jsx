@@ -54,13 +54,13 @@ function EventDetails() {
 
         <div className="event-details-page">
             <h1>Детайли за събитието</h1>
-            <p><strong>Адрес:</strong> {event.building?.name}, {event.building?.address}</p>
-            <p><strong>Състояние:</strong> {event.status}</p>
-            <p><strong>Относно:</strong>{event.subject}</p>
-            <p><strong>Описание:</strong>{event.description || "-"}</p>
-            <p><strong>Дата на изпълнение:</strong>{formatDateTime(event.completion_date)}</p>
-            <p><strong>Дата на добавяне:</strong>{formatDateTime(event.created_at)}</p>
-            <p><strong>Възложено на:</strong> {event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</p>
+            <p><strong>Адрес: </strong> {event.building?.name}, {event.building?.address}</p>
+            <p><strong>Състояние: </strong> {event.status}</p>
+            <p><strong>Относно: </strong>{event.subject}</p>
+            <p><strong>Описание: </strong>{event.description || "-"}</p>
+            <p><strong>Дата на изпълнение: </strong>{formatDateTime(event.completion_date)}</p>
+            <p><strong>Дата на добавяне: </strong>{formatDateTime(event.created_at)}</p>
+            <p><strong>Възложено на: </strong> {event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</p>
 
             <div className="buttons">
                 <button onClick={() => navigate(`/admin/editevent/${event.id}`)}>Редактиране</button>

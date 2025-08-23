@@ -58,42 +58,47 @@ function AddBuilding() {
 
     return (
         <div className="add-building-container">
-            <div className="form-header">
+            <div className="add-building-form-header">
                 <h2>Добавяне на сграда</h2>
                 <p>Попълнете информацията за новата сграда</p>
             </div>
             <form onSubmit={handleSubmit} className="add-building-form">
-                <div className="form-group">
+                <div className="add-building-form-group">
                     <label>
                         Име на сградата:
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
                     </label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+
                 </div>
-                <div className="form-group">
+                <div className="add-building-form-group">
                     <label>
                         Адрес:
-                        <input value={address} onChange={(e) => setAddress(e.target.value)} required></input>
                     </label>
+                    <input value={address} onChange={(e) => setAddress(e.target.value)} required></input>
+
                 </div>
-                <div className="form-group">
+                <div className="add-building-form-group">
                     <label>
                         Брой етажи:
-                        <input type="number" value={floors} onChange={(e) => setFloors(e.target.value)} required />
                     </label>
+                    <input type="number" value={floors} onChange={(e) => setFloors(e.target.value)} required />
+
                 </div>
-                <div className="form-group">
+                <div className="add-building-form-group">
                     <label>
                         Брой апартаменти:
-                        <input type="number" value={apartments} onChange={(e) => setApartments(e.target.value)} required />
                     </label>
+                    <input type="number" value={apartments} onChange={(e) => setApartments(e.target.value)} required />
+
                 </div>
-                <div className="form-group">
+                <div className="add-building-form-group">
                     <label>
                         Брой гаражи:
-                        <input type="number" value={garages} onChange={(e) => setGarages(e.target.value)} />
                     </label>
+                    <input type="number" value={garages} onChange={(e) => setGarages(e.target.value)} />
+
                 </div>
-                <div className="form-actions">
+                <div className="add-building-form-actions">
                     <button type="submit" className="primary-button">Добави</button>
                     <button type="button" className="secondary-button" onClick={handleCancel}>Отказ</button>
                 </div>

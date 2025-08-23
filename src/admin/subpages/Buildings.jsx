@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { supabase } from "../../supabaseClient"
 import "./styles/Buildings.css"
 
 function Buildings () {
 
+    const navigate = useNavigate();
     const [buildings, setBuildings] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -66,7 +67,7 @@ function Buildings () {
                     </thead>
                     <tbody>
                         {buildings.map((b) => (
-                            <tr key={b.id}>
+                            <tr key={b.id} onClick={() => navigate(`/admin/buildings/${b.id}/edit`)}>
                                 <td>{b.id}</td>
                                 <td>{b.name}</td>
                                 <td>{b.address}</td>

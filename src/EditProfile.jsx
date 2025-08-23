@@ -94,7 +94,7 @@ function EditProfile() {
             ...updates
         };
         localStorage.setItem("user", JSON.stringify(updatedUser));
-        localStorage.setItem(`userData_${savedUser.id}`, JSON.stringify({ ...userData, ...updates}));
+        localStorage.setItem(`userData_${savedUser.id}`, JSON.stringify({ ...userData, ...updates }));
 
         setMessage("Данните са успешно обновени")
 
@@ -134,9 +134,10 @@ function EditProfile() {
                     Потвърди паролата:
                     <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                 </label>
-
-                <button type="submit" className="save-button">Запази</button>
-                <button type="button" className="cancel-button" onClick={handleCancel}>Отказ</button>
+                <div className="form-actions">
+                    <button type="submit" className="save-button">Запази</button>
+                    <button type="button" className="cancel-button" onClick={handleCancel}>Отказ</button>
+                </div>
             </form>
 
             {message && <p className="succes-message">{message}</p>}

@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ignored specific files
+src/createAuthUsers.js
+src/someOtherFile.js
+src/thirdFile.js

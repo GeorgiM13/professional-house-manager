@@ -71,8 +71,10 @@ function AdminExpenses() {
   return (
     <div className="expenses-page">
       <div className="expenses-header">
-        <h1>Разходи</h1>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div className="expenses-left">
+          <h1>Разходи</h1>
+        </div>
+        <div className="expenses-right">
           <select
             value={selectedBuilding}
             onChange={(e) => setSelectedBuilding(e.target.value)}
@@ -85,12 +87,17 @@ function AdminExpenses() {
             ))}
           </select>
 
-          <button onClick={() => navigate("/admin/addexpense")}>
+          <button className="add-expense-btn" onClick={() => navigate("/admin/addexpense")}>
             Добавяне на разход
           </button>
         </div>
       </div>
-
+      <div className="reports-subheader">
+        <div className="left">
+          <span>Разходи, свързани със сгради</span>
+          <p>Преглед на всички разходи</p>
+        </div>
+      </div>
       <table className="expenses-table">
         <thead>
           <tr>

@@ -23,25 +23,26 @@ function UserEvents() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("user_buildings")
-        .select(`
-          building:building_id (
-            id,
-            name,
-            address
-          )
-        `)
+      const { data: apartmentsData, error: apartmentsError } = await supabase
+        .from("apartments")
+        .select(`building:building_id (id,name,address)`)
         .eq("user_id", user.id);
 
-      if (error) {
-        console.error("Грешка при зареждане на сгради:", error);
-      } else {
-        const mapped = (data || [])
-          .map((ub) => ub.building)
-          .filter((b) => b);
-        setBuildings(mapped);
-        buildingCache.current[user.id] = mapped;
+
+      const { data: garagesData, error: garagesError } = await supabase
+        .from("garages")
+        .select(`building:building_id (id,name,address)`)
+        .eq("user_id", user.id);
+
+      if (!apartmentsError && !garagesError) {
+        const allBuildings = [
+          ...(apartmentsData || []).map(a => a.building),
+          ...(garagesData || []).map(g => g.building)
+        ]
+
+        const uniqueBuildings = Array.from(new Map(allBuildings.map(b => [b.id, b])).values());
+
+        setBuildings(uniqueBuildings);
       }
       setLoadingBuildings(false);
     }
@@ -141,6 +142,8 @@ function UserEvents() {
             ))}
           </select>
         )}
+
+        
       </div>
 
 

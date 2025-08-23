@@ -3,23 +3,22 @@ html, body {
     padding: 0;
 }
 
+.logo-header {
+    margin: 0;
+    padding: 0;
+}
+
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: 10px 20px;
     background-color: #f8f8f8;
     border-bottom: 2px solid #ddd;
     position: relative;
     outline: none; 
     user-select: none;
     box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
-}
-
-header h1 {
-    margin: 0;
-    font-size: 24px;
-    color: #333;
 }
 
 .nav ul {
@@ -39,7 +38,7 @@ header h1 {
 }
 
 .nav li:hover {
-    color: #0073e6;
+    color: #8b61c2;
 }
 
 a{
@@ -53,7 +52,7 @@ a:focus {
 }
 
 .homeimg {
-    height: 1.5em;
+    height: 1.25em;
     width: auto;
     object-fit: contain;
 
@@ -63,7 +62,7 @@ a:focus {
 .nav button {
     padding: 10px 20px;
     border: none;
-    background-color: #0073e6;
+    background-color: #8b61c2;
     color: white;
     border-radius: 15px;
     cursor: pointer;

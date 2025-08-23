@@ -10,8 +10,8 @@
     animation: fadeIn 0.4s ease-in-out;
 }
 
-.expenses-details-page h2 {
-    font-size: 26px;
+.expenses-details-page h1 {
+    font-size: 32px;
     font-weight: 600;
     margin-bottom: 25px;
     color: #1a73e8;

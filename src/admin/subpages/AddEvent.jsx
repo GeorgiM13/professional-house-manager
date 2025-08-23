@@ -39,69 +39,63 @@ function AddEventPage() {
         }
     };
 
-  return (
-    <div className="container">
-        <h1>Добавяне на ново събитие</h1>
+    return (
+        <div className="add-event-container">
+            <div className="form-header">
+                <h1>Добавяне на ново събитие</h1>
+                <p>Попълнете формата за ново събитие</p>
+            </div>
 
-        <div className="form-group">
-            <select
-            value={newEvent.status}
-            onChange={(e) => setNewEvent({ ...newEvent, status: e.target.value })}
-            >
-            <option value="ново">ново</option>
-            <option value="изпълнено">изпълнено</option>
-        </select>
+            <form className="event-form">
+                <div className="form-grid">
+                    <div className="form-group">
+                        <label>Статус</label>
+                        <select value={newEvent.status} onChange={(e) => setNewEvent({ ...newEvent, status: e.target.value })}>
+                            <option value="ново">ново</option>
+                            <option value="изпълнено">изпълнено</option>
+                        </select>
+                    </div>
 
-        <input
-            placeholder="Относно"
-            value={newEvent.subject}
-            onChange={(e) => setNewEvent({ ...newEvent, subject: e.target.value })}
-        />
+                    <div className="form-group">
+                        <label>Относно</label>
+                        <input value={newEvent.subject} onChange={(e) => setNewEvent({ ...newEvent, subject: e.target.value })} />
+                    </div>
 
-        <textarea
-            placeholder="Описание"
-            value={newEvent.description}
-            onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-        />
+                    <div className="form-group">
+                        <label>Дата и час на изпълнение</label>
+                        <input type="datetime-local" value={newEvent.completion_date} onChange={(e) => setNewEvent({ ...newEvent, completion_date: e.target.value })} />
+                    </div>
 
-        <input
-            type="datetime-local"
-            value={newEvent.completion_date}
-            onChange={(e) => setNewEvent({ ...newEvent, completion_date: e.target.value })}
-        />
+                    <div className="form-group">
+                        <label>Сграда</label>
+                        <select value={newEvent.building_id} onChange={(e) => setNewEvent({ ...newEvent, building_id: e.target.value })}>
+                            <option value="">Избери сграда</option>
+                            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
+                    </div>
 
-        <select
-            value={newEvent.building_id}
-            onChange={(e) => setNewEvent({ ...newEvent, building_id: e.target.value })}
-        >
-            <option value="">Избери сграда</option>
-            {buildings.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-        </select>
+                    <div className="form-group">
+                        <label>Възложено на</label>
+                        <select value={newEvent.assigned_to} onChange={(e) => setNewEvent({ ...newEvent, assigned_to: e.target.value })}>
+                            <option value="">Възложено на</option>
+                            {users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}
+                        </select>
+                    </div>
 
-        <select
-            value={newEvent.assigned_to}
-            onChange={(e) => setNewEvent({ ...newEvent, assigned_to: e.target.value })}
-        >
-            <option value="">Възложено на</option>
-            {users.map(u => (
-                <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>
-            ))}
-        </select>
+                    <div className="form-group full-width">
+                        <label>Описание</label>
+                        <textarea value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} />
+                    </div>
+                </div>
+
+                <div className="form-actions">
+                    <button type="button" className="primary-button" onClick={handleCreateEvent}>Запази</button>
+                    <button type="button" className="secondary-button" onClick={() => navigate("/admin/adminevents")}>Отказ</button>
+                </div>
+            </form>
         </div>
 
-        <div className="buttons">
-            <button className="save" onClick={handleCreateEvent}>
-                Запази
-            </button>
-            <button className="cancel" onClick={() => navigate("/admin/adminevents")}>
-                Отказ
-            </button>
-        </div>
-
-    </div>
-  );
+    );
 }
 
 export default AddEventPage;

@@ -17,7 +17,6 @@
     gap: 15px;
 }
 
-
 .add-building-button::before {
     content: "+";
     font-weight: bold;
@@ -100,14 +99,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.building-label {
-    font-weight: 600;
-    color: #2563eb;
-}
-
-.building-info {
-    color: #334155;
-}
 
 .buildings-page > p,
 .buildings-table td[colspan] {

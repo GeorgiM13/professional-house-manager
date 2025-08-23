@@ -44,8 +44,11 @@ import UserExpensesDetails from "./client/subpages/ExpensesDetails"
 import EditProfile from "./EditProfile"
 import Buildings from "./admin/subpages/Buildings"
 import AddBuilding from "./admin/subpages/AddBuilding"
-
-
+import EditBuilding from "./admin/subpages/EditBuilding"
+import Users from "./admin/subpages/Users"
+import AddUser from "./admin/subpages/AddUser"
+import EditUser from "./admin/subpages/EditUser"
+import AddUserToBuilding from "./admin/subpages/AddUserToBuilding"
 
 
 function App() {
@@ -85,6 +88,11 @@ function App() {
                             <Route path="profile/change" element={<EditProfile />} />
                             <Route path="buildings" element={<Buildings />} />
                             <Route path="addbuilding" element={<AddBuilding />} />
+                            <Route path="buildings/:id/edit" element={<EditBuilding />} />
+                            <Route path="users" element={<Users />} />
+                            <Route path="add-user" element={<AddUser />} />
+                            <Route path="edit-user/:id" element={<EditUser />} />
+                            <Route path="add-user-to-building" element={<AddUserToBuilding />} />
                         </Route>
 
                         <Route path="/client/*" element={

@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { supabase } from "../../supabaseClient"
-import "./styles/AddUserToBuilding.css"
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import AsyncSelect from "react-select/async";
+import { supabase } from "../../supabaseClient";
+import "./styles/AddUserToBuilding.css";
 
 function AddUserToBuilding() {
     const navigate = useNavigate();
-    const [users, setUsers] = useState([]);
     const [buildings, setBuildings] = useState([]);
-    const [selectedUser, setSelectedUser] = useState("");
+    const [selectedUser, setSelectedUser] = useState(null);
     const [selectedBuilding, setSelectedBuilding] = useState("");
     const [floor, setFloor] = useState("");
     const [apartmentNumber, setApartmentNumber] = useState("");
@@ -17,21 +17,28 @@ function AddUserToBuilding() {
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        async function fetchData() {
-            const { data: usersData, error: usersError } = await supabase
-                .from("users")
-                .select("*");
-            if (usersError) console.error(usersError);
-            else setUsers(usersData);
-
-            const { data: buildingsData, error: buildingsError } = await supabase
+        async function fetchBuildings() {
+            const { data: buildingsData, error } = await supabase
                 .from("buildings")
                 .select("*");
-            if (buildingsError) console.error(buildingsError);
+            if (error) console.error(error);
             else setBuildings(buildingsData);
         }
-        fetchData();
+        fetchBuildings();
     }, []);
+
+    const loadUsers = async (inputValue) => {
+        if (!inputValue) return [];
+        const { data } = await supabase
+            .from("users")
+            .select("id, first_name, second_name, last_name")
+            .ilike("first_name", `%${inputValue}%`)
+            .limit(50);
+        return data.map(u => ({
+            value: u.id,
+            label: `${u.first_name} ${u.second_name} ${u.last_name}`,
+        }));
+    };
 
     const handleSave = async () => {
         const newErrors = {};
@@ -47,8 +54,8 @@ function AddUserToBuilding() {
         setLoading(true);
         try {
             await supabase.from("apartments").insert([{
-                user_id: selectedUser,
-                building_id: selectedBuilding,
+                user_id: selectedUser.value,
+                building_id: selectedBuilding.value,
                 floor,
                 number: apartmentNumber,
                 residents
@@ -56,8 +63,8 @@ function AddUserToBuilding() {
 
             if (garageNumber) {
                 await supabase.from("garages").insert([{
-                    user_id: selectedUser,
-                    building_id: selectedBuilding,
+                    user_id: selectedUser.value,
+                    building_id: selectedBuilding.value,
                     number: garageNumber
                 }]);
             }
@@ -76,30 +83,39 @@ function AddUserToBuilding() {
             <h1>Добави потребител към сграда</h1>
             <div className="add-user-building-form">
                 <div className="add-user-building-grid">
+
                     <div className="add-user-building-form-group">
                         <label>Потребител *</label>
-                        <select value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
-                            <option value="">-- Изберете потребител --</option>
-                            {users.map(u => (
-                                <option key={u.id} value={u.id}>
-                                    {u.first_name} {u.second_name} {u.last_name}
-                                </option>
-                            ))}
-                        </select>
+                        <AsyncSelect
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={loadUsers}
+                            onChange={(option) => setSelectedUser(option)}
+                            placeholder="Търсене на потребител..."
+                        />
                         {errors.selectedUser && <span className="error-message">{errors.selectedUser}</span>}
                     </div>
 
-
                     <div className="add-user-building-form-group">
                         <label>Сграда *</label>
-                        <select value={selectedBuilding} onChange={e => setSelectedBuilding(e.target.value)}>
-                            <option value="">-- Изберете сграда --</option>
-                            {buildings.map(b => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}, {b.address}
-                                </option>
-                            ))}
-                        </select>
+                        <AsyncSelect
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={async (inputValue) => {
+                                if (!inputValue) return [];
+                                const { data } = await supabase
+                                    .from("buildings")
+                                    .select("id, name, address")
+                                    .ilike("name", `%${inputValue}%`)
+                                    .limit(50);
+                                return data.map(b => ({
+                                    value: b.id,
+                                    label: `${b.name}, ${b.address}`,
+                                }));
+                            }}
+                            onChange={(option) => setSelectedBuilding(option)}
+                            placeholder="Търсене на сграда..."
+                        />
                         {errors.selectedBuilding && <span className="error-message">{errors.selectedBuilding}</span>}
                     </div>
 

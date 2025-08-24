@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import './styles/Login.css'
 import Header from "./components/Header"
-import Footer from "./components/footer"
+import Footer from "./components/Footer"
 
 
 function Login() {

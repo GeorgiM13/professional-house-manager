@@ -38,6 +38,10 @@
     color: #333;
 }
 
+.edit-form-group select {
+    background-color: white;
+}
+
 .edit-form-group input,
 .edit-form-group select {
     padding: 10px 14px;

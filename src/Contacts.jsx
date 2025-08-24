@@ -2,7 +2,7 @@ import { useState } from "react"
 import { supabase } from "./supabaseClient"
 import "./styles/Contacts.css"
 import Header from "./components/Header"
-import Footer from "./components/footer"
+import Footer from "./components/Footer"
 
 function Contacts() {
 

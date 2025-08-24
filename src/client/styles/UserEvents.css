@@ -109,7 +109,7 @@
     background-color: white;
     font-size: 0.95rem;
     color: #334155;
-    min-width: 250px;
+    min-width: 200px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
 }

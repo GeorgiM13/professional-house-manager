@@ -46,6 +46,10 @@
     font-size: 0.95rem;
 }
 
+.form-group select {
+    background-color: white;
+}
+
 .form-group input,
 .form-group select {
     padding: 0.75rem;

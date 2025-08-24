@@ -2,7 +2,7 @@ import HomeCard from "./HomeCard"
 import Ruse from "./assets/Ruse.jpg"
 import "./styles/Home.css"
 import Header from "./components/Header"
-import Footer from "./components/footer"
+import Footer from "./components/Footer"
 
 function Home() {
     return (

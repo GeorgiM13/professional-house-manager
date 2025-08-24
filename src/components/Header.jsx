@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import "./header.css"
-import homeImg from "./assets/home.png"
+import homeImg from "./assets/Home.png"
 import logoImg from "./assets/logo.svg"
 
 function Header() {

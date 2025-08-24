@@ -162,7 +162,7 @@
 }
 
 .form-group.full-width {
-    grid-column: 1 / -1; /* Занимава всички колони */
+    grid-column: 1 / -1;
 }
 
 .form-group textarea:focus {

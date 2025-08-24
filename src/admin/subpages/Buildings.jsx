@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { supabase } from "../../supabaseClient"
 import "./styles/Buildings.css"
 
-function Buildings () {
+function Buildings() {
 
     const navigate = useNavigate();
     const [buildings, setBuildings] = useState([]);
@@ -19,12 +19,12 @@ function Buildings () {
             .select("*")
             .order("name", { ascending: true });
 
-            if (error) {
-                console.error("Error fetching buildings:", error);
-            } else {
-                setBuildings(data);
-            }
-            setLoading(false);
+        if (error) {
+            console.error("Error fetching buildings:", error);
+        } else {
+            setBuildings(data);
+        }
+        setLoading(false);
     };
 
     function formatDateTime(dateString) {
@@ -50,7 +50,7 @@ function Buildings () {
 
             {loading ? (
                 <p>Зареждане...</p>
-            ) : buildings.length === 0 ?(
+            ) : buildings.length === 0 ? (
                 <p>Няма добавени сгради</p>
             ) : (
                 <table className="buildings-table">
@@ -68,19 +68,19 @@ function Buildings () {
                     <tbody>
                         {buildings.map((b) => (
                             <tr key={b.id} onClick={() => navigate(`/admin/buildings/${b.id}/edit`)}>
-                                <td>{b.id}</td>
-                                <td>{b.name}</td>
-                                <td>{b.address}</td>
-                                <td>{b.floors}</td>
-                                <td>{b.apartments}</td>
-                                <td>{b.garages}</td>
-                                <td>{formatDateTime(b.created_at)}</td>
+                                <td data-label="ID">{b.id}</td>
+                                <td data-label="Име">{b.name}</td>
+                                <td data-label="Адрес">{b.address}</td>
+                                <td data-label="Етажи">{b.floors}</td>
+                                <td data-label="Апартаменти">{b.apartments}</td>
+                                <td data-label="Гаражи">{b.garages}</td>
+                                <td data-label="Дата на добавяне">{formatDateTime(b.created_at)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             )
-        }
+            }
         </div>
     )
 

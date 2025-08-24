@@ -150,15 +150,22 @@
         margin: 20px;
         padding: 20px;
     }
-  
+
     .edit-page-title {
         font-size: 1.5rem;
     }
-  
+
+    .edit-form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
     .edit-form-actions {
         flex-direction: column;
+        gap: 10px;
     }
-  
+
     .edit-primary-button,
     .edit-secondary-button,
     .edit-danger-button {

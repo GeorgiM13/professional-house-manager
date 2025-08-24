@@ -14,7 +14,7 @@ function AdminFees() {
     }, []);
 
     useEffect(() => {
-        if(selectedBuilding && selectedMonth && selectedYear) {
+        if (selectedBuilding && selectedMonth && selectedYear) {
             fetchFees(selectedBuilding, selectedMonth, selectedYear);
         }
     }, [selectedBuilding, selectedMonth, selectedYear]);
@@ -23,7 +23,7 @@ function AdminFees() {
         const { data, error } = await supabase.from("buildings").select("id, name");
         if (!error) {
             setBuildings(data);
-            if(data.length > 0){
+            if (data.length > 0) {
                 setSelectedBuilding(data[0].id);
             }
         }
@@ -31,8 +31,8 @@ function AdminFees() {
 
     const fetchFees = async (buildingId, month, year) => {
         const { data, error } = await supabase
-        .from("fees")
-        .select(`
+            .from("fees")
+            .select(`
             id,
             object_number,
             type,
@@ -45,11 +45,11 @@ function AdminFees() {
                 first_name,second_name,last_name
             )
         `)
-        .eq("building_id", buildingId)
-        .eq("month", month)
-        .eq("year", year);
+            .eq("building_id", buildingId)
+            .eq("month", month)
+            .eq("year", year);
 
-        if(!error) setFees(data);
+        if (!error) setFees(data);
     };
 
     const months = [
@@ -67,7 +67,7 @@ function AdminFees() {
         { value: 12, label: "Декември" },
     ];
 
-    const years = Array.from({ length: 10 }, (_, i) => new Date(). getFullYear() - i);
+    const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
 
     return (
 

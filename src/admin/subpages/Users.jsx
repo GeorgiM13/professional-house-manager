@@ -199,13 +199,13 @@ function Users() {
                     ) : (
                         sortedRows.map((row, i) => (
                             <tr key={`${row.userId}-${i}`} onClick={() => navigate(`/admin/edit-user/${row.userId}`)} style={{ cursor: "pointer" }}>
-                                <td>{row.idx + 1}</td>
-                                <td>{row.fullName}</td>
-                                <td>{row.buildingName}</td>
-                                <td>{row.floor}</td>
-                                <td>{row.apartmentNumber}</td>
-                                <td>{row.residents}</td>
-                                <td>{row.garages}</td>
+                                <td data-label="№:">{row.idx + 1}</td>
+                                <td data-label="Име:">{row.fullName}</td>
+                                <td data-label="Адрес:">{row.buildingName}</td>
+                                <td data-label="Етаж:">{row.floor}</td>
+                                <td data-label="Апартамент:">{row.apartmentNumber}</td>
+                                <td data-label="Живущи:">{row.residents}</td>
+                                <td data-label="Гаражи:">{row.garages}</td>
                             </tr>
                         ))
                     )}

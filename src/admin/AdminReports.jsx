@@ -90,9 +90,9 @@ function AdminReports() {
                         <tr key={report.id}
                             onClick={() => navigate(`/admin/report/${report.id}`)}
                             style={{ cursor: "pointer" }}>
-                            <td>{idx + 1}</td>
-                            <td>{report.building?.name}, {report.building?.address}</td>
-                            <td>
+                            <td data-label="№">{idx + 1}</td>
+                            <td data-label="Адрес">{report.building?.name}, {report.building?.address}</td>
+                            <td data-label="Състояние">
                                 <span className={
                                     report.status === "ново"
                                         ? "status-badge status-new"
@@ -103,10 +103,10 @@ function AdminReports() {
                                     {report.status}
                                 </span>
                             </td>
-                            <td>{report.subject}</td>
-                            <td>{formatDateTime(report.updated_at)}</td>
-                            <td>{formatDateTime(report.created_at)}</td>
-                            <td>{report.submitted_by ? `${report.submitted_by.first_name} ${report.submitted_by.second_name} ${report.submitted_by.last_name}` : "-"}</td>
+                            <td data-label="Относно">{report.subject}</td>
+                            <td data-label="Дата на обновяване">{formatDateTime(report.updated_at)}</td>
+                            <td data-label="Дата на подаване">{formatDateTime(report.created_at)}</td>
+                            <td data-label="Подал сигнал">{report.submitted_by ? `${report.submitted_by.first_name} ${report.submitted_by.second_name} ${report.submitted_by.last_name}` : "-"}</td>
                         </tr>
                     ))}
                 </tbody>

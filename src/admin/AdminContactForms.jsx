@@ -64,20 +64,20 @@ function AdminContactForms() {
         <tbody>
           {messages.map((msg, idx) => (
             <tr key={msg.id} style={{ cursor: "pointer" }} onClick={() => navigate(`/admin/message/${msg.id}`)}>
-              <td>{idx + 1}</td>
-              <td>{msg.first_name}</td>
-              <td>{msg.last_name}</td>
-              <td>{msg.email}</td>
-              <td>{msg.phone}</td>
-              <td style={{
+              <td data-label="№">{idx + 1}</td>
+              <td data-label="Име">{msg.first_name}</td>
+              <td data-label="Фамилия">{msg.last_name}</td>
+              <td data-label="Email">{msg.email}</td>
+              <td data-label="Телефон">{msg.phone}</td>
+              <td data-label="Съобщение" style={{
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                maxWidth: "200px"
+                maxWidth: "250px"
               }}>
                 {msg.message}
               </td>
-              <td>{formatDateTime(msg.created_at)}</td>
+              <td data-label="Дата ма изпращане">{formatDateTime(msg.created_at)}</td>
             </tr>
           ))}
         </tbody>

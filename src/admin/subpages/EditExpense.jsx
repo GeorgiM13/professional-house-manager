@@ -264,7 +264,7 @@ function EditExpense() {
             Изтрий разход
           </button>
         </div>
-        
+
       </form>
     </div>
   );

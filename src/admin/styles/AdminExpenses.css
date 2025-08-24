@@ -144,13 +144,70 @@
 }
 
 @media (max-width: 768px) {
-    .expenses-table {
-        width: 95%;
-        font-size: 0.85rem;
+    .expenses-page {
+        margin: 0 !important;
+        padding: 20px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        border-radius: 20px !important;
     }
 
-    .expenses-table th,
-    .expenses-table td {
-        padding: 8px 6px;
+    .expenses-header,
+    .reports-subheader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .expenses-right,
+    .expenses-header select {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .expenses-table {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .expenses-table thead {
+        display: none;
+    }
+
+    .expenses-table tbody tr {
+        display: block;
+        width: 100% !important;
+        margin-bottom: 10px !important;
+        border-radius: 10px;
+        background-color: white;
+        padding: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.164);
+        box-sizing: border-box;
+    }
+
+    .expenses-table tbody td {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 5px;
+        word-break: break-word;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        box-sizing: border-box;
+        min-width: 0;
+    }
+
+    .expenses-table tbody td:last-child {
+        border-bottom: none;
+    }
+
+    .expenses-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #2563eb;
+        margin-right: 0;
     }
 }

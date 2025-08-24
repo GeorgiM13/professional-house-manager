@@ -5,12 +5,12 @@ import "./styles/ReportDetails.css"
 
 function ReportDetails() {
 
-    const {id} = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
     const [report, setReport] = useState(null);
 
     useEffect(() => {
-        async function fetchReport(){
+        async function fetchReport() {
             const { data, error } = await supabase
                 .from("reports")
                 .select(`

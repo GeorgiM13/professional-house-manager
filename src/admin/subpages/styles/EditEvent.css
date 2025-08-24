@@ -112,3 +112,33 @@ textarea {
         transform: translateY(0);
     }
 }
+
+@media (max-width: 768px) {
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+  
+    .edit-form-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+  
+    .btn {
+        width: 100%;
+    }
+
+    input[type="datetime-local"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+        background-color: white;
+        color: #333;
+        width: 100%;
+        box-sizing: border-box; 
+        padding: 10px 14px; 
+    }
+}

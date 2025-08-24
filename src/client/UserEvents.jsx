@@ -143,7 +143,7 @@ function UserEvents() {
           </select>
         )}
 
-        
+
       </div>
 
 
@@ -172,11 +172,11 @@ function UserEvents() {
 
               events.map((event, idx) => (
                 <tr key={event.id} onClick={() => navigate(`/client/event/${event.id}`)} style={{ cursor: "pointer" }}>
-                  <td>{idx + 1}</td>
-                  <td>
+                  <td data-label="№">{idx + 1}</td>
+                  <td data-label="Адрес">
                     {event.building?.name}, {event.building?.address}
                   </td>
-                  <td>
+                  <td data-label="Състояние">
                     <span
                       className={
                         event.status === "ново"
@@ -189,9 +189,9 @@ function UserEvents() {
                       {event.status}
                     </span>
                   </td>
-                  <td>{event.subject}</td>
-                  <td>{formatDateTime(event.completion_date)}</td>
-                  <td>{formatDateTime(event.created_at)}</td>
+                  <td data-label="Относно">{event.subject}</td>
+                  <td data-label="Дата на изпълнение">{formatDateTime(event.completion_date)}</td>
+                  <td data-label="Дата на добавяне">{formatDateTime(event.created_at)}</td>
                 </tr>
               ))
             )}

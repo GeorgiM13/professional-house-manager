@@ -55,7 +55,7 @@ function ExpensesDetails() {
             <p><strong>Тип разход:</strong> {expenseTypes[expense.type] || expense.type}</p>
             <p><strong>Месец:</strong> {expense.month}</p>
             <p><strong>Година:</strong> {expense.year}</p>
-            <p><strong>Текущ месец:</strong> {expense.current_month ? "Да" : "Не"}</p>
+            <p><strong>Текущ месец:</strong> {expense.current_month || ""} лв.</p>
             <p><strong>Платено:</strong> {expense.paid ? "Да" : "Не"}</p>
             <p><strong>Бележки:</strong> {expense.notes || "-"}</p>
         </div>

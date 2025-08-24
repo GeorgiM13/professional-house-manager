@@ -68,13 +68,13 @@ function EditReport() {
     if (error) {
       alert("Грешка при запазване! " + error.message);
     } else {
-      alert("Докладът е обновен успешно!");
+      alert("Сигналът е обновен успешно!");
       navigate(`/admin/reports`);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm("Наистина ли искате да изтриете този доклад?")) return;
+    if (!window.confirm("Наистина ли искате да изтриете този сигнал?")) return;
 
     const { error } = await supabase
       .from("reports")
@@ -84,7 +84,7 @@ function EditReport() {
     if (error) {
       alert("Грешка при изтриване! " + error.message);
     } else {
-      alert("Докладът е изтрит успешно!");
+      alert("Сигналът е изтрит успешно!");
       navigate("/admin/adminreports");
     }
   }
@@ -93,7 +93,7 @@ function EditReport() {
 
   return (
     <div className="edit-report-container">
-      <h1 className="page-title">Редакция на доклад</h1>
+      <h1 className="page-title">Редакция на сигнал</h1>
       <form onSubmit={handleSubmit} className="report-form">
 
         <label>Състояние</label>

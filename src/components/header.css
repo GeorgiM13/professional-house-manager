@@ -83,34 +83,61 @@ a:focus {
 }
 
 @media (max-width: 768px) {
+    .nav-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.329);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 998;
+    }
+
     .nav {
         display: flex;
         flex-direction: column;
-        position: absolute;
-        top: 50px;
+        position: fixed;
+        top: 0;
+        left: 0;
         right: 0;
-        background-color: #f8f8f8;
-        width: 200px;
-        border-left: 2px solid #ddd;
-        padding: 10px 0;
-        transform: translateX(100%);
+        background-color: rgba(248,248,248,0.97);
+        padding: 20px 0;
+        gap: 10px;
+        transform: translateY(-100%);
         opacity: 0;
         pointer-events: none;
         transition: transform 0.3s ease, opacity 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-bottom: 1px solid #ddd;
+        z-index: 999;
     }
 
     .nav ul {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
+        align-items: center;
     }
 
     .nav.active {
-        transform: translateX(0);
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .nav-overlay.active {
         opacity: 1;
         pointer-events: auto;
     }
 
     .menu-toggle {
         display: block;
+    }
+
+    .nav button {
+        width: 90%;
+        text-align: center;
     }
 }

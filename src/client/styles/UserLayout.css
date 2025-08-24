@@ -206,32 +206,45 @@
         transform: translateX(-100%);
         width: 260px;
     }
-  
+
     .sidebar.open {
         transform: translateX(0);
     }
-  
+
     .sidebar-title span,
     .sidebar-link span {
         display: inline;
     }
-  
+
     .sidebar-link {
         justify-content: flex-start;
         padding: 0.75rem 1rem;
     }
-  
+
     .main-wrapper {
         margin-left: 0;
+        width: 100%;
     }
-  
+
     .mobile-menu-button {
         display: block;
     }
-  
-    .admin-header {
+
+    .client-header {
         padding: 1rem;
         justify-content: flex-end;
+    }
+
+    .client-main {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .page-content-wrapper {
+        width: 100%;
+        max-width: 100%;
     }
 }
 

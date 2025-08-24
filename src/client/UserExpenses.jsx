@@ -170,12 +170,12 @@ function UserExpenses() {
                             expenses.map((exp, idx) => (
                                 <tr key={exp.id}
                                     onClick={() => navigate(`/client/expense/${exp.id}`)} style={{ cursor: "pointer" }}>
-                                    <td>{idx + 1}</td>
-                                    <td>{expenseTypes[exp.type] || exp.type}</td>
-                                    <td>{exp.building?.name}, {exp.building?.address}</td>
-                                    <td>{exp.month}</td>
-                                    <td>{exp.year}</td>
-                                    <td>
+                                    <td data-label="№">{idx + 1}</td>
+                                    <td data-label="Тип разход">{expenseTypes[exp.type] || exp.type}</td>
+                                    <td data-label="Адрес">{exp.building?.name}, {exp.building?.address}</td>
+                                    <td data-label="Месец">{exp.month}</td>
+                                    <td data-label="Година">{exp.year}</td>
+                                    <td data-label="Платено">
                                         <span
                                             className={
                                                 exp.paid === "да"
@@ -186,7 +186,7 @@ function UserExpenses() {
                                             {exp.paid === "да" ? "Да" : "Не"}
                                         </span>
                                     </td>
-                                    <td>{exp.current_month} лв</td>
+                                    <td data-label="Сума">{exp.current_month} лв</td>
                                 </tr>
                             ))
                         )}

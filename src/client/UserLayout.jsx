@@ -52,7 +52,9 @@ export default function UserLayout() {
                 </header>
 
                 <main className="client-main">
-                    <Outlet />
+                    <div className="page-content-wrapper">
+                        <Outlet />
+                    </div>
                 </main>
             </div>
         </div>

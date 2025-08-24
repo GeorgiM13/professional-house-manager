@@ -47,9 +47,18 @@
 }
 
 @media (max-width: 768px) {
+    .hero-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    outline: none;
+    user-select: none;
+}
+
     .top-card,
     .three-cards {
-        width: 90%;
+        width: 85%;
     }
 
     .three-cards {
@@ -58,17 +67,7 @@
     }
 
     .card-wrapper {
-        padding: 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    .services-title {
-        font-size: 1.5rem;
-        margin: 20px 0;
-    }
-
-    .card-wrapper {
-        padding: 10px;
+        padding: 12px;
+        font-size: 0.95rem;
     }
 }

@@ -13,9 +13,9 @@
 .admin-container {
     display: flex;
     min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #f7fafc;
-    outline: none; 
+    outline: none;
     user-select: none;
 }
 
@@ -119,7 +119,7 @@
     top: 100%;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     min-width: 220px;
     overflow: hidden;
     z-index: 100;
@@ -181,29 +181,41 @@
     text-align: center;
 }
 
-.sidebar-link[href*="adminevents"]::before { content: "📅"; }
-.sidebar-link[href*="reports"]::before { content: "⚠️"; }
-.sidebar-link[href*="contactforms"]::before { content: "✉️"; }
-.sidebar-link[href*="fees"]::before { content: "💰"; }
-.sidebar-link[href*="expenses"]::before { content: "💸"; }
-.sidebar-link[href*="buildingcash"]::before { content: "🏦"; }
+.sidebar-link[href*="adminevents"]::before {
+    content: "📅";
+}
+.sidebar-link[href*="reports"]::before {
+    content: "⚠️";
+}
+.sidebar-link[href*="contactforms"]::before {
+    content: "✉️";
+}
+.sidebar-link[href*="fees"]::before {
+    content: "💰";
+}
+.sidebar-link[href*="expenses"]::before {
+    content: "💸";
+}
+.sidebar-link[href*="buildingcash"]::before {
+    content: "🏦";
+}
 
 @media (max-width: 992px) {
     .sidebar {
         width: var(--sidebar-collapsed-width);
         padding: 1.5rem 0.5rem;
     }
-  
+
     .sidebar-title span,
     .sidebar-link span {
         display: none;
     }
-  
+
     .sidebar-link {
         justify-content: center;
         padding: 0.75rem 0.5rem;
     }
-  
+
     .main-wrapper {
         margin-left: var(--sidebar-collapsed-width);
     }
@@ -214,45 +226,71 @@
         transform: translateX(-100%);
         width: 260px;
     }
-  
+
     .sidebar.open {
         transform: translateX(0);
     }
-  
+
     .sidebar-title span,
     .sidebar-link span {
         display: inline;
     }
-  
+
     .sidebar-link {
         justify-content: flex-start;
         padding: 0.75rem 1rem;
     }
-  
+
     .main-wrapper {
         margin-left: 0;
+        width: 100%;
     }
-  
+
     .mobile-menu-button {
         display: block;
     }
-  
+
     .admin-header {
         padding: 1rem;
         justify-content: flex-end;
     }
+
+    .admin-main {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .admin-main > * {
+        width: 100%;
+        max-width: 100%;
+    }
 }
 
 @keyframes fadeIn {
-    to { opacity: 1; transform: translateY(0); }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes slideIn {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
 }
 
 @keyframes fadeInDrop {
-    from { opacity: 0; transform: translateY(-15px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

@@ -8,7 +8,7 @@ function AdminEvents() {
     const [buildings, setBuildings] = useState([]);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const [events, setEvents] = useState([]);
-   // const [showPastEvents, setShowPastEvents] = useState(false);
+    // const [showPastEvents, setShowPastEvents] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -41,10 +41,10 @@ function AdminEvents() {
                 building_id,
                 building:building_id(name,address)
                 `,
-                {count: "exact"}
+                    { count: "exact" }
                 )
                 .order("completion_date", { ascending: false })
-                .range(from,to);
+                .range(from, to);
 
             if (selectedBuilding !== "all") {
                 query = query.eq("building_id", selectedBuilding);
@@ -53,9 +53,9 @@ function AdminEvents() {
             const { data, error, count } = await query;
             if (error) {
                 console.error("Supabase error:", error);
-            } else{
-            setEvents(data || []);
-            setTotalCount(count || 0);
+            } else {
+                setEvents(data || []);
+                setTotalCount(count || 0);
             }
         }
         fetchEvents();
@@ -76,10 +76,10 @@ function AdminEvents() {
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
-   // function isPast(dateString) {
-   //     if (!dateString) return false;
-   //     return new Date(dateString) < new Date();
-   // }
+    // function isPast(dateString) {
+    //     if (!dateString) return false;
+    //     return new Date(dateString) < new Date();
+    // }
 
 
     return (
@@ -88,7 +88,8 @@ function AdminEvents() {
                 <h1>Събития</h1>
                 <select value={selectedBuilding} onChange={(e) => {
                     setSelectedBuilding(e.target.value).
-                    setCurrentPage(1);}}>
+                        setCurrentPage(1);
+                }}>
                     <option value="all">Всички сгради</option>
                     {buildings.map((building) => (
                         <option key={building.id} value={building.id}>{building.name}</option>
@@ -106,7 +107,7 @@ function AdminEvents() {
                 </div>
             </div>
 
-        {/*   <div className="events-filter">
+            {/*   <div className="events-filter">
                 <label>
                     <input
                         type="checkbox"
@@ -118,62 +119,63 @@ function AdminEvents() {
             </div>
 
         */}
-        
-            <table className="events-table">
-                <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Адрес</th>
-                        <th>Състояние</th>
-                        <th>Относно</th>
-                        <th>Дата на изпълнение</th>
-                        <th>Дата на добавяне</th>
-                        <th>Възложено на</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {events
-                    //.filter(event => showPastEvents || !isPast(event.completion_date))
-                    .map((event, idx) => (
-                        <tr key={event.id}
-                            onClick={() => navigate(`/admin/event/${event.id}`)}
-                            style={{ cursor: "pointer" }}>
-                            <td>{idx + 1}</td>
-                            <td>{event.building?.name}, {event.building?.address}</td>
-                            <td>
-                                <span className={
-                                    event.status === "ново"
-                                        ? "status-badge status-new"
-                                        : event.status === "изпълнено"
-                                            ? "status-badge status-done"
-                                            : "status-badge"
-                                }> {event.status}
-                                </span>
-                            </td>
-                            <td>{event.subject}</td>
-                            <td>{formatDateTime(event.completion_date)}</td>
-                            <td>{formatDateTime(event.created_at)}</td>
-                            <td>{event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</td>
+            <div className="events-table-wrapper">
+                <table className="events-table">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Адрес</th>
+                            <th>Състояние</th>
+                            <th>Относно</th>
+                            <th>Дата на изпълнение</th>
+                            <th>Дата на добавяне</th>
+                            <th>Възложено на</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {events
+                            //.filter(event => showPastEvents || !isPast(event.completion_date))
+                            .map((event, idx) => (
+                                <tr key={event.id}
+                                    onClick={() => navigate(`/admin/event/${event.id}`)}
+                                    style={{ cursor: "pointer" }}>
+                                    <td data-label="№">{idx + 1}</td>
+                                    <td data-label="Адрес">{event.building?.name}, {event.building?.address}</td>
+                                    <td data-label="Състояние">
+                                        <span className={
+                                            event.status === "ново"
+                                                ? "status-badge status-new"
+                                                : event.status === "изпълнено"
+                                                    ? "status-badge status-done"
+                                                    : "status-badge"
+                                        }> {event.status}
+                                        </span>
+                                    </td>
+                                    <td data-label="Относно">{event.subject}</td>
+                                    <td data-label="Дата на изпълнение">{formatDateTime(event.completion_date)}</td>
+                                    <td data-label="Дата на добавяне">{formatDateTime(event.created_at)}</td>
+                                    <td data-label="Възложено на">{event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
+            </div>
 
-                    <div className="pagination">
-                        <button
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(p => p - 1)}
-                        >
-                            ⬅ Предишна
-                        </button>
-                        <span>Страница {currentPage} от {totalPages}</span>
-                        <button
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(p => p + 1)}
-                        >
-                            Следваща ➡
-                        </button>
-                    </div>
+            <div className="pagination">
+                <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                >
+                    ⬅ Предишна
+                </button>
+                <span>Страница {currentPage} от {totalPages}</span>
+                <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                >
+                    Следваща ➡
+                </button>
+            </div>
 
         </div>
     );

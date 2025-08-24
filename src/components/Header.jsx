@@ -17,6 +17,9 @@ function Header() {
                 ☰
             </button>
 
+            <div className={`nav-overlay ${menuOpen ? "active" : ""}`}
+                onClick={() => setMenuOpen(false)}></div>
+
             <div className={`nav ${menuOpen ? "active" : ""}`}>
                 <ul>
                     <li><Link to="/"><img className="homeimg" src={homeImg} alt="" /></Link></li>

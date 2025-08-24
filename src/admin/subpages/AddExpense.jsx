@@ -205,7 +205,7 @@ function AddExpense() {
                 </div>
 
                 <div className="form-actions">
-                    
+
                     <button
                         type="submit"
                         className="primary-button"

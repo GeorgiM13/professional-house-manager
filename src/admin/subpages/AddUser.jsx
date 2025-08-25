@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
 import "./styles/AddUser.css"
 
@@ -19,17 +20,26 @@ function AddUser() {
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-        async function fetchBuildings() {
-            const { data, error } = await supabase.from("buildings").select("*");
-            if (error) {
-                console.error("Грешка при зареждане на сгради:", error);
-                return;
-            }
-            setBuildings(data);
+    const loadBuildings = async (inputValue) => {
+        const { data, error } = await supabase
+            .from("buildings")
+            .select("id, name, address, floors, apartments, garages")
+            .ilike("name", `%${inputValue || ""}%`)
+            .limit(20);
+
+        if (error) {
+            console.error("Грешка при зареждане на сгради: ", error);
+            return [];
         }
-        fetchBuildings();
-    }, []);
+
+        return (data || []).map(b => ({
+            value: b.id,
+            label: `${b.name}, ${b.address}`,
+            floors: b.floors,
+            apartments: b.apartments,
+            garages: b.garages
+        }))
+    }
 
     const handleSave = async () => {
         const newErrors = {};
@@ -187,10 +197,13 @@ function AddUser() {
 
                     <div className={`form-group ${errors.selectedBuilding ? 'has-error' : ''}`}>
                         <label>Сграда *</label>
-                        <select value={selectedBuilding} onChange={(e) => setSelectedBuilding(e.target.value)}>
-                            <option value="">-- Изберете сграда --</option>
-                            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}, {b.address}</option>)}
-                        </select>
+                        <AsyncSelect
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={loadBuildings}
+                            onChange={(option) => setSelectedBuilding(option)}
+                            placeholder="Търсене на сграда..."
+                        />
                         {errors.selectedBuilding && <span className="error-message">{errors.selectedBuilding}</span>}
                     </div>
 

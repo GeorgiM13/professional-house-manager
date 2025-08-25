@@ -60,6 +60,21 @@
     transition: all 0.2s;
 }
 
+.custom__control {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    min-height: 45px;
+    box-shadow: none;
+    font-size: 1rem;
+    padding: 0.25rem;
+}
+
+.custom__control--is-focused {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66,153,225,0.2);
+}
+
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {

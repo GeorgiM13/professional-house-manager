@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
 import "./styles/Users.css"
 
 function Users() {
     const [users, setUsers] = useState([]);
-    const usersCache = useRef(null);
-    const [buildings, setBuildings] = useState([]);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const navigate = useNavigate();
 
@@ -77,21 +76,30 @@ function Users() {
             });
 
             setUsers(mappedUsers);
-
-            const allBuildings = {};
-            mappedUsers.forEach((u) => {
-                u.buildings.forEach((b) => {
-                    allBuildings[b.id] = b;
-                });
-            });
-            setBuildings(Object.values(allBuildings));
         }
 
         fetchUsers();
     }, []);
 
+    const loadBuildings = async (inputValue) => {
+        const { data, error } = await supabase
+            .from("buildings")
+            .select("id, name, address")
+            .ilike("name", `%${inputValue || ""}%`)
+            .limit(50);
 
+        if (error) {
+            console.error("Грешка при зареждане на сгради:", error);
+            return [];
+        }
 
+        const allOption = { value: "all", label: "Всички сгради" };
+        const mapped = (data || []).map(b => ({
+            value: b.id,
+            label: `${b.name}, ${b.address}`
+        }));
+        return [allOption, ...mapped];
+    };
 
     const tableRows = users.flatMap((u, idx) => {
         const hasBuilding = u.buildings.length > 0;
@@ -144,7 +152,6 @@ function Users() {
         if (isNaN(numA) && !isNaN(numB)) return -1;
         if (!isNaN(numA) && isNaN(numB)) return 1;
         if (isNaN(numA) && isNaN(numB)) return 0;
-
         return numA - numB;
     });
 
@@ -157,19 +164,15 @@ function Users() {
                     <p>Списък на потребителите, адрес, етаж, апартамент, живущи и гараж ако има прилежащ</p>
                 </div>
                 <div className="users-right">
-                    {buildings.length > 1 && (
-                        <select
-                            value={selectedBuilding}
-                            onChange={(e) => setSelectedBuilding(e.target.value)}
-                        >
-                            <option value="all">Всички сгради</option>
-                            {buildings.map(b => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}, {b.address}
-                                </option>
-                            ))}
-                        </select>
-                    )}
+                    <div style={{ minWidth: "250px" }}>
+                        <AsyncSelect
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={loadBuildings}
+                            onChange={(option) => setSelectedBuilding(option?.value || "all")}
+                            placeholder="Изберете сграда..."
+                        />
+                    </div>
                     <button className="add-user-btn" onClick={() => navigate("/admin/add-user")}>
                         Добави потребител
                     </button>
@@ -198,7 +201,11 @@ function Users() {
                         </tr>
                     ) : (
                         sortedRows.map((row, i) => (
-                            <tr key={`${row.userId}-${i}`} onClick={() => navigate(`/admin/edit-user/${row.userId}`)} style={{ cursor: "pointer" }}>
+                            <tr
+                                key={`${row.userId}-${i}`}
+                                onClick={() => navigate(`/admin/edit-user/${row.userId}`)}
+                                style={{ cursor: "pointer" }}
+                            >
                                 <td data-label="№:">{row.idx + 1}</td>
                                 <td data-label="Име:">{row.fullName}</td>
                                 <td data-label="Адрес:">{row.buildingName}</td>
@@ -210,7 +217,6 @@ function Users() {
                         ))
                     )}
                 </tbody>
-
             </table>
         </div>
     );

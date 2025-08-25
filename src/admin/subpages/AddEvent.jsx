@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { supabase } from "../../supabaseClient"
+import AsyncSelect from "react-select/async"
 import { useNavigate } from "react-router-dom"
 import "./styles/AddEvent.css"
 
@@ -68,10 +69,26 @@ function AddEventPage() {
 
                     <div className="form-group">
                         <label>Сграда</label>
-                        <select value={newEvent.building_id} onChange={(e) => setNewEvent({ ...newEvent, building_id: e.target.value })}>
-                            <option value="">Избери сграда</option>
-                            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                        </select>
+                        <AsyncSelect
+                            className="custom-select"
+                            classNamePrefix="custom"
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={async (inputValue) => {
+                                const { data } = await supabase
+                                    .from("buildings")
+                                    .select("id, name, address")
+                                    .ilike("name", `%${inputValue || ""}%`)
+                                    .limit(10);
+                                return data.map(b => ({
+                                    value: b.id,
+                                    label: `${b.name}, ${b.address}`
+                                }));
+                            }}
+                            onChange={(option) => setNewEvent({ ...newEvent, building_id: option ? option.value : "" })}
+                            placeholder="Търсене на сграда..."
+                            isClearable
+                        />
                     </div>
 
                     <div className="form-group">

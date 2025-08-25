@@ -22,14 +22,34 @@ export default function AdminLayout() {
             </button>
 
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <h2 className="sidebar-title">Админ панел</h2>
+                <div className="sidebar-header">
+                    <h2 className="sidebar-title">Админ панел</h2>
+                    <button
+                        className="sidebar-close-button"
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        ✕
+                    </button>
+                </div>
                 <nav className="sidebar-nav">
-                    <Link to="/admin/adminevents" className="sidebar-link">Събития</Link>
-                    <Link to="/admin/reports" className="sidebar-link">Подадени сигнали</Link>
-                    <Link to="/admin/contactforms" className="sidebar-link">Подадени контактни форми</Link>
-                    <Link to="/admin/fees" className="sidebar-link">Събиране на такси</Link>
-                    <Link to="/admin/expenses" className="sidebar-link">Разходи</Link>
-                    <Link to="/admin/buildingcash" className="sidebar-link">Каса сгради</Link>
+                    <Link to="/admin/adminevents" className="sidebar-link" onClick={() => setSidebarOpen(false)}>
+                        Събития
+                    </Link>
+                    <Link to="/admin/reports" className="sidebar-link" onClick={() => setSidebarOpen(false)}>
+                        Подадени сигнали
+                    </Link>
+                    <Link to="/admin/contactforms" className="sidebar-link" onClick={() => setSidebarOpen(false)}>
+                        Подадени контактни форми
+                    </Link>
+                    <Link to="/admin/fees" className="sidebar-link" onClick={() => setSidebarOpen(false)}>
+                        Събиране на такси
+                    </Link>
+                    <Link to="/admin/expenses" className="sidebar-link" onClick={() => setSidebarOpen(false)}>
+                        Разходи
+                    </Link>
+                    <Link to="/admin/buildingcash" className="sidebar-link" onClick={() => setSidebarOpen(false)}>
+                        Каса сгради
+                    </Link>
                 </nav>
             </aside>
 

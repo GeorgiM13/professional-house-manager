@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../supabaseClient"
 import "./styles/AdminEvents.css"
 
@@ -86,15 +87,24 @@ function AdminEvents() {
         <div className="events-page">
             <div className="events-header">
                 <h1>Събития</h1>
-                <select value={selectedBuilding} onChange={(e) => {
-                    setSelectedBuilding(e.target.value).
+                <AsyncSelect
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={async (inputValue) => {
+                        const { data } = await supabase
+                            .from("buildings")
+                            .select("id, name, address")
+                            .ilike("name", `%${inputValue || ""}%`)
+                            .limit(10);
+                        return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+                    }}
+                    onChange={(option) => {
+                        setSelectedBuilding(option ? option.value : "all");
                         setCurrentPage(1);
-                }}>
-                    <option value="all">Всички сгради</option>
-                    {buildings.map((building) => (
-                        <option key={building.id} value={building.id}>{building.name}</option>
-                    ))}
-                </select>
+                    }}
+                    placeholder="Изберете сграда"
+                    isClearable
+                />
             </div>
 
             <div className="events-subheader">

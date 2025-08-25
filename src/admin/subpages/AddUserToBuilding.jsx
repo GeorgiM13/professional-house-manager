@@ -33,7 +33,7 @@ function AddUserToBuilding() {
             .from("users")
             .select("id, first_name, second_name, last_name")
             .ilike("first_name", `%${inputValue}%`)
-            .limit(50);
+            .limit(20);
         return data.map(u => ({
             value: u.id,
             label: `${u.first_name} ${u.second_name} ${u.last_name}`,

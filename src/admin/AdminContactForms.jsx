@@ -5,24 +5,34 @@ import "./styles/AdminEvents.css"
 
 function AdminContactForms() {
   const [messages, setMessages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
   const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchMessages() {
-      const { data, error } = await supabase
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await supabase
         .from("contact_messages")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) {
         console.error("Supabase error:", error);
       } else {
         setMessages(data || []);
+        setTotalCount(count || 0);
       }
     }
 
     fetchMessages();
-  }, []);
+  }, [currentPage, pageSize]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   function formatDateTime(dateString) {
     if (!dateString) return "";
@@ -83,6 +93,21 @@ function AdminContactForms() {
         </tbody>
       </table>
 
+      <div className="pagination">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(p => p - 1)}
+        >
+          ⬅ Предишна
+        </button>
+        <span>Страница {currentPage} от {totalPages}</span>
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(p => p + 1)}
+        >
+          Следваща ➡
+        </button>
+      </div>
     </div>
   );
 }

@@ -102,6 +102,13 @@
     color: white;
 }
 
+.reports-filter {
+  margin: 15px 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 @media (max-width: 768px) {
     .reports-page {
         margin: 0 !important;

@@ -5,10 +5,15 @@ import { supabase } from "../supabaseClient"
 import "./styles/AdminReports.css"
 
 function AdminReports() {
+
     const navigate = useNavigate();
-    const [buildings, setBuildings] = useState([]);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const [reports, setReports] = useState([]);
+    const [showPastReports, setShowPastReports] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const pageSize = 20;
+
 
     const loadBuildings = async (inputValue) => {
         const { data } = await supabase
@@ -21,6 +26,9 @@ function AdminReports() {
 
     useEffect(() => {
         async function fetchReports() {
+            const from = (currentPage - 1) * pageSize;
+            const to = from + pageSize - 1;
+
             let query = supabase
                 .from("reports")
                 .select(`
@@ -31,19 +39,34 @@ function AdminReports() {
                     created_at,
                     building:building_id(name,address),
                     submitted_by(first_name,second_name,last_name)
-                `)
-                .order("created_at", { ascending: false });
+                `, { count: "exact" }
+                )
+                .order("created_at", { ascending: false })
+                .range(from,to);
+
+            if (!showPastReports) {
+                query = query.eq("status", "ново");
+            }
 
             if (selectedBuilding !== "all") {
                 query = query.eq("building_id", selectedBuilding);
             }
 
-            const { data, error } = await query;
+            const { data, error, count } = await query;
             if (error) console.error("Supabase error:", error);
-            setReports(data || []);
+            else {
+                setReports(data || []);
+                setTotalCount(count || 0);
+            }
         }
         fetchReports();
-    }, [selectedBuilding]);
+    }, [selectedBuilding, currentPage, pageSize, showPastReports]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [showPastReports]);
+
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     function formatDateTime(dateString) {
         if (!dateString) return "";
@@ -73,12 +96,25 @@ function AdminReports() {
                     isClearable
                 />
             </div>
+            
 
             <div className="reports-subheader">
                 <div className="left">
                     <span>Сигнали, подадени от потребители</span>
                     <p>Преглед на всички подадени сигнали</p>
                 </div>
+            </div>
+
+            <div className="reports-filter">
+                <label className="toggle-switch">
+                    <input
+                        type="checkbox"
+                        checked={showPastReports}
+                        onChange={() => setShowPastReports(!showPastReports)}
+                    />
+                    <span className="slider"></span>
+                    <span className="label-text">Показвай минали сигнали</span>
+                </label>
             </div>
 
             <table className="reports-table">
@@ -120,6 +156,22 @@ function AdminReports() {
                 </tbody>
 
             </table>
+
+            <div className="pagination">
+                <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                >
+                    ⬅ Предишна
+                </button>
+                <span>Страница {currentPage} от {totalPages}</span>
+                <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                >
+                    Следваща ➡
+                </button>
+            </div>
         </div>
     );
 }

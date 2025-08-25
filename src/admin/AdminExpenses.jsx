@@ -8,6 +8,9 @@ function AdminExpenses() {
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
 
   const monthOrder = {
     "Януари": 1,
@@ -35,28 +38,43 @@ function AdminExpenses() {
 
   useEffect(() => {
     async function fetchExpenses() {
-      const { data: expensesData, error: expensesError } = await supabase
+      let query = supabase
         .from("expenses")
         .select(`*, building:buildings(name,address)`);
 
+      if (selectedBuilding !== "all") {
+        query = query.eq("building_id", selectedBuilding);
+      }
+
+      const { data: expensesData, error: expensesError } = await query;
+
       if (expensesError) {
         console.error("Грешка при зареждане на разходите:", expensesError);
-      } else {
-        const sortedExpenses = [...(expensesData || [])].sort((a, b) => {
-          if (b.year !== a.year) return b.year - a.year;
-          return monthOrder[b.month] - monthOrder[a.month];
-        });
-        setExpenses(sortedExpenses);
+        return;
       }
+
+      const sortedExpenses = [...(expensesData || [])].sort((a, b) => {
+        if (b.year !== a.year) return b.year - a.year;
+        return monthOrder[b.month] - monthOrder[a.month];
+      });
+
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize;
+      const pagedExpenses = sortedExpenses.slice(from, to);
+
+      setExpenses(pagedExpenses);
+      setTotalCount(sortedExpenses.length);
     }
 
     fetchExpenses();
-  }, []);
+  }, [currentPage, pageSize, selectedBuilding]);
 
   const filteredExpenses =
     selectedBuilding === "all"
       ? expenses
       : expenses.filter((exp) => exp.building_id === Number(selectedBuilding));
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const expenseTypes = {
     electricity_lift: "Ток асансьор",
@@ -147,6 +165,21 @@ function AdminExpenses() {
           )}
         </tbody>
       </table>
+      <div className="pagination">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(p => p - 1)}
+        >
+          ⬅ Предишна
+        </button>
+        <span>Страница {currentPage} от {totalPages}</span>
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(p => p + 1)}
+        >
+          Следваща ➡
+        </button>
+      </div>
     </div>
   );
 }

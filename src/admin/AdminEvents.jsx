@@ -8,7 +8,7 @@ function AdminEvents() {
     const navigate = useNavigate();
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const [events, setEvents] = useState([]);
-    // const [showPastEvents, setShowPastEvents] = useState(false);
+    const [showPastEvents, setShowPastEvents] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -28,7 +28,6 @@ function AdminEvents() {
 
             const from = (currentPage - 1) * pageSize;
             const to = from + pageSize - 1;
-
 
             let query = supabase
                 .from("events")
@@ -51,6 +50,10 @@ function AdminEvents() {
                 query = query.eq("building_id", selectedBuilding);
             }
 
+            if (!showPastEvents) {
+                query = query.gte("completion_date", new Date().toISOString());
+            }
+
             const { data, error, count } = await query;
             if (error) {
                 console.error("Supabase error:", error);
@@ -60,7 +63,7 @@ function AdminEvents() {
             }
         }
         fetchEvents();
-    }, [selectedBuilding, currentPage, pageSize]);
+    }, [selectedBuilding, currentPage, pageSize, showPastEvents]);
 
 
     function formatDateTime(dateString) {
@@ -77,10 +80,10 @@ function AdminEvents() {
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    // function isPast(dateString) {
-    //     if (!dateString) return false;
-    //     return new Date(dateString) < new Date();
-    // }
+    function isPast(dateString) {
+        if (!dateString) return false;
+        return new Date(dateString) < new Date();
+    }
 
 
     return (
@@ -112,18 +115,19 @@ function AdminEvents() {
                 </div>
             </div>
 
-            {/*   <div className="events-filter">
-                <label>
+            <div className="events-filter">
+                <label className="toggle-switch">
                     <input
                         type="checkbox"
                         checked={showPastEvents}
                         onChange={() => setShowPastEvents(!showPastEvents)}
                     />
-                    Показвай минали събития
+                    <span className="slider"></span>
+                    <span className="label-text">Показвай минали събития</span>
                 </label>
             </div>
 
-        */}
+
             <div className="events-table-wrapper">
                 <table className="events-table">
                     <thead>
@@ -139,7 +143,6 @@ function AdminEvents() {
                     </thead>
                     <tbody>
                         {events
-                            //.filter(event => showPastEvents || !isPast(event.completion_date))
                             .map((event, idx) => (
                                 <tr key={event.id}
                                     onClick={() => navigate(`/admin/event/${event.id}`)}

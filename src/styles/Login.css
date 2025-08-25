@@ -3,7 +3,7 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    background: linear-gradient(135deg, #5b1fa8, #876caa);
     font-family: 'Arial', sans-serif;
     padding: 20px;
 }
@@ -44,7 +44,7 @@
 }
 
 .login-form input:focus {
-    border-color: #2575fc;
+    border-color: #8b61c2;
     box-shadow: 0 0 8px rgba(37, 117, 252, 0.3);
     outline: none;
     transform: scale(1.02);
@@ -54,7 +54,7 @@
     width: 100%;
     padding: 14px;
     margin-top: 15px;
-    background-color: #2575fc;
+    background-color: #8b61c2;
     color: white;
     font-size: 16px;
     border: none;
@@ -64,7 +64,7 @@
 }
 
 .login-form button:hover {
-    background-color: #1a5bcc;
+    background-color: #694992;
     transform: scale(1.03);
 }
 

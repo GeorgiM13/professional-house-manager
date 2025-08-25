@@ -82,6 +82,16 @@
     font-size: 1.1rem;
 }
 
+.custom__control {
+    padding: 0.25rem 0.5rem !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    min-height: 45px !important;
+    background: white !important;
+    transition: all 0.2s !important;
+}
+
 .users-table {
     width: 100%;
     border-collapse: separate;

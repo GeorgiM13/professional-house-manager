@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
 import "./styles/AddExpense.css"
 
@@ -14,22 +15,17 @@ function AddExpense() {
         building_id: "",
         notes: "",
     });
-
-    const [buildings, setBuildings] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
-    useEffect(() => {
-        async function fetchBuildings() {
-            const { data, error } = await supabase.from("buildings").select("id, name");
-            if (error) {
-                console.error("Грешка при зареждане на сгради:", error);
-            } else {
-                setBuildings(data);
-            }
-        }
-        fetchBuildings();
-    }, []);
+    const loadBuildings = async (inputValue) => {
+        const { data } = await supabase
+            .from("buildings")
+            .select("id, name, address")
+            .ilike("name", `%${inputValue || ""}%`)
+            .limit(10);
+        return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+    };
 
     function handleChange(e) {
         const { name, value } = e.target;
@@ -176,17 +172,23 @@ function AddExpense() {
 
                     <div className={`form-group ${errors.building_id ? 'has-error' : ''}`}>
                         <label htmlFor="building_id">Сграда *</label>
-                        <select
-                            id="building_id"
-                            name="building_id"
-                            value={formData.building_id}
-                            onChange={handleChange}
-                        >
-                            <option value="">-- Избери сграда --</option>
-                            {buildings.map((b) => (
-                                <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                        </select>
+                        <AsyncSelect
+                            className="custom-select"
+                            classNamePrefix="custom"
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={loadBuildings}
+                            onChange={(option) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    building_id: option?.value || "",
+                                    building_label: option?.label || ""
+                                }));
+                                if (errors.building_id) setErrors(prev => ({ ...prev, building_id: "" }));
+                            }}
+                            placeholder="Изберете сграда"
+                            isClearable
+                        />
                         {errors.building_id && <span className="error-message">{errors.building_id}</span>}
                     </div>
 

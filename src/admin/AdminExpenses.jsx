@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../supabaseClient"
 import "./styles/AdminExpenses.css"
 
 function AdminExpenses() {
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState([]);
-  const [buildings, setBuildings] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState("all");
 
   const monthOrder = {
@@ -24,8 +24,17 @@ function AdminExpenses() {
     "Декември": 12
   };
 
+  const loadBuildings = async (inputValue) => {
+    const { data } = await supabase
+      .from("buildings")
+      .select("id, name, address")
+      .ilike("name", `%${inputValue || ""}%`)
+      .limit(10);
+    return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+  };
+
   useEffect(() => {
-    async function fetchData() {
+    async function fetchExpenses() {
       const { data: expensesData, error: expensesError } = await supabase
         .from("expenses")
         .select(`*, building:buildings(name,address)`);
@@ -39,20 +48,9 @@ function AdminExpenses() {
         });
         setExpenses(sortedExpenses);
       }
-
-      const { data: buildingsData, error: buildingsError } = await supabase
-        .from("buildings")
-        .select("*")
-        .order("name");
-
-      if (buildingsError) {
-        console.error("Грешка при зареждане на сградите:", buildingsError);
-      } else {
-        setBuildings(buildingsData || []);
-      }
     }
 
-    fetchData();
+    fetchExpenses();
   }, []);
 
   const filteredExpenses =
@@ -75,17 +73,18 @@ function AdminExpenses() {
           <h1>Разходи</h1>
         </div>
         <div className="expenses-right">
-          <select
-            value={selectedBuilding}
-            onChange={(e) => setSelectedBuilding(e.target.value)}
-          >
-            <option value="all">Всички сгради</option>
-            {buildings.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
+          <AsyncSelect
+            className="custom-select"
+            classNamePrefix="custom"
+            cacheOptions
+            defaultOptions
+            loadOptions={loadBuildings}
+            onChange={(option) => {
+              setSelectedBuilding(option ? option.value : "all");
+            }}
+            placeholder="Изберете сграда"
+            isClearable
+          />
 
           <button className="add-expense-btn" onClick={() => navigate("/admin/addexpense")}>
             Добавяне на разход

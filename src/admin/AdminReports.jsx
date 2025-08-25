@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../supabaseClient"
 import "./styles/AdminReports.css"
 
@@ -9,13 +10,14 @@ function AdminReports() {
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const [reports, setReports] = useState([]);
 
-    useEffect(() => {
-        async function fetchBuildings() {
-            const { data } = await supabase.from("buildings").select("*");
-            setBuildings(data || []);
-        }
-        fetchBuildings();
-    }, []);
+    const loadBuildings = async (inputValue) => {
+        const { data } = await supabase
+            .from("buildings")
+            .select("id, name, address")
+            .ilike("name", `%${inputValue || ""}%`)
+            .limit(10);
+        return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+    };
 
     useEffect(() => {
         async function fetchReports() {
@@ -58,12 +60,18 @@ function AdminReports() {
         <div className="reports-page">
             <div className="reports-header">
                 <h1>Подадени сигнали</h1>
-                <select value={selectedBuilding} onChange={(e) => setSelectedBuilding(e.target.value)}>
-                    <option value="all">Всички сгради</option>
-                    {buildings.map((building) => (
-                        <option key={building.id} value={building.id}>{building.name}</option>
-                    ))}
-                </select>
+                <AsyncSelect
+                    className="custom-select"
+                    classNamePrefix="custom"
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={loadBuildings}
+                    onChange={(option) => {
+                        setSelectedBuilding(option ? option.value : "all");
+                    }}
+                    placeholder="Изберете сграда"
+                    isClearable
+                />
             </div>
 
             <div className="reports-subheader">

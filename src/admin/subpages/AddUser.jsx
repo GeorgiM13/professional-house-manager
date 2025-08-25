@@ -25,7 +25,7 @@ function AddUser() {
             .from("buildings")
             .select("id, name, address, floors, apartments, garages")
             .ilike("name", `%${inputValue || ""}%`)
-            .limit(20);
+            .limit(10);
 
         if (error) {
             console.error("Грешка при зареждане на сгради: ", error);
@@ -35,6 +35,7 @@ function AddUser() {
         return (data || []).map(b => ({
             value: b.id,
             label: `${b.name}, ${b.address}`,
+            name: b.name,
             floors: b.floors,
             apartments: b.apartments,
             garages: b.garages
@@ -53,20 +54,16 @@ function AddUser() {
             return;
         }
 
-
-
-        const buildingObj = buildings.find(b => b.id === Number(selectedBuilding));
-
-        if (floor && (parseInt(floor) < 1 || parseInt(floor) > buildingObj.floors)) {
-            newErrors.floor = `Етажът трябва да е между 1 и ${buildingObj.floors}`;
+        if (floor && (parseInt(floor) < 1 || parseInt(floor) > selectedBuilding.floors)) {
+            newErrors.floor = `Етажът трябва да е между 1 и ${selectedBuilding.floors}`;
         }
 
-        if (apartmentNumber && (parseInt(apartmentNumber) < 1 || parseInt(apartmentNumber) > buildingObj.apartments)) {
-            newErrors.apartmentNumber = `Апартаментът трябва да е между 1 и ${buildingObj.apartments}`;
+        if (apartmentNumber && (parseInt(apartmentNumber) < 1 || parseInt(apartmentNumber) > selectedBuilding.apartments)) {
+            newErrors.apartmentNumber = `Апартаментът трябва да е между 1 и ${selectedBuilding.apartments}`;
         }
 
-        if (garageNumber && (parseInt(garageNumber) < 1 || parseInt(garageNumber) > buildingObj.garages)) {
-            newErrors.garageNumber = `Гаражът трябва да е между 1 и ${buildingObj.garages}`;
+        if (garageNumber && (parseInt(garageNumber) < 1 || parseInt(garageNumber) > selectedBuilding.garages)) {
+            newErrors.garageNumber = `Гаражът трябва да е между 1 и ${selectedBuilding.garages}`;
         }
 
 
@@ -75,7 +72,7 @@ function AddUser() {
             return;
         }
 
-        const building = buildings.find(b => b.id === Number(selectedBuilding))?.name || "";
+        const buildingName = selectedBuilding?.name || "";
         const transliterate = str => {
             const map = {
                 'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'zh', 'з': 'z', 'и': 'i',
@@ -86,9 +83,11 @@ function AddUser() {
             return str.toLowerCase().split('').map(c => map[c] || c).join('');
         }
 
-        const clean = str => transliterate(str).replace(/\s+/g, '');
+        const clean = str => transliterate(str)
+            .replace(/[.,]/g, '')
+            .replace(/\s+/g, '_');
 
-        const username = `${clean(firstName)}_${clean(building)}_${floor}_${apartmentNumber}`;
+        const username = `${clean(firstName)}_${clean(buildingName)}_${floor}_${apartmentNumber}`;
         const email = `${username}@example.com`;
         const password = clean(`${firstName}_${secondName}_${lastName}`);
         const displayName = `${firstName} ${secondName} ${lastName}`.trim();
@@ -138,7 +137,7 @@ function AddUser() {
                     floor,
                     number: apartmentNumber,
                     residents,
-                    building_id: selectedBuilding,
+                    building_id: selectedBuilding.value,
                 },
             ]);
         }
@@ -148,7 +147,7 @@ function AddUser() {
                 {
                     user_id: newUser.id,
                     number: garageNumber,
-                    building_id: selectedBuilding,
+                    building_id: selectedBuilding.value,
                 },
             ]);
         }
@@ -198,11 +197,14 @@ function AddUser() {
                     <div className={`form-group ${errors.selectedBuilding ? 'has-error' : ''}`}>
                         <label>Сграда *</label>
                         <AsyncSelect
+                            className="custom-select"
+                            classNamePrefix="custom"
                             cacheOptions
                             defaultOptions
                             loadOptions={loadBuildings}
                             onChange={(option) => setSelectedBuilding(option)}
                             placeholder="Търсене на сграда..."
+                            isClearable
                         />
                         {errors.selectedBuilding && <span className="error-message">{errors.selectedBuilding}</span>}
                     </div>

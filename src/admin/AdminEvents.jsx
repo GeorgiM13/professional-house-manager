@@ -6,7 +6,6 @@ import "./styles/AdminEvents.css"
 
 function AdminEvents() {
     const navigate = useNavigate();
-    const [buildings, setBuildings] = useState([]);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const [events, setEvents] = useState([]);
     // const [showPastEvents, setShowPastEvents] = useState(false);
@@ -15,13 +14,14 @@ function AdminEvents() {
     const [totalCount, setTotalCount] = useState(0);
     const pageSize = 20;
 
-    useEffect(() => {
-        async function fetchBuildings() {
-            const { data } = await supabase.from("buildings").select("*");
-            setBuildings(data || []);
-        }
-        fetchBuildings();
-    }, []);
+    const loadBuildings = async (inputValue) => {
+        const { data } = await supabase
+            .from("buildings")
+            .select("id, name, address")
+            .ilike("name", `%${inputValue || ""}%`)
+            .limit(10);
+        return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+    };
 
     useEffect(() => {
         async function fetchEvents() {
@@ -88,16 +88,11 @@ function AdminEvents() {
             <div className="events-header">
                 <h1>Събития</h1>
                 <AsyncSelect
+                    className="custom-select"
+                    classNamePrefix="custom"
                     cacheOptions
                     defaultOptions
-                    loadOptions={async (inputValue) => {
-                        const { data } = await supabase
-                            .from("buildings")
-                            .select("id, name, address")
-                            .ilike("name", `%${inputValue || ""}%`)
-                            .limit(10);
-                        return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
-                    }}
+                    loadOptions={loadBuildings}
                     onChange={(option) => {
                         setSelectedBuilding(option ? option.value : "all");
                         setCurrentPage(1);

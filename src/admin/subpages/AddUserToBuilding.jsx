@@ -16,24 +16,25 @@ function AddUserToBuilding() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
-    useEffect(() => {
-        async function fetchBuildings() {
-            const { data: buildingsData, error } = await supabase
-                .from("buildings")
-                .select("*");
-            if (error) console.error(error);
-            else setBuildings(buildingsData);
-        }
-        fetchBuildings();
-    }, []);
+   
+    const loadBuildings = async (inputValue) => {
+        const { data } = await supabase
+            .from("buildings")
+            .select("id, name, address")
+            .ilike("name", `%${inputValue}%`)
+            .limit(10);
+        return data.map(b => ({
+            value: b.id,
+            label: `${b.name}, ${b.address}`,
+        }));
+    };
 
     const loadUsers = async (inputValue) => {
-        if (!inputValue) return [];
         const { data } = await supabase
             .from("users")
             .select("id, first_name, second_name, last_name")
-            .ilike("first_name", `%${inputValue}%`)
-            .limit(20);
+            .or(`first_name.ilike.%${inputValue}%,last_name.ilike.%${inputValue}%`)
+            .limit(10);
         return data.map(u => ({
             value: u.id,
             label: `${u.first_name} ${u.second_name} ${u.last_name}`,
@@ -87,11 +88,14 @@ function AddUserToBuilding() {
                     <div className="add-user-building-form-group">
                         <label>Потребител *</label>
                         <AsyncSelect
+                            className="custom-select"
+                            classNamePrefix="custom"
                             cacheOptions
                             defaultOptions
                             loadOptions={loadUsers}
                             onChange={(option) => setSelectedUser(option)}
                             placeholder="Търсене на потребител..."
+                            isClearable
                         />
                         {errors.selectedUser && <span className="error-message">{errors.selectedUser}</span>}
                     </div>
@@ -99,22 +103,14 @@ function AddUserToBuilding() {
                     <div className="add-user-building-form-group">
                         <label>Сграда *</label>
                         <AsyncSelect
+                            className="custom-select"
+                            classNamePrefix="custom"
                             cacheOptions
                             defaultOptions
-                            loadOptions={async (inputValue) => {
-                                if (!inputValue) return [];
-                                const { data } = await supabase
-                                    .from("buildings")
-                                    .select("id, name, address")
-                                    .ilike("name", `%${inputValue}%`)
-                                    .limit(50);
-                                return data.map(b => ({
-                                    value: b.id,
-                                    label: `${b.name}, ${b.address}`,
-                                }));
-                            }}
+                            loadOptions={loadBuildings}
                             onChange={(option) => setSelectedBuilding(option)}
                             placeholder="Търсене на сграда..."
+                            isClearable
                         />
                         {errors.selectedBuilding && <span className="error-message">{errors.selectedBuilding}</span>}
                     </div>

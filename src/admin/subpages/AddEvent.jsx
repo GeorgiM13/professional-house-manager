@@ -17,13 +17,19 @@ function AddEventPage() {
         building_id: ""
     });
 
-    useEffect(() => {
-        async function fetchBuildings() {
-            const { data } = await supabase.from("buildings").select("*");
-            setBuildings(data || []);
-        }
-        fetchBuildings();
+    const loadBuildings = async (inputValue) => {
+        const { data } = await supabase
+            .from("buildings")
+            .select("id, name, address")
+            .ilike("name", `%${inputValue || ""}%`)
+            .limit(10);
+        return data.map(b => ({
+            value: b.id,
+            label: `${b.name}, ${b.address}`
+        }));
+    }
 
+    useEffect(() => {
         async function fetchUsers() {
             const { data } = await supabase.from("users").select("*");
             setUsers((data || []).filter(u => u.role === "admin"));
@@ -74,17 +80,7 @@ function AddEventPage() {
                             classNamePrefix="custom"
                             cacheOptions
                             defaultOptions
-                            loadOptions={async (inputValue) => {
-                                const { data } = await supabase
-                                    .from("buildings")
-                                    .select("id, name, address")
-                                    .ilike("name", `%${inputValue || ""}%`)
-                                    .limit(10);
-                                return data.map(b => ({
-                                    value: b.id,
-                                    label: `${b.name}, ${b.address}`
-                                }));
-                            }}
+                            loadOptions={loadBuildings}
                             onChange={(option) => setNewEvent({ ...newEvent, building_id: option ? option.value : "" })}
                             placeholder="Търсене на сграда..."
                             isClearable

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
 import "./styles/EditExpense.css"
 
@@ -15,8 +16,6 @@ function EditExpense() {
     building_id: "",
     notes: "",
   });
-
-  const [buildings, setBuildings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [errors, setErrors] = useState({});
@@ -30,42 +29,44 @@ function EditExpense() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
+  const loadBuildings = async (inputValue) => {
+    const { data } = await supabase
+      .from("buildings")
+      .select("id, name, address")
+      .ilike("name", `%${inputValue || ""}%`)
+      .limit(10);
+    return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+  };
+
   useEffect(() => {
-    async function fetchData() {
+    async function fetchExpense() {
       try {
-        const { data: buildingsData, error: buildingsError } = await supabase
-          .from("buildings")
-          .select("id, name");
-
-        if (buildingsError) throw buildingsError;
-        setBuildings(buildingsData);
-
-        const { data: expenseData, error: expenseError } = await supabase
+        const { data: expense, error } = await supabase
           .from("expenses")
-          .select("*")
+          .select("*, building:buildings(name,address)")
           .eq("id", id)
           .single();
-
-        if (expenseError) throw expenseError;
+        if (error) throw error;
 
         setFormData({
-          type: expenseData.type,
-          month: expenseData.month,
-          year: expenseData.year,
-          current_month: expenseData.current_month,
-          paid: expenseData.paid,
-          building_id: expenseData.building_id,
-          notes: expenseData.notes || "",
+          type: expense.type,
+          month: expense.month,
+          year: expense.year,
+          current_month: expense.current_month,
+          paid: expense.paid,
+          building_id: expense.building_id,
+          building_label: expense.building ? `${expense.building.name}, ${expense.building.address}` : "",
+          notes: expense.notes || "",
         });
-      } catch (error) {
-        console.error("Грешка при зареждане на данни:", error.message);
-        alert("Грешка при зареждане на данни");
+      } catch (err) {
+        console.error(err);
+        alert("Грешка при зареждане на разхода");
       } finally {
         setIsLoadingData(false);
       }
     }
 
-    fetchData();
+    fetchExpense();
   }, [id]);
 
   async function handleDelete() {
@@ -228,17 +229,24 @@ function EditExpense() {
 
         <div className="form-group">
           <label>Сграда *</label>
-          <select
-            name="building_id"
-            value={formData.building_id}
-            onChange={handleChange}
-            className={errors.building_id ? 'error' : ''}
-          >
-            <option value="">-- Избери сграда --</option>
-            {buildings.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
+          <AsyncSelect
+            className="custom-select"
+            classNamePrefix="custom"
+            cacheOptions
+            defaultOptions
+            loadOptions={loadBuildings}
+            value={formData.building_id ? { value: formData.building_id, label: formData.building_label } : null}
+            onChange={(option) => {
+              setFormData(prev => ({
+                ...prev,
+                building_id: option?.value || "",
+                building_label: option?.label || ""
+              }));
+              if (errors.building_id) setErrors(prev => ({ ...prev, building_id: "" }));
+            }}
+            placeholder="Изберете сграда"
+            isClearable
+          />
           {errors.building_id && <span className="error-message">{errors.building_id}</span>}
         </div>
 

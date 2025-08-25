@@ -86,7 +86,7 @@ function Users() {
             .from("buildings")
             .select("id, name, address")
             .ilike("name", `%${inputValue || ""}%`)
-            .limit(50);
+            .limit(10);
 
         if (error) {
             console.error("Грешка при зареждане на сгради:", error);
@@ -132,16 +132,18 @@ function Users() {
                         residents: a.residents,
                         garages: b.garages.length > 0 ? b.garages.map(g => `Гараж ${g}`).join(", ") : "Няма гараж",
                         userId: u.id,
+                        buildingId: b.id,
                     }))
                     : [{
                         idx,
                         fullName: u.fullName,
                         buildingName: `${b.name}, ${b.address}`,
-                        floor: "Няма апартамент",
+                        floor: "Няма етаж",
                         apartmentNumber: "Няма апартамент",
                         residents: "Няма живущи",
                         garages: b.garages.length > 0 ? b.garages.map(g => `Гараж ${g}`).join(", ") : "Няма гараж",
                         userId: u.id,
+                        buildingId: b.id,
                     }]
             );
     });
@@ -166,11 +168,14 @@ function Users() {
                 <div className="users-right">
                     <div style={{ minWidth: "250px" }}>
                         <AsyncSelect
+                            className="custom-select"
+                            classNamePrefix="custom"
                             cacheOptions
                             defaultOptions
                             loadOptions={loadBuildings}
                             onChange={(option) => setSelectedBuilding(option?.value || "all")}
                             placeholder="Изберете сграда..."
+                            isClearable
                         />
                     </div>
                     <button className="add-user-btn" onClick={() => navigate("/admin/add-user")}>
@@ -203,7 +208,7 @@ function Users() {
                         sortedRows.map((row, i) => (
                             <tr
                                 key={`${row.userId}-${i}`}
-                                onClick={() => navigate(`/admin/edit-user/${row.userId}`)}
+                                onClick={() => navigate(`/admin/edit-user/${row.userId}`, { state: { buildingId: row.buildingId } })}
                                 style={{ cursor: "pointer" }}
                             >
                                 <td data-label="№:">{row.idx + 1}</td>

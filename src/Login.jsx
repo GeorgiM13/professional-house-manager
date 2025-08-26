@@ -50,8 +50,6 @@ function Login() {
     };
 
     localStorage.setItem('user', JSON.stringify(sessionData));
-    console.log('Вход успешен', sessionData);
-
 
     if (sessionData.role === 'admin') {
       window.location.href = '/admin/adminevents';

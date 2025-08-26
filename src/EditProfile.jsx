@@ -13,7 +13,6 @@ function EditProfile() {
         return JSON.parse(localStorage.getItem(`userData_${savedUser.id}`)) || null;
     });
     const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");

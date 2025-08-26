@@ -12,19 +12,19 @@ function AdminExpenses() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
 
-  const monthOrder = {
-    "Януари": 1,
-    "Февруари": 2,
-    "Март": 3,
-    "Април": 4,
-    "Май": 5,
-    "Юни": 6,
-    "Юли": 7,
-    "Август": 8,
-    "Септември": 9,
-    "Октомври": 10,
-    "Ноември": 11,
-    "Декември": 12
+  const monthNames = {
+    1: "Януари",
+    2: "Февруари",
+    3: "Март",
+    4: "Април",
+    5: "Май",
+    6: "Юни",
+    7: "Юли",
+    8: "Август",
+    9: "Септември",
+    10: "Октомври",
+    11: "Ноември",
+    12: "Декември"
   };
 
   const loadBuildings = async (inputValue) => {
@@ -40,30 +40,24 @@ function AdminExpenses() {
     async function fetchExpenses() {
       let query = supabase
         .from("expenses")
-        .select(`*, building:buildings(name,address)`);
+        .select("*, building:buildings(name,address)", { count: "exact" })
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       if (selectedBuilding !== "all") {
         query = query.eq("building_id", selectedBuilding);
       }
 
-      const { data: expensesData, error: expensesError } = await query;
+      const { data: expensesData, error, count } = await query;
 
-      if (expensesError) {
-        console.error("Грешка при зареждане на разходите:", expensesError);
+      if (error) {
+        console.error("Грешка при зареждане на разходите:", error);
         return;
       }
 
-      const sortedExpenses = [...(expensesData || [])].sort((a, b) => {
-        if (b.year !== a.year) return b.year - a.year;
-        return monthOrder[b.month] - monthOrder[a.month];
-      });
-
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize;
-      const pagedExpenses = sortedExpenses.slice(from, to);
-
-      setExpenses(pagedExpenses);
-      setTotalCount(sortedExpenses.length);
+      setExpenses(expensesData || []);
+      setTotalCount(count || 0);
     }
 
     fetchExpenses();
@@ -89,6 +83,12 @@ function AdminExpenses() {
       <div className="expenses-header">
         <div className="expenses-left">
           <h1>Разходи</h1>
+          <div className="expenses-subheader">
+            <div className="left">
+              <span>Разходи, свързани със сгради</span>
+              <p>Преглед на всички разходи</p>
+            </div>
+          </div>
         </div>
         <div className="expenses-right">
           <AsyncSelect
@@ -109,12 +109,7 @@ function AdminExpenses() {
           </button>
         </div>
       </div>
-      <div className="reports-subheader">
-        <div className="left">
-          <span>Разходи, свързани със сгради</span>
-          <p>Преглед на всички разходи</p>
-        </div>
-      </div>
+
       <table className="expenses-table">
         <thead>
           <tr>
@@ -146,7 +141,7 @@ function AdminExpenses() {
                 <td data-label="Адрес">
                   {exp.building?.name}, {exp.building?.address}
                 </td>
-                <td data-label="Месец">{exp.month}</td>
+                <td data-label="Месец">{monthNames[exp.month]}</td>
                 <td data-label="Година">{exp.year}</td>
                 <td data-label="Платено">
                   <span

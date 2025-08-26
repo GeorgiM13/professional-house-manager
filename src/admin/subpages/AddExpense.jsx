@@ -54,7 +54,7 @@ function AddExpense() {
         try {
             const { error } = await supabase.from("expenses").insert([{
                 type: formData.type,
-                month: formData.month,
+                month: parseInt(formData.month),
                 year: parseInt(formData.year),
                 current_month: parseFloat(formData.current_month) || 0,
                 paid: formData.paid,
@@ -79,7 +79,8 @@ function AddExpense() {
     ];
 
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+    const nextYear = new Date().getFullYear() + 1;
+    const years = Array.from({ length: 6 }, (_, i) => nextYear - i);
 
     return (
         <div className="add-expense-container">
@@ -119,8 +120,8 @@ function AddExpense() {
                             onChange={handleChange}
                         >
                             <option value="">-- Избери месец --</option>
-                            {months.map((m) => (
-                                <option key={m} value={m}>{m}</option>
+                            {months.map((m, index) => (
+                                <option key={index + 1} value={index + 1}>{m}</option>
                             ))}
                         </select>
                         {errors.month && <span className="error-message">{errors.month}</span>}

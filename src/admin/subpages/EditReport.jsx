@@ -14,7 +14,6 @@ function EditReport() {
     notes: ""
   });
 
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,18 +35,7 @@ function EditReport() {
       setLoading(false);
     }
 
-    async function fetchUsers() {
-      const { data, error } = await supabase
-        .from("users")
-        .select("id, first_name, last_name, role");
-
-      if (!error) {
-        setUsers((data || []).filter((u) => u.role === "admin"));
-      }
-    }
-
     fetchReport();
-    fetchUsers();
   }, [id]);
 
   async function handleSubmit(e) {

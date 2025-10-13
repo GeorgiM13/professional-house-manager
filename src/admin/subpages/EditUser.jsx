@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
+import CustomAlert from "../../components/CustomAlert"
+import ConfirmModal from "../../components/ConfirmModal"
 import "./styles/EditUser.css"
 
 function EditUser() {
@@ -24,6 +26,10 @@ function EditUser() {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
+
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertType, setAlertType] = useState("info");
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const loadBuildings = async (inputValue) => {
         const { data } = await supabase
@@ -90,7 +96,8 @@ function EditUser() {
                 }
             } catch (error) {
                 console.error("Грешка при зареждане на потребителя:", error.message);
-                alert("Грешка при зареждане на данни");
+                setAlertType("error");
+                setAlertMessage("Грешка при зареждане на данните: " + error.message);
             } finally {
                 setIsLoadingData(false);
             }
@@ -104,11 +111,53 @@ function EditUser() {
         setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
     };
 
+
+
     const handleSave = async () => {
         const newErrors = {};
         if (!firstName) newErrors.firstName = "Моля въведете първо име";
         if (!lastName) newErrors.lastName = "Моля изберете фамилия";
         if (!selectedBuilding) newErrors.selectedBuilding = "Моля изберете сграда";
+
+        if (garageNumber) {
+            if (!selectedBuilding || !selectedBuilding.value) {
+                newErrors.selectedBuilding = "Моля изберете сграда, преди да въведете гараж.";
+            } else {
+                const { data: buildingInfo, error: buildingError } = await supabase
+                    .from("buildings")
+                    .select("id, name, garages")
+                    .eq("id", selectedBuilding.value)
+                    .maybeSingle();
+
+                if (buildingError) {
+                    alert("Грешка при зареждане на информация за сградата.");
+                    console.error(buildingError);
+                    setErrors(newErrors);
+                    return;
+                }
+
+                if (!buildingInfo || !buildingInfo.garages || buildingInfo.garages === 0) {
+                    newErrors.garageNumber = `Сградата "${buildingInfo?.name || ""}" няма налични гаражи.`;
+                } else {
+                    const numberValue = Number(garageNumber);
+                    if (isNaN(numberValue) || numberValue < 1 || numberValue > buildingInfo.garages) {
+                        newErrors.garageNumber = `Номерът на гаража трябва да е между 1 и ${buildingInfo.garages}.`;
+                    } else {
+                        const { data: takenGarage } = await supabase
+                            .from("garages")
+                            .select("id, user_id")
+                            .eq("building_id", selectedBuilding.value)
+                            .eq("number", numberValue)
+                            .neq("user_id", id)
+                            .maybeSingle();
+
+                        if (takenGarage) {
+                            newErrors.garageNumber = `Гараж №${numberValue} вече е зает от друг потребител.`;
+                        }
+                    }
+                }
+            }
+        }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -201,19 +250,20 @@ function EditUser() {
                 }
             }
 
-            navigate("/admin/users");
+            setAlertType("success");
+            setAlertMessage("Промените са запазени успешно!");
+            setTimeout(() => navigate("/admin/users"), 2500);
         } catch (error) {
             console.error("Грешка при обновяване:", error.message);
-            alert("Възникна грешка: " + error.message);
+            setAlertType("error");
+            setAlertMessage("Грешка при запазване: " + error.message);
         } finally {
             setLoading(false);
         }
     };
 
 
-    const handleDelete = async () => {
-        if (!window.confirm("Сигурни ли сте, че искате да изтриете този потребител?")) return;
-
+    const handleDeleteConfirmed = async () => {
         setLoading(true);
 
         try {
@@ -257,17 +307,21 @@ function EditUser() {
 
             if ((remainingApartments?.length === 0) && (remainingGarages?.length === 0)) {
                 await supabase.from("users").delete().eq("id", id);
-                alert("Потребителят е изтрит напълно.");
+                setAlertType("success");
+                setAlertMessage("Потребителят е изтрит напълно.");
             } else {
-                alert("Потребителят има данни в други сгради и не може да бъде изтрит напълно.");
+                setAlertType("info");
+                setAlertMessage("Потребителят има данни в други сгради и не е изтрит напълно.");
             }
 
-            navigate("/admin/users");
+            setTimeout(() => navigate("/admin/users"), 3000);
         } catch (error) {
             console.error("Грешка при изтриване:", error.message);
-            alert("Възникна грешка: " + error.message);
+            setAlertType("error");
+            setAlertMessage("Грешка при изтриване: " + error.message);
         } finally {
             setLoading(false);
+            setShowConfirm(false);
         }
     };
 
@@ -357,11 +411,25 @@ function EditUser() {
                     <button className="edit-secondary-button" onClick={() => navigate("/admin/users")} disabled={loading}>
                         Отказ
                     </button>
-                    <button className="edit-danger-button" onClick={handleDelete} disabled={loading}>
+                    <button className="edit-danger-button" onClick={() => setShowConfirm(true)} disabled={loading}>
                         Изтрий потребител
                     </button>
                 </div>
             </div>
+             <CustomAlert
+                message={alertMessage}
+                type={alertType}
+                onClose={() => setAlertMessage("")}
+            />
+
+            {showConfirm && (
+                <ConfirmModal
+                    title="Изтриване на потребител"
+                    message="Сигурни ли сте, че искате да изтриете този потребител?"
+                    onConfirm={handleDeleteConfirmed}
+                    onCancel={() => setShowConfirm(false)}
+                />
+            )}
         </div>
     );
 }

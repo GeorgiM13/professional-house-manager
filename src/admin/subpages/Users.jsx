@@ -7,6 +7,7 @@ import "./styles/Users.css"
 function Users() {
     const [users, setUsers] = useState([]);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -101,7 +102,11 @@ function Users() {
         return [allOption, ...mapped];
     };
 
-    const tableRows = users.flatMap((u, idx) => {
+    const filteredUsers = users.filter((u) =>
+        u.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const tableRows = filteredUsers.flatMap((u, idx) => {
         const hasBuilding = u.buildings.length > 0;
 
         if (!hasBuilding) {
@@ -164,67 +169,75 @@ function Users() {
                     <h1>Потребители</h1>
                     <span>Подробни данни на потребителите</span>
                     <p>Списък на потребителите, адрес, етаж, апартамент, живущи и гараж ако има прилежащ</p>
+                    <input
+                            type="text"
+                            className="search-input"
+                            placeholder="Търсене по име..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                 </div>
                 <div className="users-right">
-                    <div style={{ minWidth: "250px" }}>
-                        <AsyncSelect
-                            className="custom-select"
-                            classNamePrefix="custom"
-                            cacheOptions
-                            defaultOptions
-                            loadOptions={loadBuildings}
-                            onChange={(option) => setSelectedBuilding(option?.value || "all")}
-                            placeholder="Изберете сграда..."
-                            isClearable
-                        />
+                        
+                        <div style={{ minWidth: "250px" }}>
+                            <AsyncSelect
+                                className="custom-select"
+                                classNamePrefix="custom"
+                                cacheOptions
+                                defaultOptions
+                                loadOptions={loadBuildings}
+                                onChange={(option) => setSelectedBuilding(option?.value || "all")}
+                                placeholder="Изберете сграда..."
+                                isClearable
+                            />
+                        </div>
+                        <button className="add-user-btn" onClick={() => navigate("/admin/add-user")}>
+                            Добави потребител
+                        </button>
+                        <button className="add-user-btn" onClick={() => navigate("/admin/add-user-to-building")}>
+                            Добави потребител към сграда
+                        </button>
                     </div>
-                    <button className="add-user-btn" onClick={() => navigate("/admin/add-user")}>
-                        Добави потребител
-                    </button>
-                    <button className="add-user-btn" onClick={() => navigate("/admin/add-user-to-building")}>
-                        Добави потребител към сграда
-                    </button>
                 </div>
-            </div>
 
-            <table className="users-table">
-                <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Име</th>
-                        <th>Адрес</th>
-                        <th>Етаж</th>
-                        <th>Апартамент</th>
-                        <th>Живущи</th>
-                        <th>Гаражи</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {sortedRows.length === 0 ? (
+                <table className="users-table">
+                    <thead>
                         <tr>
-                            <td colSpan="7" style={{ textAlign: "center", padding: "1rem" }}>Няма намерени потребители.</td>
+                            <th>№</th>
+                            <th>Име</th>
+                            <th>Адрес</th>
+                            <th>Етаж</th>
+                            <th>Апартамент</th>
+                            <th>Живущи</th>
+                            <th>Гаражи</th>
                         </tr>
-                    ) : (
-                        sortedRows.map((row, i) => (
-                            <tr
-                                key={`${row.userId}-${i}`}
-                                onClick={() => navigate(`/admin/edit-user/${row.userId}`, { state: { buildingId: row.buildingId } })}
-                                style={{ cursor: "pointer" }}
-                            >
-                                <td data-label="№:">{row.idx + 1}</td>
-                                <td data-label="Име:">{row.fullName}</td>
-                                <td data-label="Адрес:">{row.buildingName}</td>
-                                <td data-label="Етаж:">{row.floor}</td>
-                                <td data-label="Апартамент:">{row.apartmentNumber}</td>
-                                <td data-label="Живущи:">{row.residents}</td>
-                                <td data-label="Гаражи:">{row.garages}</td>
+                    </thead>
+                    <tbody>
+                        {sortedRows.length === 0 ? (
+                            <tr>
+                                <td colSpan="7" style={{ textAlign: "center", padding: "1rem" }}>Няма намерени потребители.</td>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-        </div>
-    );
+                        ) : (
+                            sortedRows.map((row, i) => (
+                                <tr
+                                    key={`${row.userId}-${i}`}
+                                    onClick={() => navigate(`/admin/edit-user/${row.userId}`, { state: { buildingId: row.buildingId } })}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <td data-label="№:">{row.idx + 1}</td>
+                                    <td data-label="Име:">{row.fullName}</td>
+                                    <td data-label="Адрес:">{row.buildingName}</td>
+                                    <td data-label="Етаж:">{row.floor}</td>
+                                    <td data-label="Апартамент:">{row.apartmentNumber}</td>
+                                    <td data-label="Живущи:">{row.residents}</td>
+                                    <td data-label="Гаражи:">{row.garages}</td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+            );
 }
 
-export default Users;
+            export default Users;

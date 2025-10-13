@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
+import CustomAlert from "../../components/CustomAlert"
 import "./styles/AddExpense.css"
 
 function AddExpense() {
@@ -17,6 +18,8 @@ function AddExpense() {
     });
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertType, setAlertType] = useState("info");
 
     const loadBuildings = async (inputValue) => {
         const { data } = await supabase
@@ -63,12 +66,17 @@ function AddExpense() {
             }]);
 
             if (error) throw error;
-            navigate("/admin/expenses");
+
+            setAlertType("success");
+            setAlertMessage("Разходът е добавен успешно!");
+            setTimeout(() => navigate("/admin/expenses"), 2000);
         } catch (err) {
             console.error("Грешка при добавяне на разход:", err.message);
-            alert("Възникна грешка: " + err.message);
+            setAlertType("error");
+            alert("Възникна грешка при добавяне: " + err.message);
         } finally {
             setLoading(false);
+            setShowConfirm(false);
         }
     }
 
@@ -230,6 +238,13 @@ function AddExpense() {
                     </button>
                 </div>
             </form>
+
+            <CustomAlert
+                message={alertMessage}
+                type={alertType}
+                onClose={() => setAlertMessage("")}
+            />
+
         </div>
     );
 }

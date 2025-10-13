@@ -2,12 +2,16 @@ import { useState, useEffect } from "react"
 import { supabase } from "../../supabaseClient"
 import AsyncSelect from "react-select/async"
 import { useNavigate } from "react-router-dom"
+import CustomAlert from "../../components/CustomAlert"
 import "./styles/AddEvent.css"
 
 function AddEventPage() {
     const navigate = useNavigate();
     const [buildings, setBuildings] = useState([]);
     const [users, setUsers] = useState([]);
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertType, setAlertType] = useState("info");
+    const [loading, setLoading] = useState(false);
     const [newEvent, setNewEvent] = useState({
         status: "ново",
         subject: "",
@@ -31,6 +35,8 @@ function AddEventPage() {
 
     useEffect(() => {
         async function fetchUsers() {
+            setLoading(false);
+
             const { data } = await supabase.from("users").select("*");
             setUsers((data || []).filter(u => u.role === "admin"));
         }
@@ -38,11 +44,21 @@ function AddEventPage() {
     }, []);
 
     const handleCreateEvent = async () => {
-        const { error } = await supabase.from("events").insert([newEvent]);
-        if (!error) {
-            navigate("/admin/adminevents");
-        } else {
-            console.error(error);
+        try {
+            const { error } = await supabase.from("events").insert([newEvent]);
+            if (error) {
+                setAlertType("error");
+                setAlertMessage("Възникна грешка при добавяне: " + error.message);
+            } else {
+                setAlertType("success");
+                setAlertMessage("Събитието е добавено успешно!");
+                setTimeout(() => navigate("/admin/adminevents"), 2000);
+            }
+        } catch (err) {
+            setAlertType("error");
+            setAlertMessage("Неуспешна операция: " + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -106,6 +122,11 @@ function AddEventPage() {
                     <button type="button" className="secondary-button" onClick={() => navigate("/admin/adminevents")}>Отказ</button>
                 </div>
             </form>
+            <CustomAlert
+                message={alertMessage}
+                type={alertType}
+                onClose={() => setAlertMessage("")}
+            />
         </div>
 
     );

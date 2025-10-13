@@ -18,7 +18,7 @@ export default function AdminLayout() {
                 className={`mobile-menu-button ${sidebarOpen ? 'active' : ''}`}
                 onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-                {sidebarOpen ? '✕' : '☰'}
+                {sidebarOpen ? '' : '☰'}
             </button>
 
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>

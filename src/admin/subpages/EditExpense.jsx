@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import AsyncSelect from "react-select/async"
 import { supabase } from "../../supabaseClient"
+import CustomAlert from "../../components/CustomAlert"
+import ConfirmModal from "../../components/ConfirmModal"
 import "./styles/EditExpense.css"
 
 function EditExpense() {
@@ -19,6 +21,9 @@ function EditExpense() {
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [errors, setErrors] = useState({});
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("info");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const months = [
     "Януари", "Февруари", "Март", "Април",
@@ -70,13 +75,12 @@ function EditExpense() {
     fetchExpense();
   }, [id]);
 
-  async function handleDelete() {
-    if (!window.confirm("Сигурни ли сте, че искате да изтриете този разход?")) {
-      return;
-    }
+  function handleDelete() {
+    setShowConfirm(true);
+  }
 
+  async function handleDeleteConfirmed() {
     setLoading(true);
-
     try {
       const { error } = await supabase
         .from("expenses")
@@ -85,14 +89,19 @@ function EditExpense() {
 
       if (error) throw error;
 
-      navigate("/admin/expenses");
+      setAlertType("success");
+      setAlertMessage("Разходът е изтрит успешно!");
+      setTimeout(() => navigate("/admin/expenses"), 1200);
     } catch (err) {
       console.error("Грешка при изтриване на разход:", err.message);
-      alert("Възникна грешка при изтриване: " + err.message);
+      setAlertType("error");
+      setAlertMessage("Възникна грешка при изтриване: " + err.message);
     } finally {
       setLoading(false);
+      setShowConfirm(false);
     }
   }
+
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -134,10 +143,13 @@ function EditExpense() {
 
       if (error) throw error;
 
-      navigate("/admin/expenses");
+      setAlertType("success");
+      setAlertMessage("Разходът е обновен успешно!");
+      setTimeout(() => navigate("/admin/expenses"), 2000);
     } catch (err) {
       console.error("Грешка при обновяване на разход:", err.message);
-      alert("Възникна грешка: " + err.message);
+      setAlertType("error");
+      setAlertMessage("Възникна грешка: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -275,6 +287,20 @@ function EditExpense() {
         </div>
 
       </form>
+      <CustomAlert
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertMessage("")}
+      />
+
+      {showConfirm && (
+        <ConfirmModal
+          title="Изтриване на разход"
+          message="Наистина ли искате да изтриете този разход?"
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
     </div>
   );
 }

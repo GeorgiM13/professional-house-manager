@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { supabase } from "../../supabaseClient"
+import CustomAlert from "../../components/CustomAlert"
+import ConfirmModal from "../../components/ConfirmModal"
 import "./styles/EditReport.css"
 
 function EditReport() {
@@ -15,6 +17,9 @@ function EditReport() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("info");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     async function fetchReport() {
@@ -54,27 +59,31 @@ function EditReport() {
       .eq("id", Number(id));
 
     if (error) {
-      alert("Грешка при запазване! " + error.message);
+      setAlertType("error");
+      setAlertMessage("Грешка при запазване! " + error.message);
     } else {
-      alert("Сигналът е обновен успешно!");
-      navigate(`/admin/reports`);
+      setAlertType("success");
+      setAlertMessage("Сигналът е обновен успешно!");
+      setTimeout(() => navigate(`/admin/reports`), 3000);
     }
   }
 
-  async function handleDelete() {
-    if (!window.confirm("Наистина ли искате да изтриете този сигнал?")) return;
-
+  async function handleDeleteConfirmed() {
     const { error } = await supabase
       .from("reports")
       .delete()
       .eq("id", id);
 
     if (error) {
-      alert("Грешка при изтриване! " + error.message);
+      setAlertType("error");
+      setAlertMessage("Грешка при изтриване! " + error.message);
     } else {
-      alert("Сигналът е изтрит успешно!");
-      navigate("/admin/adminreports");
+      setAlertType("success");
+      setAlertMessage("Сигналът е изтрит успешно!");
+      setTimeout(() => navigate(`/admin/reports`), 3000);
     }
+
+    setShowConfirm(false);
   }
 
   if (loading) return <p className="loading-text">Зареждане...</p>;
@@ -136,12 +145,25 @@ function EditReport() {
           <button
             type="button"
             className="btn danger"
-            onClick={handleDelete}
+            onClick={() => setShowConfirm(true)}
           >
             Изтрий
           </button>
         </div>
       </form>
+      <CustomAlert
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertMessage("")}
+      />
+      {showConfirm && (
+        <ConfirmModal
+          title="Изтриване на събитие"
+          message="Наистина ли искате да изтриете това събитие?"
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
     </div>
   );
 }

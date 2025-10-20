@@ -1,63 +1,39 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "../supabaseClient"
+import { useUserBuildings } from "./hooks/useUserBuildings"
 import "./styles/UserExpenses.css"
 
 function UserExpenses() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
     const [expenses, setExpenses] = useState([]);
-    const [buildings, setBuildings] = useState([]);
-    const [loadingBuildings, setLoadingBuildings] = useState(true);
+    const { buildings, loading } = useUserBuildings(user?.id);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
     const expensesCache = useRef({});
     const buildingCache = useRef({});
 
-    const monthOrder = {
-        "Януари": 1, "Февруари": 2, "Март": 3, "Април": 4,
-        "Май": 5, "Юни": 6, "Юли": 7, "Август": 8,
-        "Септември": 9, "Октомври": 10, "Ноември": 11, "Декември": 12
-    };
+    const monthNames = {
+    1: "Януари",
+    2: "Февруари",
+    3: "Март",
+    4: "Април",
+    5: "Май",
+    6: "Юни",
+    7: "Юли",
+    8: "Август",
+    9: "Септември",
+    10: "Октомври",
+    11: "Ноември",
+    12: "Декември"
+  };
 
     useEffect(() => {
-        async function fetchBuildings() {
-            if (!user) return;
-            if (buildingCache.current[user.id]) {
-                setBuildings(buildingCache.current[user.id]);
-                setLoadingBuildings(false);
-                return;
-            }
+        if (!user || loading) return;
+        if (buildings.length === 0) return; 
 
-            const { data: apartmentsData, error: apartmentsError } = await supabase
-                .from("apartments")
-                .select(`building:building_id (id,name,address)`)
-                .eq("user_id", user.id);
-
-
-            const { data: garagesData, error: garagesError } = await supabase
-                .from("garages")
-                .select(`building:building_id (id,name,address)`)
-                .eq("user_id", user.id);
-
-            if (!apartmentsError && !garagesError) {
-                const allBuildings = [
-                    ...(apartmentsData || []).map(a => a.building),
-                    ...(garagesData || []).map(g => g.building)
-                ]
-
-                const uniqueBuildings = Array.from(new Map(allBuildings.map(b => [b.id, b])).values());
-
-                setBuildings(uniqueBuildings);
-            }
-            setLoadingBuildings(false);
-        }
-
-        fetchBuildings();
-    }, [user]);
-
-    useEffect(() => {
         async function fetchExpenses() {
-            if (!user || loadingBuildings) return;
+            if (!user || loading) return;
 
             const cacheKey = selectedBuilding;
             if (expensesCache.current[cacheKey]) {
@@ -77,7 +53,8 @@ function UserExpenses() {
                     notes,
                     building:building_id(name,address)
                 `)
-                .order("year", { ascending: false });
+                .order("year", { ascending: false })
+                .order("month", { ascending: false });
 
             if (selectedBuilding !== "all") {
                 query = query.eq("building_id", selectedBuilding);
@@ -89,17 +66,13 @@ function UserExpenses() {
             if (error) {
                 console.error("Грешка при зареждане на разходи:", error);
             } else {
-                const sorted = [...(data || [])].sort((a, b) => {
-                    if (b.year !== a.year) return b.year - a.year;
-                    return monthOrder[b.month] - monthOrder[a.month];
-                });
-                setExpenses(sorted);
-                expensesCache.current[cacheKey] = sorted;
+                setExpenses(data || []);
+                expensesCache.current[cacheKey] = data || [];
             }
         }
 
         fetchExpenses();
-    }, [user, selectedBuilding, buildings, loadingBuildings]);
+    }, [selectedBuilding, loading]);
 
     useEffect(() => {
         if (buildings.length === 1) {
@@ -144,7 +117,7 @@ function UserExpenses() {
 
             </div>
 
-            {loadingBuildings ? (
+            {loading ? (
                 <p style={{ textAlign: "center", padding: "1rem" }}>Зареждане на разходи...</p>
             ) : (
                 <table className="expenses-table">
@@ -173,7 +146,7 @@ function UserExpenses() {
                                     <td data-label="№">{idx + 1}</td>
                                     <td data-label="Тип разход">{expenseTypes[exp.type] || exp.type}</td>
                                     <td data-label="Адрес">{exp.building?.name}, {exp.building?.address}</td>
-                                    <td data-label="Месец">{exp.month}</td>
+                                    <td data-label="Месец">{monthNames[exp.month]}</td>
                                     <td data-label="Година">{exp.year}</td>
                                     <td data-label="Платено">
                                         <span

@@ -1,58 +1,22 @@
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "../supabaseClient"
 import { useNavigate } from "react-router-dom"
+import { useUserBuildings } from "./hooks/useUserBuildings" 
 import "./styles/UserEvents.css"
 
 function UserEvents() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const [events, setEvents] = useState([]);
-  const [buildings, setBuildings] = useState([]);
-  const [loadingBuildings, setLoadingBuildings] = useState(true);
+  const { buildings, loading } = useUserBuildings(user?.id);
   const [selectedBuilding, setSelectedBuilding] = useState("all");
   const eventsCache = useRef({});
   const buildingCache = useRef({});
 
-  useEffect(() => {
-    async function fetchBuildings() {
-      if (!user) return;
-
-      if (buildingCache.current[user.id]) {
-        setBuildings(buildingCache.current[user.id]);
-        setLoadingBuildings(false);
-        return;
-      }
-
-      const { data: apartmentsData, error: apartmentsError } = await supabase
-        .from("apartments")
-        .select(`building:building_id (id,name,address)`)
-        .eq("user_id", user.id);
-
-
-      const { data: garagesData, error: garagesError } = await supabase
-        .from("garages")
-        .select(`building:building_id (id,name,address)`)
-        .eq("user_id", user.id);
-
-      if (!apartmentsError && !garagesError) {
-        const allBuildings = [
-          ...(apartmentsData || []).map(a => a.building),
-          ...(garagesData || []).map(g => g.building)
-        ]
-
-        const uniqueBuildings = Array.from(new Map(allBuildings.map(b => [b.id, b])).values());
-
-        setBuildings(uniqueBuildings);
-      }
-      setLoadingBuildings(false);
-    }
-
-    fetchBuildings();
-  }, [user]);
 
   useEffect(() => {
     async function fetchEvents() {
-      if (!user || loadingBuildings) return;
+      if (!user || loading) return;
 
       const cacheKey = selectedBuilding;
 
@@ -93,7 +57,7 @@ function UserEvents() {
     }
 
     fetchEvents();
-  }, [user, selectedBuilding, buildings, loadingBuildings]);
+  }, [selectedBuilding, loading]);
 
   function formatDateTime(dateString) {
     if (!dateString) return "";
@@ -147,7 +111,7 @@ function UserEvents() {
       </div>
 
 
-      {loadingBuildings ? (
+      {loading ? (
         <p style={{ textAlign: "center", padding: "1rem" }}>Зареждане на събития...</p>
       ) : (
         <table className="events-table">

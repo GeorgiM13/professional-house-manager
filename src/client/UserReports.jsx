@@ -1,59 +1,22 @@
 import { useState, useEffect, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { supabase } from "../supabaseClient"
+import { useUserBuildings } from "./hooks/useUserBuildings"
 import "./styles/UserReports.css"
 
 function UserReports() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
     const [reports, setReports] = useState([]);
-    const [buildings, setBuildings] = useState([]);
-    const [loadingBuildings, setLoadingBuildings] = useState(true);
+    const { buildings, loading } = useUserBuildings(user?.id);
     const [selectedBuilding, setSelectedBuilding] = useState("all");
 
     const reportsCache = useRef({});
     const buildingCache = useRef({});
 
     useEffect(() => {
-        async function fetchBuildings() {
-            if (!user) return;
-
-            if (buildingCache.current[user.id]) {
-                setBuildings(buildingCache.current[user.id]);
-                setLoadingBuildings(false);
-                return;
-            }
-
-            const { data: apartmentsData, error: apartmentsError } = await supabase
-                .from("apartments")
-                .select(`building:building_id (id,name,address)`)
-                .eq("user_id", user.id);
-
-
-            const { data: garagesData, error: garagesError } = await supabase
-                .from("garages")
-                .select(`building:building_id (id,name,address)`)
-                .eq("user_id", user.id);
-
-            if (!apartmentsError && !garagesError) {
-                const allBuildings = [
-                    ...(apartmentsData || []).map(a => a.building),
-                    ...(garagesData || []).map(g => g.building)
-                ]
-
-                const uniqueBuildings = Array.from(new Map(allBuildings.map(b => [b.id, b])).values());
-
-                setBuildings(uniqueBuildings);
-            }
-            setLoadingBuildings(false);
-        }
-
-        fetchBuildings();
-    }, [user]);
-
-    useEffect(() => {
         async function fetchReports() {
-            if (!user || loadingBuildings) return;
+            if (!user || loading) return;
 
             const cacheKey = selectedBuilding;
 
@@ -95,7 +58,7 @@ function UserReports() {
         }
 
         fetchReports();
-    }, [user, selectedBuilding, buildings, loadingBuildings]);
+    }, [user, selectedBuilding, buildings, loading]);
 
     function formatDateTime(dateString) {
         if (!dateString) return "";

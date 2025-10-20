@@ -23,7 +23,7 @@ export default function UserLayout() {
 
             <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <h2 className="sidebar-title">Админ панел</h2>
+                    <h2 className="sidebar-title">Клиент панел</h2>
                     <button
                         className="sidebar-close-button"
                         onClick={() => setSidebarOpen(false)}
@@ -31,7 +31,6 @@ export default function UserLayout() {
                         ✕
                     </button>
                 </div>
-                <h2 className="sidebar-title">Клиент панел</h2>
                 <nav className="sidebar-nav">
                     <Link to="/client/userevents" className="sidebar-link" onClick={() => setSidebarOpen(false)}>Събития</Link>
                     <Link to="/client/reports" className="sidebar-link" onClick={() => setSidebarOpen(false)}>Подаване на сигнал</Link>

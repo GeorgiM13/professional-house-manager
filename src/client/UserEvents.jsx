@@ -1,27 +1,32 @@
-import { useState, useEffect, useRef } from "react"
-import { supabase } from "../supabaseClient"
-import { useNavigate } from "react-router-dom"
-import { useUserBuildings } from "./hooks/useUserBuildings" 
-import "./styles/UserEvents.css"
+import { useState, useEffect, useRef, useMemo } from "react";
+import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
+import { useUserBuildings } from "./hooks/useUserBuildings";
+import { useLocalUser } from "./hooks/useLocalUser";
+import BuildingSelector from "./components/BuildingSelector";
+import "./styles/UserEvents.css";
 
 function UserEvents() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { userId } = useLocalUser();
   const [events, setEvents] = useState([]);
-  const { buildings, loading } = useUserBuildings(user?.id);
+  const { buildings, loading } = useUserBuildings(userId);
   const [selectedBuilding, setSelectedBuilding] = useState("all");
   const eventsCache = useRef({});
-  const buildingCache = useRef({});
 
+  const idsKey = useMemo(() => (
+    buildings.length ? buildings.map((b) => b.id).sort().join(",") : ""
+  ), [buildings]);
 
   useEffect(() => {
+    let cancelled = false;
     async function fetchEvents() {
-      if (!user || loading) return;
+      if (!userId || loading) return;
 
-      const cacheKey = selectedBuilding;
-
-      if (eventsCache.current[cacheKey]) {
-        setEvents(eventsCache.current[cacheKey]);
+      const cacheKey = `${selectedBuilding}|${idsKey}`;
+      const cached = eventsCache.current[cacheKey];
+      if (cached) {
+        setEvents(cached);
         return;
       }
 
@@ -41,23 +46,28 @@ function UserEvents() {
       if (selectedBuilding !== "all") {
         query = query.eq("building_id", selectedBuilding);
       } else if (buildings.length > 0) {
-        query = query.in(
-          "building_id",
-          buildings.map((b) => b.id)
-        );
+        query = query.in("building_id", buildings.map((b) => b.id));
       }
 
       const { data, error } = await query;
       if (error) {
-        console.error("Грешка при зареждане на събития:", error);
-      } else {
-        setEvents(data || []);
-        eventsCache.current[cacheKey] = data || [];
+        console.error("Supabase error (events):", error);
+      } else if (!cancelled) {
+        const next = data || [];
+        setEvents(next);
+        eventsCache.current[cacheKey] = next;
       }
     }
 
     fetchEvents();
-  }, [selectedBuilding, loading]);
+    return () => { cancelled = true; };
+  }, [selectedBuilding, idsKey, loading, userId, buildings]);
+
+  useEffect(() => {
+    if (buildings.length === 1) {
+      setSelectedBuilding(buildings[0].id);
+    }
+  }, [buildings]);
 
   function formatDateTime(dateString) {
     if (!dateString) return "";
@@ -70,46 +80,17 @@ function UserEvents() {
     return `${day}.${month}.${year} ${hours}:${minutes}`;
   }
 
-  useEffect(() => {
-    if (buildings.length === 1) {
-      setSelectedBuilding(buildings[0].id)
-    }
-  }, [buildings]);
-
-
   return (
     <div className="events-page">
       <div className="events-header">
-        <h1>Моите събития</h1>
-
-        {buildings.length === 1 && buildings[0] ? (
-
-          <>
-            <div className="building-badge">
-              <p className="building-label">Вашата сграда: </p>
-              <p className="building-info">
-                {buildings[0].name} - {buildings[0].address}
-              </p>
-            </div>
-          </>
-        ) : (
-
-          <select
-            value={selectedBuilding}
-            onChange={(e) => setSelectedBuilding(e.target.value)}
-          >
-            <option value="all">Всички сгради</option>
-            {buildings.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name} – {b.address}
-              </option>
-            ))}
-          </select>
-        )}
-
-
+        <h1>Събития</h1>
+        <BuildingSelector
+          buildings={buildings}
+          value={selectedBuilding}
+          onChange={setSelectedBuilding}
+          singleLabel="Избрана сграда"
+        />
       </div>
-
 
       {loading ? (
         <p style={{ textAlign: "center", padding: "1rem" }}>Зареждане на събития...</p>
@@ -118,11 +99,11 @@ function UserEvents() {
           <thead>
             <tr>
               <th>№</th>
-              <th>Адрес</th>
-              <th>Състояние</th>
-              <th>Относно</th>
+              <th>Сграда</th>
+              <th>Статус</th>
+              <th>Тема</th>
               <th>Дата на изпълнение</th>
-              <th>Дата на добавяне</th>
+              <th>Дата на създаване</th>
             </tr>
           </thead>
           <tbody>
@@ -133,29 +114,27 @@ function UserEvents() {
                 </td>
               </tr>
             ) : (
-
               events.map((event, idx) => (
                 <tr key={event.id} onClick={() => navigate(`/client/event/${event.id}`)} style={{ cursor: "pointer" }}>
                   <td data-label="№">{idx + 1}</td>
-                  <td data-label="Адрес">
+                  <td data-label="Сграда">
                     {event.building?.name}, {event.building?.address}
                   </td>
-                  <td data-label="Състояние">
+                  <td data-label="Статус">
                     <span
-                      className={
-                        event.status === "ново"
-                          ? "status-badge status-new"
-                          : event.status === "изпълнено"
-                            ? "status-badge status-done"
-                            : "status-badge"
-                      }
+                      className={(() => {
+                        const s = (event.status || "").toString().trim().toLowerCase();
+                        if (s === "ново") return "status-badge status-new";
+                        if (s === "изпълнено") return "status-badge status-done";
+                        return "status-badge";
+                      })()}
                     >
                       {event.status}
                     </span>
                   </td>
-                  <td data-label="Относно">{event.subject}</td>
+                  <td data-label="Тема">{event.subject}</td>
                   <td data-label="Дата на изпълнение">{formatDateTime(event.completion_date)}</td>
-                  <td data-label="Дата на добавяне">{formatDateTime(event.created_at)}</td>
+                  <td data-label="Дата на създаване">{formatDateTime(event.created_at)}</td>
                 </tr>
               ))
             )}
@@ -167,3 +146,4 @@ function UserEvents() {
 }
 
 export default UserEvents;
+

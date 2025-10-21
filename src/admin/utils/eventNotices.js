@@ -332,7 +332,15 @@ export async function generateDOCX(event) {
   });
 
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `Съобщение_${event.subject}_${event.building.name}.docx`);
+const file = new File([blob], "document.docx", {
+  type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+});
+
+// ⚠️ това трябва да е достъпен HTTP/HTTPS линк
+const blobUrl = URL.createObjectURL(file);
+const viewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(blobUrl)}`;
+window.open(viewerUrl, "_blank");
+
 }
 
 export async function generatePDF(event) {
@@ -550,6 +558,73 @@ export async function generatePDF(event) {
     );
   }
 
-  // 📄 Записваме PDF файла
-  doc.save(`Съобщение_${event.subject}_${event.building.name}.pdf`);
+const pdfBlob = doc.output("blob");
+const pdfUrl = URL.createObjectURL(pdfBlob);
+
+// 🧹 Премахни стария контейнер, ако има
+const oldPreview = document.getElementById("pdfPreviewContainer");
+if (oldPreview) oldPreview.remove();
+
+// 📄 Създаваме контейнер
+const container = document.createElement("div");
+container.id = "pdfPreviewContainer";
+container.style.position = "fixed";
+container.style.top = "0";
+container.style.left = "0";
+container.style.width = "100%";
+container.style.height = "100%";
+container.style.backgroundColor = "rgba(0,0,0,0.7)";
+container.style.zIndex = "9999";
+container.style.display = "flex";
+container.style.flexDirection = "column";
+container.style.alignItems = "center";
+container.style.justifyContent = "center";
+
+// 🖼️ Вграждане чрез <embed>
+const embed = document.createElement("embed");
+embed.src = pdfUrl;
+embed.type = "application/pdf";
+embed.style.width = "80%";
+embed.style.height = "90%";
+embed.style.border = "2px solid #ccc";
+embed.style.borderRadius = "10px";
+embed.style.backgroundColor = "#fff";
+container.appendChild(embed);
+
+// 🖨️ Бутон "Принтирай"
+const printButton = document.createElement("button");
+printButton.textContent = "🖨️ Принтирай";
+printButton.style.marginTop = "15px";
+printButton.style.padding = "10px 20px";
+printButton.style.fontSize = "16px";
+printButton.style.backgroundColor = "#0078D4";
+printButton.style.color = "#fff";
+printButton.style.border = "none";
+printButton.style.borderRadius = "6px";
+printButton.style.cursor = "pointer";
+printButton.onclick = () => {
+  // ✅ използваме текущия doc за директен печат
+  doc.autoPrint();
+  doc.output("dataurlnewwindow");
+};
+
+// ❌ Бутон "Затвори"
+const closeButton = document.createElement("button");
+closeButton.textContent = "✖";
+closeButton.style.position = "absolute";
+closeButton.style.top = "20px";
+closeButton.style.right = "40px";
+closeButton.style.padding = "10px 15px";
+closeButton.style.fontSize = "18px";
+closeButton.style.backgroundColor = "#d9534f";
+closeButton.style.color = "#fff";
+closeButton.style.border = "none";
+closeButton.style.borderRadius = "50%";
+closeButton.style.cursor = "pointer";
+closeButton.onclick = () => container.remove();
+
+container.appendChild(printButton);
+container.appendChild(closeButton);
+document.body.appendChild(container);
+
 }

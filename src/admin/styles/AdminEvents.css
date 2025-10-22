@@ -45,7 +45,7 @@
   font-weight: 500;
   font-size: 0.95rem;
   transition: all 0.2s ease;
-  background-color: #2563eb;
+  background: linear-gradient(135deg, #1b6db1 0%, #00aeff 100%);
   color: white;
   box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
   display: flex;
@@ -120,6 +120,28 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
+.docx-btn {
+  padding: 6px 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #1b6db1 0%, #00aeff 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.docx-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+}
+
+.docx-btn:active {
+  transform: translateY(0);
+}
+
 .events-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -135,12 +157,12 @@
 }
 
 .status-new {
-  background-color: #dc2626d5;
+  background: linear-gradient(135deg, #a10000 0%, #ff0000 100%);
   color: white;
 }
 
 .status-done {
-  background-color: #16a34acc;
+  background: linear-gradient(135deg, #1bb14d 0%, #00832c 100%);
   color: white;
 }
 

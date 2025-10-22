@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import AsyncSelect from "react-select/async"
 import { supabase } from "../supabaseClient"
 import "./styles/AdminEvents.css"
+import { generateDOCX } from "./utils/eventNotices"
 
 function AdminEvents() {
     const navigate = useNavigate();
@@ -139,6 +140,7 @@ function AdminEvents() {
                             <th>Дата на изпълнение</th>
                             <th>Дата на добавяне</th>
                             <th>Възложено на</th>
+                            <th>Печат</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,6 +165,9 @@ function AdminEvents() {
                                     <td data-label="Дата на изпълнение">{formatDateTime(event.completion_date)}</td>
                                     <td data-label="Дата на добавяне">{formatDateTime(event.created_at)}</td>
                                     <td data-label="Възложено на">{event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</td>
+                                    <td data-label="Печат">
+                                            <button className="docx-btn" onClick={(e) => { e.stopPropagation(); generateDOCX(event); }}>Генерирай DOCX</button>
+                                          </td>
                                 </tr>
                             ))}
                     </tbody>
@@ -190,3 +195,4 @@ function AdminEvents() {
 }
 
 export default AdminEvents;
+

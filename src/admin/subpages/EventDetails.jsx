@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import { generatePDF, generateDOCX } from "../utils/eventNotices";
 import "./styles/EventDetails.css";
 
 function EventDetails() {
@@ -92,10 +91,6 @@ function EventDetails() {
         <button onClick={() => navigate("/admin/adminevents")}>
           Назад към списъка
         </button>
-      </div>
-      <div className="event-actions">
-        <button onClick={() => generatePDF(event)}>📄 Генерирай PDF</button>
-        <button onClick={() => generateDOCX(event)}>📝 Генерирай DOCX</button>
       </div>
     </div>
   );

@@ -53,7 +53,7 @@
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.2s ease;
-    background-color: #2563eb;
+    background: linear-gradient(135deg, #1b6db1 0%, #00aeff 100%);
     color: white;
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     display: flex;
@@ -155,12 +155,12 @@
 }
 
 .status-paid {
-    background-color: #16a34a;
+    background: linear-gradient(135deg, #1bb14d 0%, #00832c 100%);
     color: white;
 }
 
 .status-unpaid {
-    background-color: #dc2626;
+    background: linear-gradient(135deg, #a10000 0%, #ff0000 100%);
     color: white;
 }
 

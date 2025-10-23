@@ -87,7 +87,20 @@ function AdminEvents() {
     }
 
 
-    return (
+      const DONE = "изпълнено";
+  const NEW = "ново";
+  const markEventStatus = async (e, id, targetStatus) => {
+    e.stopPropagation();
+    const { error } = await supabase
+      .from('events')
+      .update({ status: targetStatus })
+      .eq('id', id);
+    if (error) {
+      console.error('Supabase update error:', error);
+      return;
+    }
+    setEvents(prev => prev.map(ev => ev.id === id ? { ...ev, status: targetStatus } : ev));
+  };return (
         <div className="events-page">
             <div className="events-header">
                 <h1>Събития</h1>
@@ -141,6 +154,7 @@ function AdminEvents() {
                             <th>Дата на добавяне</th>
                             <th>Възложено на</th>
                             <th>Печат</th>
+                            <th>Смяна състояние</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -166,8 +180,15 @@ function AdminEvents() {
                                     <td data-label="Дата на добавяне">{formatDateTime(event.created_at)}</td>
                                     <td data-label="Възложено на">{event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</td>
                                     <td data-label="Печат">
-                                            <button className="docx-btn" onClick={(e) => { e.stopPropagation(); generateDOCX(event); }}>Генерирай DOCX</button>
+                                            <div className="action-buttons">
+                                                <button className="docx-btn" onClick={(e) => { e.stopPropagation(); generateDOCX(event); }}>Генерирай DOCX</button>
+                                            </div>
                                           </td>
+                                    <td data-label="Смяна състояние">
+                                        <div className="action-buttons">
+                                            <button className="done-btn" onClick={(e) => markEventStatus(e, event.id, event.status === "изпълнено" ? "ново" : "изпълнено") }><svg className="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 20.3 7.7l-1.4-1.4z"/></svg></button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                     </tbody>
@@ -195,4 +216,7 @@ function AdminEvents() {
 }
 
 export default AdminEvents;
+
+
+
 

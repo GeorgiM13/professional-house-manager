@@ -8,6 +8,8 @@ export function useUserBuildings(userId) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchBuildings() {
       if (!userId) return;
 
@@ -17,36 +19,64 @@ export function useUserBuildings(userId) {
         return;
       }
 
-      const [{ data: apartmentsData, error: apartmentsError }, { data: garagesData, error: garagesError }] =
-        await Promise.all([
-          supabase
-            .from("apartments")
-            .select(`building:building_id (id, name, address)`)
-            .eq("user_id", userId),
-          supabase
-            .from("garages")
-            .select(`building:building_id (id, name, address)`)
-            .eq("user_id", userId),
-        ]);
+      setLoading(true);
 
-      if (!apartmentsError && !garagesError) {
-        const allBuildings = [
-          ...(apartmentsData || []).map((a) => a.building),
-          ...(garagesData || []).map((g) => g.building),
-        ];
+      const [
+        { data: apartmentsData, error: apartmentsError },
+        { data: garagesData, error: garagesError },
+        { data: officesData, error: officesError },
+      ] = await Promise.all([
+        supabase
+          .from("apartments")
+          .select(`building:building_id (id, name, address)`)
+          .eq("user_id", userId),
+        supabase
+          .from("garages")
+          .select(`building:building_id (id, name, address)`)
+          .eq("user_id", userId),
+        supabase
+          .from("offices")
+          .select(`building:building_id (id, name, address)`)
+          .eq("user_id", userId),
+      ]);
 
-        const uniqueBuildings = Array.from(
-          new Map(allBuildings.map((b) => [b.id, b])).values()
-        );
-
-        setBuildings(uniqueBuildings);
-        globalBuildingCache[userId] = uniqueBuildings;
+      if (apartmentsError || garagesError || officesError) {
+        console.error("useUserBuildings errors:", {
+          apartmentsError,
+          garagesError,
+          officesError,
+        });
+        if (!cancelled) setLoading(false);
+        return;
       }
 
-      setLoading(false);
+      const allBuildings = [
+        ...(apartmentsData || []).map((x) => x.building).filter(Boolean),
+        ...(garagesData || []).map((x) => x.building).filter(Boolean),
+        ...(officesData || []).map((x) => x.building).filter(Boolean),
+      ];
+
+      const uniqueById = new Map();
+      for (const b of allBuildings) {
+        if (!b || b.id == null) continue;
+        uniqueById.set(b.id, b);
+      }
+
+      const uniqueBuildings = Array.from(uniqueById.values())
+        .map((b) => ({ id: b.id, name: b.name, address: b.address }))
+        .sort((a, z) => (a.name || "").localeCompare(z.name || ""));
+
+      if (!cancelled) {
+        setBuildings(uniqueBuildings);
+        globalBuildingCache[userId] = uniqueBuildings;
+        setLoading(false);
+      }
     }
 
     fetchBuildings();
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   return { buildings, loading };

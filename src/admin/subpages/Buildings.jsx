@@ -62,6 +62,7 @@ function Buildings() {
                             <th>Етажи</th>
                             <th>Апартаменти</th>
                             <th>Гаражи</th>
+                            <th>Офиси</th>
                             <th>Дата на добавяне</th>
                         </tr>
                     </thead>
@@ -74,6 +75,7 @@ function Buildings() {
                                 <td data-label="Етажи">{b.floors}</td>
                                 <td data-label="Апартаменти">{b.apartments}</td>
                                 <td data-label="Гаражи">{b.garages}</td>
+                                <td data-label="Офиси">{b.offices}</td>
                                 <td data-label="Дата на добавяне">{formatDateTime(b.created_at)}</td>
                             </tr>
                         ))}

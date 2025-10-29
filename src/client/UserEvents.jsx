@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+﻿import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { useUserBuildings } from "./hooks/useUserBuildings";
@@ -38,6 +38,7 @@ function UserEvents() {
           subject,
           completion_date,
           created_at,
+          assigned_user:assigned_to(first_name,last_name),
           building_id,
           building:building_id(name,address)
         `)
@@ -104,6 +105,7 @@ function UserEvents() {
               <th>Тема</th>
               <th>Дата на изпълнение</th>
               <th>Дата на създаване</th>
+              <th>Възложено на</th>
             </tr>
           </thead>
           <tbody>
@@ -135,6 +137,7 @@ function UserEvents() {
                   <td data-label="Тема">{event.subject}</td>
                   <td data-label="Дата на изпълнение">{formatDateTime(event.completion_date)}</td>
                   <td data-label="Дата на създаване">{formatDateTime(event.created_at)}</td>
+                  <td data-label="Възложено на">{event.assigned_user ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}` : "-"}</td>
                 </tr>
               ))
             )}

@@ -16,6 +16,7 @@ function AddUserToBuilding() {
   const [area, setArea] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [selectedType, setSelectedType] = useState("apartment");
 
   const loadBuildings = async (inputValue) => {
     const { data } = await supabase
@@ -43,21 +44,15 @@ function AddUserToBuilding() {
 
   const handleSave = async () => {
     const newErrors = {};
-
     if (!selectedUser) newErrors.selectedUser = "Изберете потребител";
     if (!selectedBuilding) newErrors.selectedBuilding = "Изберете сграда";
 
-    // ✅ Валидираме, че има или апартамент, или офис
-    if (!apartmentNumber && !officeNumber) {
-      newErrors.apartmentNumber = "Въведете апартамент или офис";
-      newErrors.officeNumber = "Въведете апартамент или офис";
-    }
+    const areaNum = area !== "" ? Number(area) : null;
+    const floorNum = floor !== "" ? Number(floor) : null;
+    const residentsNum = residents !== "" ? Number(residents) : 0;
 
-    if (area !== "") {
-      const areaNum = Number(area);
-      if (!Number.isFinite(areaNum) || areaNum <= 0) {
-        newErrors.area = "Площта трябва да е положително число (m²).";
-      }
+    if (area && (!Number.isFinite(areaNum) || areaNum <= 0)) {
+      newErrors.area = "Площта трябва да е положително число (m²).";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -69,13 +64,8 @@ function AddUserToBuilding() {
     try {
       const userId = selectedUser.value;
       const buildingId = selectedBuilding.value;
-      const areaNum = area ? Number(area) : null;
 
-      if (apartmentNumber) {
-        const floorNum = floor !== "" ? Number(floor) : null;
-        const residentsNum = residents !== "" ? Number(residents) : 0;
-        const areaNum = area !== "" ? Number(area) : null;
-
+      if (selectedType === "apartment") {
         const { error } = await supabase.from("apartments").insert([
           {
             user_id: userId,
@@ -86,34 +76,33 @@ function AddUserToBuilding() {
             area: areaNum,
           },
         ]);
-
-        if (error) {
-          console.error("Грешка при добавяне на апартамент:", error.message);
-          alert("Грешка при добавяне на апартамент: " + error.message);
-          return;
-        }
+        if (error) throw error;
       }
 
-      if (officeNumber) {
-        await supabase.from("offices").insert([
-          {
-            user_id: userId,
-            building_id: buildingId,
-            floor: floor || null,
-            number: Number(officeNumber),
-            area: areaNum,
-          },
-        ]);
-      }
-
-      if (garageNumber) {
-        await supabase.from("garages").insert([
+      if (selectedType === "garage") {
+        const { error } = await supabase.from("garages").insert([
           {
             user_id: userId,
             building_id: buildingId,
             number: Number(garageNumber),
+            floor: floorNum,
+            area: areaNum,
           },
         ]);
+        if (error) throw error;
+      }
+
+      if (selectedType === "office") {
+        const { error } = await supabase.from("offices").insert([
+          {
+            user_id: userId,
+            building_id: buildingId,
+            floor: floorNum,
+            number: Number(officeNumber),
+            area: areaNum,
+          },
+        ]);
+        if (error) throw error;
       }
 
       navigate("/admin/users");
@@ -128,7 +117,32 @@ function AddUserToBuilding() {
   return (
     <div className="add-user-building-container">
       <h1>Добави потребител към сграда</h1>
+
       <div className="add-user-building-form">
+        <div className="property-type-toggle">
+          <button
+            type="button"
+            className={selectedType === "apartment" ? "active" : ""}
+            onClick={() => setSelectedType("apartment")}
+          >
+            Апартамент
+          </button>
+          <button
+            type="button"
+            className={selectedType === "garage" ? "active" : ""}
+            onClick={() => setSelectedType("garage")}
+          >
+            Гараж
+          </button>
+          <button
+            type="button"
+            className={selectedType === "office" ? "active" : ""}
+            onClick={() => setSelectedType("office")}
+          >
+            Офис
+          </button>
+        </div>
+
         <div className="add-user-building-grid">
           <div className="add-user-building-form-group">
             <label>Потребител *</label>
@@ -164,60 +178,82 @@ function AddUserToBuilding() {
             )}
           </div>
 
-          <div className="add-user-building-form-group">
-            <label>Етаж</label>
-            <input value={floor} onChange={(e) => setFloor(e.target.value)} />
-          </div>
+          {selectedType === "apartment" && (
+            <>
+              <div className="add-user-building-form-group">
+                <label>Етаж</label>
+                <input
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+              <div className="add-user-building-form-group">
+                <label>Апартамент №</label>
+                <input
+                  value={apartmentNumber}
+                  onChange={(e) => setApartmentNumber(e.target.value)}
+                />
+              </div>
+              <div className="add-user-building-form-group">
+                <label>Живущи</label>
+                <input
+                  value={residents}
+                  onChange={(e) => setResidents(e.target.value)}
+                />
+              </div>
+              <div className="add-user-building-form-group">
+                <label>Площ (m²)</label>
+                <input value={area} onChange={(e) => setArea(e.target.value)} />
+              </div>
+            </>
+          )}
 
-          <div className="add-user-building-form-group">
-            <label>Апартамент</label>
-            <input
-              value={apartmentNumber}
-              onChange={(e) => setApartmentNumber(e.target.value)}
-            />
-            {errors.apartmentNumber && (
-              <span className="error-message">{errors.apartmentNumber}</span>
-            )}
-          </div>
+          {selectedType === "garage" && (
+            <>
+              <div className="add-user-building-form-group">
+                <label>Етаж</label>
+                <input
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+              <div className="add-user-building-form-group">
+                <label>Номер на гараж</label>
+                <input
+                  value={garageNumber}
+                  onChange={(e) => setGarageNumber(e.target.value)}
+                />
+              </div>
 
-          <div className="add-user-building-form-group">
-            <label>Живущи</label>
-            <input
-              value={residents}
-              onChange={(e) => setResidents(e.target.value)}
-            />
-          </div>
+              <div className="add-user-building-form-group">
+                <label>Площ (m²)</label>
+                <input value={area} onChange={(e) => setArea(e.target.value)} />
+              </div>
+            </>
+          )}
 
-          <div className="add-user-building-form-group">
-            <label>Гараж</label>
-            <input
-              value={garageNumber}
-              onChange={(e) => setGarageNumber(e.target.value)}
-            />
-          </div>
-
-          <div className="add-user-building-form-group">
-            <label>Офис</label>
-            <input
-              value={officeNumber}
-              onChange={(e) => setOfficeNumber(e.target.value)}
-            />
-            {errors.officeNumber && (
-              <span className="error-message">{errors.officeNumber}</span>
-            )}
-          </div>
-
-          <div className="add-user-building-form-group">
-            <label>Площ (m²)</label>
-            <input
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-            />
-            {errors.area && (
-              <span className="error-message">{errors.area}</span>
-            )}
-          </div>
-
+          {selectedType === "office" && (
+            <>
+              <div className="add-user-building-form-group">
+                <label>Етаж</label>
+                <input
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+              <div className="add-user-building-form-group">
+                <label>Офис №</label>
+                <input
+                  value={officeNumber}
+                  onChange={(e) => setOfficeNumber(e.target.value)}
+                />
+              </div>
+              <div className="add-user-building-form-group">
+                <label>Площ (m²)</label>
+                <input value={area} onChange={(e) => setArea(e.target.value)} />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="add-user-building-form-buttons">

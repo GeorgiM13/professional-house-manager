@@ -31,7 +31,7 @@ export async function byExpensesPlusFee(buildingId, month, year) {
         .eq("building_id", buildingId),
       supabase
         .from("garages")
-        .select("number, user_id")
+        .select("number, floor, user_id, area")
         .eq("building_id", buildingId),
     ]);
 

@@ -19,6 +19,7 @@ function AddUser() {
   const [officeNumber, setOfficeNumber] = useState("");
   const [area, setArea] = useState("");
   const [errors, setErrors] = useState({});
+  const [selectedType, setSelectedType] = useState("apartment");
 
   const navigate = useNavigate();
 
@@ -44,6 +45,15 @@ function AddUser() {
     }));
   };
 
+  function generateSecurePassword(length = 10) {
+    const chars =
+      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
+    return Array.from(
+      { length },
+      () => chars[Math.floor(Math.random() * chars.length)]
+    ).join("");
+  }
+
   const handleSave = async () => {
     const newErrors = {};
 
@@ -58,11 +68,15 @@ function AddUser() {
     const residentsNum = residents !== "" ? Number(residents) : 0;
     const buildingId = selectedBuilding ? Number(selectedBuilding.value) : null;
 
-    if (
-      floor &&
-      (parseInt(floor) < 1 || parseInt(floor) > selectedBuilding.floors)
-    ) {
-      newErrors.floor = `Етажът трябва да е между 1 и ${selectedBuilding.floors}`;
+    if (floor && !garageNumber) {
+      const floorValue = parseInt(floor);
+      if (
+        isNaN(floorValue) ||
+        floorValue < 1 ||
+        floorValue > selectedBuilding.floors
+      ) {
+        newErrors.floor = `Етажът трябва да е между 1 и ${selectedBuilding.floors}`;
+      }
     }
 
     if (
@@ -141,11 +155,11 @@ function AddUser() {
       transliterate(str).replace(/[.,]/g, "").replace(/\s+/g, "_");
 
     const username = `${clean(firstName)}_${clean(
-      buildingName
-    )}_${floor}_${apartmentNumber}`;
+      selectedBuilding?.label || "building"
+    )}_${apartmentNumber || garageNumber || officeNumber || "user"}`;
     const generatedEmail = `${username}@example.com`;
     const finalEmail = email || generatedEmail;
-    const password = clean(`${firstName}_${secondName}_${lastName}`);
+    const password = generateSecurePassword(10);
     const displayName = `${firstName} ${secondName} ${lastName}`.trim();
 
     const { data: authUser, error: authError } = await supabase.auth.signUp(
@@ -201,13 +215,19 @@ function AddUser() {
     }
 
     if (garageNum) {
+      const floorNum = floor !== "" ? Number(floor) : null;
+      const areaNum = area !== "" ? Number(area) : null;
+
       const { error } = await supabase.from("garages").insert([
         {
           user_id: newUser.id,
           number: garageNum,
+          floor: floorNum,
+          area: areaNum,
           building_id: buildingId,
         },
       ]);
+
       if (error) {
         alert("Грешка при добавяне на гараж: " + error.message);
         return;
@@ -242,6 +262,29 @@ function AddUser() {
       </div>
 
       <div className="user-form">
+        <div className="property-type-toggle">
+          <button
+            type="button"
+            className={selectedType === "apartment" ? "active" : ""}
+            onClick={() => setSelectedType("apartment")}
+          >
+            Апартамент
+          </button>
+          <button
+            type="button"
+            className={selectedType === "garage" ? "active" : ""}
+            onClick={() => setSelectedType("garage")}
+          >
+            Гараж
+          </button>
+          <button
+            type="button"
+            className={selectedType === "office" ? "active" : ""}
+            onClick={() => setSelectedType("office")}
+          >
+            Офис
+          </button>
+        </div>
         <div className="form-grid">
           <div className={`form-group ${errors.firstName ? "has-error" : ""}`}>
             <label>Първо име *</label>
@@ -317,63 +360,85 @@ function AddUser() {
             )}
           </div>
 
-          <div className="form-group">
-            <label>Етаж</label>
-            <input value={floor} onChange={(e) => setFloor(e.target.value)} />
-            {errors.floor && (
-              <span className="error-message">{errors.floor}</span>
-            )}
-          </div>
+          {selectedType === "apartment" && (
+            <>
+              <div className="form-group">
+                <label>Етаж</label>
+                <input
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
 
-          <div className="form-group">
-            <label>Апартамент</label>
-            <input
-              value={apartmentNumber}
-              onChange={(e) => setApartmentNumber(e.target.value)}
-            />
-            {errors.apartmentNumber && (
-              <span className="error-message">{errors.apartmentNumber}</span>
-            )}
-          </div>
+              <div className="form-group">
+                <label>Апартамент №</label>
+                <input
+                  value={apartmentNumber}
+                  onChange={(e) => setApartmentNumber(e.target.value)}
+                />
+              </div>
 
-          <div className="form-group">
-            <label>Живущи</label>
-            <input
-              value={residents}
-              onChange={(e) => setResidents(e.target.value)}
-            />
-          </div>
+              <div className="form-group">
+                <label>Живущи</label>
+                <input
+                  value={residents}
+                  onChange={(e) => setResidents(e.target.value)}
+                />
+              </div>
 
-          <div className="form-group">
-            <label>Гараж</label>
-            <input
-              value={garageNumber}
-              onChange={(e) => setGarageNumber(e.target.value)}
-            />
-            {errors.garageNumber && (
-              <span className="error-message">{errors.garageNumber}</span>
-            )}
-          </div>
-          <div className="form-group">
-            <label>Офис</label>
-            <input
-              value={officeNumber}
-              onChange={(e) => setOfficeNumber(e.target.value)}
-            />
-            {errors.officeNumber && (
-              <span className="error-message">{errors.officeNumber}</span>
-            )}
-          </div>
-          <div className="form-group">
-            <label>Площ (m²)</label>
-            <input
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-            />
-            {errors.area && (
-              <span className="error-message">{errors.area}</span>
-            )}
-          </div>
+              <div className="form-group">
+                <label>Площ (m²)</label>
+                <input value={area} onChange={(e) => setArea(e.target.value)} />
+              </div>
+            </>
+          )}
+          {selectedType === "garage" && (
+            <>
+              <div className="form-group">
+                <label>Етаж</label>
+                <input
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label>Номер на гараж</label>
+                <input
+                  value={garageNumber}
+                  onChange={(e) => setGarageNumber(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Площ (m²)</label>
+                <input value={area} onChange={(e) => setArea(e.target.value)} />
+              </div>
+            </>
+          )}
+          {selectedType === "office" && (
+            <>
+              <div className="form-group">
+                <label>Етаж</label>
+                <input
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Офис №</label>
+                <input
+                  value={officeNumber}
+                  onChange={(e) => setOfficeNumber(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Площ (m²)</label>
+                <input value={area} onChange={(e) => setArea(e.target.value)} />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="form-actions">

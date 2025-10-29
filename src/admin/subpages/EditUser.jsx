@@ -28,10 +28,15 @@ function EditUser() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("info");
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const isGarage = propertyType === "garage";
+  const isOffice = propertyType === "office";
+  const isApartment = propertyType === "apartment";
 
   const loadBuildings = async (inputValue) => {
     const { data } = await supabase
@@ -42,6 +47,26 @@ function EditUser() {
     return data.map((b) => ({
       value: b.id,
       label: `${b.name}, ${b.address}`,
+    }));
+  };
+
+  const loadUsers = async (inputValue) => {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, first_name, second_name, last_name, email")
+      .or(`first_name.ilike.%${inputValue}%,last_name.ilike.%${inputValue}%`)
+      .limit(20);
+
+    if (error) {
+      console.error("Грешка при зареждане на потребители:", error);
+      return [];
+    }
+
+    return data.map((u) => ({
+      value: u.id,
+      label: `${u.first_name} ${u.second_name ?? ""} ${u.last_name} (${
+        u.email
+      })`,
     }));
   };
 
@@ -64,6 +89,13 @@ function EditUser() {
         setFirstName(userData.first_name);
         setSecondName(userData.second_name || "");
         setLastName(userData.last_name);
+        setSelectedUser({
+          value: userData.id,
+          label: `${userData.first_name} ${userData.second_name ?? ""} ${
+            userData.last_name
+          } (${userData.email})`,
+        });
+
         setPhone(userData.phone || "");
         setRole(userData.role);
 
@@ -92,10 +124,16 @@ function EditUser() {
         }
 
         const garage = (userData.garages || []).find(
-          (g) => g.building_id === buildingId
+          (g) =>
+            g.building_id === buildingId &&
+            (!propertyType || propertyType === "garage") &&
+            (!propertyNumber || g.number?.toString().trim() === propertyNumber)
         );
+
         if (garage) {
           setGarageNumber(garage.number || "");
+          setFloor(garage.floor || "");
+          setOfficeArea(garage.area ?? "");
           if (!apt) resolveBuildingSelect(garage.building_id);
         }
 
@@ -189,7 +227,7 @@ function EditUser() {
               .select("id, user_id")
               .eq("building_id", selectedBuilding.value)
               .eq("number", numberValue)
-              .neq("user_id", id)
+              .neq("user_id", selectedUser?.value || id)
               .maybeSingle();
 
             if (takenGarage) {
@@ -241,7 +279,7 @@ function EditUser() {
       const { data: apartment } = await supabase
         .from("apartments")
         .select("*")
-        .eq("user_id", id)
+        .eq("user_id", selectedUser?.value || id)
         .eq("building_id", bIdForQuery)
         .maybeSingle();
 
@@ -263,7 +301,7 @@ function EditUser() {
       } else {
         if (floor || apartmentNumber || residents) {
           await supabase.from("apartments").insert({
-            user_id: id,
+            user_id: selectedUser?.value || id,
             building_id: selB,
             floor,
             number: apartmentNumber,
@@ -276,9 +314,12 @@ function EditUser() {
       const { data: garage } = await supabase
         .from("garages")
         .select("*")
-        .eq("user_id", id)
+        .eq("user_id", selectedUser?.value || id)
         .eq("building_id", bIdForQuery)
         .maybeSingle();
+
+      const floorNum = floor === "" ? null : Number(floor);
+      const garageAreaNum = officeArea === "" ? null : Number(officeArea);
 
       if (garage) {
         if (garageNumber) {
@@ -287,6 +328,8 @@ function EditUser() {
             .update({
               building_id: selB,
               number: garageNumber,
+              floor: floorNum,
+              area: garageAreaNum,
             })
             .eq("id", garage.id);
         } else {
@@ -295,9 +338,11 @@ function EditUser() {
       } else {
         if (garageNumber) {
           await supabase.from("garages").insert({
-            user_id: id,
+            user_id: selectedUser?.value || id,
             building_id: selB,
             number: garageNumber,
+            floor: floorNum,
+            area: garageAreaNum,
           });
         }
       }
@@ -305,7 +350,7 @@ function EditUser() {
       const { data: office } = await supabase
         .from("offices")
         .select("*")
-        .eq("user_id", id)
+        .eq("user_id", selectedUser?.value || id)
         .eq("building_id", bIdForQuery)
         .eq("number", propertyNumber || officeNumber)
         .maybeSingle();
@@ -326,7 +371,7 @@ function EditUser() {
       } else {
         if (officeNumber) {
           await supabase.from("offices").insert({
-            user_id: id,
+            user_id: selectedUser?.value || id,
             building_id: selB,
             number: officeNumber,
             area: areaNum,
@@ -355,21 +400,21 @@ function EditUser() {
         await supabase
           .from("apartments")
           .delete()
-          .eq("user_id", id)
+          .eq("user_id", selectedUser?.value || id)
           .eq("building_id", selB)
           .eq("number", propertyNumber);
       } else if (propertyType === "office") {
         await supabase
           .from("offices")
           .delete()
-          .eq("user_id", id)
+          .eq("user_id", selectedUser?.value || id)
           .eq("building_id", selB)
           .eq("number", propertyNumber);
       } else if (propertyType === "garage") {
         await supabase
           .from("garages")
           .delete()
-          .eq("user_id", id)
+          .eq("user_id", selectedUser?.value || id)
           .eq("building_id", selB)
           .eq("number", propertyNumber);
       } else {
@@ -378,33 +423,9 @@ function EditUser() {
         );
       }
 
-      const { data: remainingApartments } = await supabase
-        .from("apartments")
-        .select("id")
-        .eq("user_id", id);
-
-      const { data: remainingGarages } = await supabase
-        .from("garages")
-        .select("id")
-        .eq("user_id", id);
-
-      const { data: remainingOffices } = await supabase
-        .from("offices")
-        .select("id")
-        .eq("user_id", id);
-
-      if (
-        (remainingApartments?.length ?? 0) === 0 &&
-        (remainingGarages?.length ?? 0) === 0 &&
-        (remainingOffices?.length ?? 0) === 0
-      ) {
-        await supabase.from("users").delete().eq("id", id);
-        setAlertType("success");
-        setAlertMessage("Потребителят е изтрит напълно (нямаше други имоти).");
-      } else {
         setAlertType("success");
         setAlertMessage("Записът за имота е изтрит успешно.");
-      }
+    
 
       setTimeout(() => navigate("/admin/users"), 2500);
     } catch (error) {
@@ -426,41 +447,19 @@ function EditUser() {
       <h1 className="edit-page-title">Редакция на потребител</h1>
       <div className="edit-user-form">
         <div className="edit-form-grid">
-          <div
-            className={`edit-form-group ${errors.firstName ? "has-error" : ""}`}
-          >
-            <label>Първо име *</label>
-            <input
-              name="firstName"
-              value={firstName}
-              onChange={handleChange(setFirstName)}
-            />
-            {errors.firstName && (
-              <span className="error-message">{errors.firstName}</span>
-            )}
-          </div>
-
           <div className="edit-form-group">
-            <label>Презиме</label>
-            <input
-              name="secondName"
-              value={secondName}
-              onChange={handleChange(setSecondName)}
+            <label>Избери потребител *</label>
+            <AsyncSelect
+              className="custom-select"
+              classNamePrefix="custom"
+              cacheOptions
+              defaultOptions
+              loadOptions={loadUsers}
+              value={selectedUser}
+              onChange={(option) => setSelectedUser(option)}
+              placeholder="Търсене по име"
+              isClearable
             />
-          </div>
-
-          <div
-            className={`edit-form-group ${errors.lastName ? "has-error" : ""}`}
-          >
-            <label>Фамилия *</label>
-            <input
-              name="lastName"
-              value={lastName}
-              onChange={handleChange(setLastName)}
-            />
-            {errors.lastName && (
-              <span className="error-message">{errors.lastName}</span>
-            )}
           </div>
 
           <div className="edit-form-group">
@@ -502,73 +501,106 @@ function EditUser() {
             )}
           </div>
 
-          <div className="edit-form-group">
-            <label>Етаж</label>
-            <input
-              name="floor"
-              value={floor}
-              onChange={handleChange(setFloor)}
-            />
-            {errors.floor && (
-              <span className="error-message">{errors.floor}</span>
-            )}
-          </div>
+          {isApartment && (
+            <>
+              <div className="edit-form-group">
+                <label>Етаж</label>
+                <input
+                  name="floor"
+                  value={floor}
+                  onChange={handleChange(setFloor)}
+                />
+              </div>
 
-          <div className="edit-form-group">
-            <label>Апартамент</label>
-            <input
-              name="apartmentNumber"
-              value={apartmentNumber}
-              onChange={handleChange(setApartmentNumber)}
-            />
-            {errors.apartmentNumber && (
-              <span className="error-message">{errors.apartmentNumber}</span>
-            )}
-          </div>
+              <div className="edit-form-group">
+                <label>Апартамент №</label>
+                <input
+                  name="apartmentNumber"
+                  value={apartmentNumber}
+                  onChange={handleChange(setApartmentNumber)}
+                />
+              </div>
 
-          <div className="edit-form-group">
-            <label>Живущи</label>
-            <input
-              name="residents"
-              value={residents}
-              onChange={handleChange(setResidents)}
-            />
-          </div>
+              <div className="edit-form-group">
+                <label>Живущи</label>
+                <input
+                  name="residents"
+                  value={residents}
+                  onChange={handleChange(setResidents)}
+                />
+              </div>
 
-          <div className="edit-form-group">
-            <label>Гараж</label>
-            <input
-              name="garageNumber"
-              value={garageNumber}
-              onChange={handleChange(setGarageNumber)}
-            />
-            {errors.garageNumber && (
-              <span className="error-message">{errors.garageNumber}</span>
-            )}
-          </div>
+              <div className="edit-form-group">
+                <label>Площ (m²)</label>
+                <input
+                  name="officeArea"
+                  value={officeArea}
+                  onChange={handleChange(setOfficeArea)}
+                />
+              </div>
+            </>
+          )}
 
-          <div className="edit-form-group">
-            <label>Офис №</label>
-            <input
-              name="officeNumber"
-              value={officeNumber}
-              onChange={handleChange(setOfficeNumber)}
-            />
-            {errors.officeNumber && (
-              <span className="error-message">{errors.officeNumber}</span>
-            )}
-          </div>
-          <div className="edit-form-group">
-            <label>Площ (m²)</label>
-            <input
-              name="officeArea"
-              value={officeArea}
-              onChange={handleChange(setOfficeArea)}
-            />
-            {errors.officeArea && (
-              <span className="error-message">{errors.officeArea}</span>
-            )}
-          </div>
+          {isOffice && (
+            <>
+              <div className="edit-form-group">
+                <label>Етаж</label>
+                <input
+                  name="floor"
+                  value={floor}
+                  onChange={handleChange(setFloor)}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label>Офис №</label>
+                <input
+                  name="officeNumber"
+                  value={officeNumber}
+                  onChange={handleChange(setOfficeNumber)}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label>Площ (m²)</label>
+                <input
+                  name="officeArea"
+                  value={officeArea}
+                  onChange={handleChange(setOfficeArea)}
+                />
+              </div>
+            </>
+          )}
+          {isGarage && (
+            <>
+              <div className="edit-form-group">
+                <label>Номер на гараж</label>
+                <input
+                  name="garageNumber"
+                  value={garageNumber}
+                  onChange={handleChange(setGarageNumber)}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label>Етаж</label>
+                <input
+                  name="floor"
+                  value={floor}
+                  onChange={handleChange(setFloor)}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label>Площ (m²)</label>
+                <input
+                  name="officeArea"
+                  value={officeArea}
+                  onChange={handleChange(setOfficeArea)}
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="edit-form-actions">
@@ -591,7 +623,7 @@ function EditUser() {
             onClick={() => setShowConfirm(true)}
             disabled={loading}
           >
-            Изтрий потребител
+            Изтрий записа
           </button>
         </div>
       </div>
@@ -603,8 +635,8 @@ function EditUser() {
 
       {showConfirm && (
         <ConfirmModal
-          title="Изтриване на потребител"
-          message="Сигурни ли сте, че искате да изтриете този потребител?"
+          title="Изтриване на запис"
+          message="Сигурни ли сте, че искате да изтриете този запис?"
           onConfirm={handleDeleteConfirmed}
           onCancel={() => setShowConfirm(false)}
         />

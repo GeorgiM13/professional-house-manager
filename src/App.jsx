@@ -7,6 +7,7 @@ import ForUs from "./ForUs"
 import Documents from "./Documents"
 import Contacts from "./Contacts"
 import Login from "./Login"
+import EmailConfirm from "./EmailConfirm"
 import "./App.css"
 
 import PrivateRoute from "./components/PrivateRoute"
@@ -65,7 +66,8 @@ function App() {
                         <Route path="/for-us" element={<ForUs />} />
                         <Route path="/documents" element={<Documents />} />
                         <Route path="/contacts" element={<Contacts />} />
-                        <Route path="/login" element={<Login />} />    
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/confirm-email" element={<EmailConfirm />} />    
                         <Route path="/admin/*" element={
                         <PrivateRoute allowedRoles={['admin']} userRole={user?.role}>
                             <AdminLayout />

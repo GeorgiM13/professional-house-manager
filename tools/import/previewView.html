@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8" />
+<title>📋 Преглед на импортирани акаунти</title>
+<style>
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f7f8fa;
+    color: #333;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #4a148c;
+    margin-bottom: 15px;
+  }
+  #controls {
+    text-align: center;
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  input[type="file"], input[type="text"] {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    background: #fff;
+  }
+  button.export-btn {
+    background:#4a148c;
+    color:#fff;
+    border:none;
+    padding:10px 20px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:15px;
+    line-height:1.2;
+    font-weight:500;
+  }
+  button.export-btn:hover {
+    background:#6a1b9a;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    font-size: 15px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  th {
+    background: #4a148c;
+    color: white;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  tr:nth-child(even) { background: #fafafa; }
+  tr:hover { background: #f0f0f0; }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    color: white;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .status-preview { background-color: #8e24aa; }
+  .status-new { background-color: #2e7d32; }
+  .status-reused { background-color: #1565c0; }
+
+  #count {
+    text-align: right;
+    margin-top: 10px;
+    color: #555;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<h1>📋 Преглед на импортирани акаунти</h1>
+
+<div id="controls">
+  <input type="file" id="csvInput" accept=".csv" />
+  <input type="text" id="search" placeholder="🔍 Търси по имейл, собственик или статус..." size="40" />
+  <button id="exportDocBtn" class="export-btn">📄 Експортирай DOCX</button>
+</div>
+
+<div id="count"></div>
+<table id="table"></table>
+
+<script>
+/* ================= CSV ПАРСЕР ================= */
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").trim();
+  const lines = text.split("\n");
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(",").map(h => h.trim());
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const values = [];
+    let current = "", insideQuotes = false;
+
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j], next = line[j + 1];
+      if (char === '"' && next === '"') {
+        current += '"';
+        j++;
+      } else if (char === '"') {
+        insideQuotes = !insideQuotes;
+      } else if (char === "," && !insideQuotes) {
+        values.push(current.trim());
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+
+    if (values.length === headers.length) {
+      const obj = {};
+      headers.forEach((h, idx) => (obj[h] = values[idx].replace(/^"|"$/g, "")));
+      rows.push(obj);
+    }
+  }
+  return rows;
+}
+
+/* ================= РЕНДЕРИРАНЕ ================= */
+function reorderColumns(row) {
+  const ordered = {};
+  const order = ["Building", "Type", "Floor", "Number", "Owner", "Email", "Username", "Password", "Status", "Area"];
+  order.forEach(k => { ordered[k] = row[k] || ""; });
+  return ordered;
+}
+
+function renderTable(data, filterText = "") {
+  const table = document.getElementById("table");
+  table.innerHTML = "";
+  if (!data.length) return;
+
+  const reordered = data.map(reorderColumns);
+  const headers = Object.keys(reordered[0]);
+  const thead = document.createElement("thead");
+  const trh = document.createElement("tr");
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    th.addEventListener("click", () => sortBy(h, reordered));
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  const filtered = reordered.filter(r =>
+    Object.values(r).some(v =>
+      v.toLowerCase().includes(filterText.toLowerCase())
+    )
+  );
+
+  filtered.forEach(r => {
+    const tr = document.createElement("tr");
+    headers.forEach(h => {
+      const td = document.createElement("td");
+      const val = r[h];
+      if (h === "Status") {
+        const badge = document.createElement("span");
+        badge.classList.add("status-badge");
+        const clean = val.toLowerCase();
+        if (clean.includes("🔁") || clean.includes("повторно")) {
+          badge.classList.add("status-reused");
+          badge.textContent = "🔁 Повторно използван акаунт";
+        } else if (clean.includes("🆕") || clean.includes("нов")) {
+          badge.classList.add("status-new");
+          badge.textContent = "🆕 Нов акаунт";
+        } else {
+          badge.classList.add("status-preview");
+          badge.textContent = "🧪 Симулиран акаунт";
+        }
+        td.appendChild(badge);
+      } else {
+        td.textContent = val;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  document.getElementById("count").textContent =
+    `Показани записи: ${filtered.length} от ${data.length}`;
+}
+
+function sortBy(column, data) {
+  const sorted = [...data].sort((a, b) => a[column].localeCompare(b[column], "bg"));
+  renderTable(sorted, document.getElementById("search").value);
+}
+
+/* ================= DOC ГЕНЕРАТОР ================= */
+/**
+ * Правим "Word-съвместим" документ (HTML) и го сваляме като .doc
+ * Word ще го отвори без проблем, после клиентът може Save As .docx.
+ */
+function exportToDocLike() {
+  if (!window.parsedData?.length) {
+    alert("Моля, първо зареди CSV файл!");
+    return;
+  }
+
+  // събираме уникални по имейл
+  const uniqueMap = new Map();
+  window.parsedData.forEach(r => {
+    const email = (r.Email || "").trim();
+    if (!email) return;
+    if (!uniqueMap.has(email)) {
+      uniqueMap.set(email, {
+        name: r.Owner || "",
+        email,
+        username: email,
+        password: r.Password || ""
+      });
+    }
+  });
+
+  const uniqueUsers = Array.from(uniqueMap.values());
+  if (!uniqueUsers.length) {
+    alert("Няма валидни записи за експортиране.");
+    return;
+  }
+
+  // правим HTML таблица за Word
+  let tableHTML = `
+<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;font-family:'Segoe UI',sans-serif;font-size:11pt;width:100%;">
+  <thead style="background-color:#EDE7F6;color:#4A148C;font-weight:bold;text-align:left;">
+    <tr>
+      <th style="width:30%;">Име</th>
+      <th style="width:30%;">Имейл</th>
+      <th style="width:25%;">Потребителско име</th>
+      <th style="width:15%;">Парола</th>
+    </tr>
+  </thead>
+  <tbody>
+`;
+
+  uniqueUsers.forEach(u => {
+    tableHTML += `
+      <tr>
+        <td>${escapeHtml(u.name)}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml(u.username)}</td>
+        <td>${escapeHtml(u.password)}</td>
+      </tr>
+    `;
+  });
+
+  tableHTML += `
+      </tbody>
+    </table>
+  `;
+
+  const fullHTML =
+`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Списък с импортирани потребители</title>
+</head>
+<body style="font-family:'Segoe UI',sans-serif;">
+  <h1 style="color:#4A148C;font-size:20pt;">Списък с импортирани потребители</h1>
+  ${tableHTML}
+</body>
+</html>`;
+
+  // сваляне
+  const blob = new Blob([fullHTML], {
+    type: "application/msword;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Импортирани_потребители.doc"; // Word ще го отвори
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// малък helper за безопасност
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+/* ================= СЪБИТИЯ ================= */
+
+document.getElementById("csvInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = event => {
+    const text = event.target.result;
+    window.parsedData = parseCSV(text);
+    renderTable(window.parsedData);
+  };
+  reader.readAsText(file, "UTF-8");
+});
+
+document.getElementById("search").addEventListener("input", e => {
+  renderTable(window.parsedData || [], e.target.value);
+});
+
+document.getElementById("exportDocBtn").addEventListener("click", exportToDocLike);
+</script>
+</body>
+</html>

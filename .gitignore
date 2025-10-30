@@ -32,3 +32,6 @@ dist-ssr
 src/createAuthUsers.js
 src/someOtherFile.js
 src/thirdFile.js
+tools/import/output/
+tools/import/data/
+

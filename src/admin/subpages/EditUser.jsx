@@ -25,6 +25,7 @@ function EditUser() {
   const [garageNumber, setGarageNumber] = useState("");
   const [officeNumber, setOfficeNumber] = useState("");
   const [officeArea, setOfficeArea] = useState("");
+  const [retailDescription, setRetailDescription] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -81,7 +82,7 @@ function EditUser() {
 
         const { data: userData, error: userError } = await supabase
           .from("users")
-          .select("*, apartments(*), garages(*), offices(*)")
+          .select("*, apartments(*), garages(*), offices(*), retails(*)")
           .eq("id", id)
           .single();
         if (userError) throw userError;
@@ -150,6 +151,22 @@ function EditUser() {
           if (!apt && !garage) resolveBuildingSelect(office.building_id);
         }
 
+        const retail = (userData.retails || []).find(
+          (r) =>
+            r.building_id === buildingId &&
+            (!propertyType || propertyType === "retail") &&
+            (!propertyNumber || r.number?.toString().trim() === propertyNumber)
+        );
+
+        if (retail) {
+          setOfficeNumber(retail.number || "");
+          setOfficeArea(retail.area ?? "");
+          setFloor(retail.floor || "");
+          setRetailDescription(retail.description || "");
+          if (!apt && !garage && !office)
+            resolveBuildingSelect(retail.building_id);
+        }
+
         if (
           !apt &&
           !garage &&
@@ -181,86 +198,13 @@ function EditUser() {
     setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
+  const clean = (val) => (val === "" ? null : val);
+
   const handleSave = async () => {
-    const newErrors = {};
-    if (!firstName) newErrors.firstName = "Моля въведете първо име";
-    if (!lastName) newErrors.lastName = "Моля изберете фамилия";
-    if (!selectedBuilding) newErrors.selectedBuilding = "Моля изберете сграда";
-
-    if (garageNumber) {
-      if (!selectedBuilding || !selectedBuilding.value) {
-        newErrors.selectedBuilding =
-          "Моля изберете сграда, преди да въведете гараж.";
-      } else {
-        const { data: buildingInfo, error: buildingError } = await supabase
-          .from("buildings")
-          .select("id, name, garages")
-          .eq("id", selectedBuilding.value)
-          .maybeSingle();
-
-        if (buildingError) {
-          alert("Грешка при зареждане на информация за сградата.");
-          console.error(buildingError);
-          setErrors(newErrors);
-          return;
-        }
-
-        if (
-          !buildingInfo ||
-          !buildingInfo.garages ||
-          buildingInfo.garages === 0
-        ) {
-          newErrors.garageNumber = `Сградата "${
-            buildingInfo?.name || ""
-          }" няма налични гаражи.`;
-        } else {
-          const numberValue = Number(garageNumber);
-          if (
-            isNaN(numberValue) ||
-            numberValue < 1 ||
-            numberValue > buildingInfo.garages
-          ) {
-            newErrors.garageNumber = `Номерът на гаража трябва да е между 1 и ${buildingInfo.garages}.`;
-          } else {
-            const { data: takenGarage } = await supabase
-              .from("garages")
-              .select("id, user_id")
-              .eq("building_id", selectedBuilding.value)
-              .eq("number", numberValue)
-              .neq("user_id", selectedUser?.value || id)
-              .maybeSingle();
-
-            if (takenGarage) {
-              newErrors.garageNumber = `Гараж №${numberValue} вече е зает от друг потребител.`;
-            }
-          }
-        }
-      }
-    }
-
-    if (officeNumber) {
-      const officeNum = officeNumber;
-      if (officeNum < 1) {
-        newErrors.officeNumber =
-          "Номерът на офиса трябва да е положително число.";
-      }
-    }
-
-    if (officeArea !== "") {
-      const areaNum = Number(officeArea);
-      if (!Number.isFinite(areaNum) || areaNum <= 0) {
-        newErrors.officeArea = "Площта трябва да е положително число (m²).";
-      }
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
     setLoading(true);
 
     try {
+      // Обновяваме основните данни на потребителя
       await supabase
         .from("users")
         .update({
@@ -270,118 +214,90 @@ function EditUser() {
           phone,
           role,
         })
-        .eq("id", id);
+        .eq("id", selectedUser?.value || id);
 
       const selB = Number(selectedBuilding?.value);
-      const bIdForQuery = Number(buildingId) || selB;
-      const areaNum = officeArea === "" ? null : Number(officeArea);
+      const areaNum = clean(officeArea);
+      const floorNum = clean(floor);
+      const newOwnerId = selectedUser?.value || id; // ← това е новият собственик
 
-      const { data: apartment } = await supabase
-        .from("apartments")
-        .select("*")
-        .eq("user_id", selectedUser?.value || id)
-        .eq("building_id", bIdForQuery)
-        .maybeSingle();
-
-      if (apartment) {
-        if (floor || apartmentNumber || residents) {
-          await supabase
-            .from("apartments")
-            .update({
+      // === АПАРТАМЕНТ ===
+      if (propertyType === "apartment") {
+        await supabase
+          .from("apartments")
+          .update(
+            {
+              user_id: newOwnerId,
               building_id: selB,
-              floor,
-              number: apartmentNumber,
-              residents,
-              area: areaNum,
-            })
-            .eq("id", apartment.id);
-        } else {
-          await supabase.from("apartments").delete().eq("id", apartment.id);
-        }
-      } else {
-        if (floor || apartmentNumber || residents) {
-          await supabase.from("apartments").insert({
-            user_id: selectedUser?.value || id,
-            building_id: selB,
-            floor,
-            number: apartmentNumber,
-            residents,
-            area: areaNum,
-          });
-        }
-      }
-
-      const { data: garage } = await supabase
-        .from("garages")
-        .select("*")
-        .eq("user_id", selectedUser?.value || id)
-        .eq("building_id", bIdForQuery)
-        .maybeSingle();
-
-      const floorNum = floor === "" ? null : Number(floor);
-      const garageAreaNum = officeArea === "" ? null : Number(officeArea);
-
-      if (garage) {
-        if (garageNumber) {
-          await supabase
-            .from("garages")
-            .update({
-              building_id: selB,
-              number: garageNumber,
               floor: floorNum,
-              area: garageAreaNum,
-            })
-            .eq("id", garage.id);
-        } else {
-          await supabase.from("garages").delete().eq("id", garage.id);
-        }
-      } else {
-        if (garageNumber) {
-          await supabase.from("garages").insert({
-            user_id: selectedUser?.value || id,
-            building_id: selB,
-            number: garageNumber,
-            floor: floorNum,
-            area: garageAreaNum,
-          });
-        }
+              number: clean(apartmentNumber),
+              residents: clean(residents),
+              area: areaNum,
+            },
+            { returning: "minimal" }
+          )
+          .eq("building_id", selB)
+          .eq("number", propertyNumber);
       }
 
-      const { data: office } = await supabase
-        .from("offices")
-        .select("*")
-        .eq("user_id", selectedUser?.value || id)
-        .eq("building_id", bIdForQuery)
-        .eq("number", propertyNumber || officeNumber)
-        .maybeSingle();
-
-      if (office) {
-        if (officeNumber) {
-          await supabase
-            .from("offices")
-            .update({
+      // === ГАРАЖ ===
+      if (propertyType === "garage") {
+        await supabase
+          .from("garages")
+          .update(
+            {
+              user_id: newOwnerId,
               building_id: selB,
-              number: officeNumber,
+              number: clean(garageNumber),
+              floor: floorNum,
               area: areaNum,
-            })
-            .eq("id", office.id);
-        } else {
-          await supabase.from("offices").delete().eq("id", office.id);
-        }
-      } else {
-        if (officeNumber) {
-          await supabase.from("offices").insert({
-            user_id: selectedUser?.value || id,
-            building_id: selB,
-            number: officeNumber,
-            area: areaNum,
-          });
-        }
+            },
+            { returning: "minimal" }
+          )
+          .eq("building_id", selB)
+          .eq("number", propertyNumber);
+      }
+
+      // === ОФИС ===
+      if (propertyType === "office") {
+        await supabase
+          .from("offices")
+          .update(
+            {
+              user_id: newOwnerId,
+              building_id: selB,
+              number: clean(officeNumber),
+              area: areaNum,
+              floor: floorNum,
+            },
+            { returning: "minimal" }
+          )
+          .eq("building_id", selB)
+          .eq("number", propertyNumber);
+      }
+
+      // === РИТЕЙЛ ===
+      if (propertyType === "retail") {
+        await supabase
+          .from("retails")
+          .update(
+            {
+              user_id: newOwnerId,
+              building_id: selB,
+              number: clean(officeNumber),
+              area: areaNum,
+              floor: floorNum,
+              description: clean(retailDescription),
+            },
+            { returning: "minimal" }
+          )
+          .eq("building_id", selB)
+          .eq("number", propertyNumber);
       }
 
       setAlertType("success");
-      setAlertMessage("Промените са запазени успешно!");
-      setTimeout(() => navigate("/admin/users"), 2500);
+      setAlertMessage("✅ Промените са запазени успешно!");
+      setTimeout(() => navigate("/admin/users", { replace: true }), 2000);
     } catch (error) {
       console.error("Грешка при обновяване:", error.message);
       setAlertType("error");
@@ -417,15 +333,21 @@ function EditUser() {
           .eq("user_id", selectedUser?.value || id)
           .eq("building_id", selB)
           .eq("number", propertyNumber);
+      } else if (propertyType === "retail") {
+        await supabase
+          .from("retails")
+          .delete()
+          .eq("user_id", selectedUser?.value || id)
+          .eq("building_id", selB)
+          .eq("number", propertyNumber);
       } else {
         console.warn(
           "Не е подаден propertyType – няма конкретен имот за изтриване."
         );
       }
 
-        setAlertType("success");
-        setAlertMessage("Записът за имота е изтрит успешно.");
-    
+      setAlertType("success");
+      setAlertMessage("Записът за имота е изтрит успешно.");
 
       setTimeout(() => navigate("/admin/users"), 2500);
     } catch (error) {
@@ -456,7 +378,21 @@ function EditUser() {
               defaultOptions
               loadOptions={loadUsers}
               value={selectedUser}
-              onChange={(option) => setSelectedUser(option)}
+              onChange={async (option) => {
+                setSelectedUser(option);
+
+                if (option?.value) {
+                  const { data, error } = await supabase
+                    .from("users")
+                    .select("phone")
+                    .eq("id", option.value)
+                    .single();
+
+                  if (!error) setPhone(data?.phone || "");
+                } else {
+                  setPhone("");
+                }
+              }}
               placeholder="Търсене по име"
               isClearable
             />
@@ -597,6 +533,45 @@ function EditUser() {
                   name="officeArea"
                   value={officeArea}
                   onChange={handleChange(setOfficeArea)}
+                />
+              </div>
+            </>
+          )}
+
+          {propertyType === "retail" && (
+            <>
+              <div className="edit-form-group">
+                <label>Етаж</label>
+                <input
+                  name="floor"
+                  value={floor}
+                  onChange={handleChange(setFloor)}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label>Ритейл №</label>
+                <input
+                  name="officeNumber"
+                  value={officeNumber}
+                  onChange={handleChange(setOfficeNumber)}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label>Площ (m²)</label>
+                <input
+                  name="officeArea"
+                  value={officeArea}
+                  onChange={handleChange(setOfficeArea)}
+                />
+              </div>
+              <div className="edit-form-group">
+                <label>Описание</label>
+                <input
+                  name="retailDescription"
+                  value={retailDescription}
+                  onChange={handleChange(setRetailDescription)}
                 />
               </div>
             </>

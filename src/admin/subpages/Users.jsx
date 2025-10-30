@@ -35,7 +35,13 @@ function Users() {
           number,
           area,
           building:buildings ( id, name, address )
-        )
+        ),
+          retails (
+            floor,
+            number,
+            area,
+            building:buildings ( id, name, address )
+          )
       `);
 
       if (error) {
@@ -85,6 +91,19 @@ function Users() {
             residents: "-",
             area: g.area ?? "-",
             building: g.building,
+          });
+        });
+
+        (user.retails || []).forEach((r) => {
+          rows.push({
+            userId: user.id,
+            fullName,
+            type: "Ритейл",
+            floor: r.floor ?? "-",
+            number: r.number ?? "-",
+            residents: "-",
+            area: r.area ?? "-",
+            building: r.building,
           });
         });
 
@@ -141,9 +160,19 @@ function Users() {
   });
 
   const sortedRows = [...filteredRows].sort((a, b) => {
+    // Сортира първо по етаж (числово, но поддържа и отрицателни)
     const floorA = isNaN(Number(a.floor)) ? 9999 : Number(a.floor);
     const floorB = isNaN(Number(b.floor)) ? 9999 : Number(b.floor);
-    return floorA - floorB;
+    if (floorA !== floorB) return floorA - floorB;
+
+    // Ако етажите са равни → сортирай по номер (числово, но поддържа и текстови като "27А")
+    const numA = parseFloat(String(a.number).replace(/[^\d.-]/g, "")) || 0;
+    const numB = parseFloat(String(b.number).replace(/[^\d.-]/g, "")) || 0;
+
+    // Ако има букви (напр. "27А"), сравни и по текстовата стойност
+    if (numA === numB)
+      return String(a.number).localeCompare(String(b.number), "bg");
+    return numA - numB;
   });
 
   return (
@@ -227,6 +256,8 @@ function Users() {
                           ? "office"
                           : row.type === "Гараж"
                           ? "garage"
+                          : row.type === "Ритейл"
+                          ? "retail"
                           : null,
                       propertyNumber: row.number?.toString() || null,
                     },

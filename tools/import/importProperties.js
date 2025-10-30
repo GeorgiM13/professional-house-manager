@@ -2,7 +2,9 @@
  * importProperties.js (v5)
  * -------------------------
  * - Без дублиране на акаунти
+ * - Записване в базата: node tools/import/importProperties.js --file tools/import/data/Arena_shablon.xlsx --import
  * - Безопасен preview (--preview = без запис към Supabase)
+ * - Записване в .doc node tools/import/exportDoc.js
  * - Коректно засичане на тип имот (апартамент / гараж / офис)
  * - Видим summary + skipped
  */

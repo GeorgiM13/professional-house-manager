@@ -204,24 +204,24 @@ function EditUser() {
     setLoading(true);
 
     try {
-      // Обновяваме основните данни на потребителя
-      await supabase
-        .from("users")
-        .update({
-          first_name: firstName,
-          second_name: secondName,
-          last_name: lastName,
-          phone,
-          role,
-        })
-        .eq("id", selectedUser?.value || id);
+      if (!selectedUser || selectedUser.value === id) {
+        await supabase
+          .from("users")
+          .update({
+            first_name: firstName,
+            second_name: secondName,
+            last_name: lastName,
+            phone,
+            role,
+          })
+          .eq("id", id);
+      }
 
       const selB = Number(selectedBuilding?.value);
       const areaNum = clean(officeArea);
       const floorNum = clean(floor);
-      const newOwnerId = selectedUser?.value || id; // ← това е новият собственик
+      const newOwnerId = selectedUser?.value || id;
 
-      // === АПАРТАМЕНТ ===
       if (propertyType === "apartment") {
         await supabase
           .from("apartments")
@@ -240,7 +240,6 @@ function EditUser() {
           .eq("number", propertyNumber);
       }
 
-      // === ГАРАЖ ===
       if (propertyType === "garage") {
         await supabase
           .from("garages")
@@ -258,7 +257,6 @@ function EditUser() {
           .eq("number", propertyNumber);
       }
 
-      // === ОФИС ===
       if (propertyType === "office") {
         await supabase
           .from("offices")
@@ -276,7 +274,6 @@ function EditUser() {
           .eq("number", propertyNumber);
       }
 
-      // === РИТЕЙЛ ===
       if (propertyType === "retail") {
         await supabase
           .from("retails")
@@ -297,7 +294,16 @@ function EditUser() {
 
       setAlertType("success");
       setAlertMessage("✅ Промените са запазени успешно!");
-      setTimeout(() => navigate("/admin/users", { replace: true }), 2000);
+      setTimeout(() => {
+        navigate("/admin/users", {
+          state: {
+            previousBuilding: selectedBuilding,
+            previousSearch: location.state?.searchTerm || "",
+            previousPage: location.state?.currentPage || 1,
+            scrollPosition: location.state?.scrollPosition || 0,
+          },
+        });
+      }, 2000);
     } catch (error) {
       console.error("Грешка при обновяване:", error.message);
       setAlertType("error");
@@ -349,7 +355,16 @@ function EditUser() {
       setAlertType("success");
       setAlertMessage("Записът за имота е изтрит успешно.");
 
-      setTimeout(() => navigate("/admin/users"), 2500);
+      setTimeout(() => {
+        navigate("/admin/users", {
+          state: {
+            previousBuilding: selectedBuilding,
+            previousSearch: location.state?.searchTerm || "",
+            previousPage: location.state?.currentPage || 1,
+            scrollPosition: location.state?.scrollPosition || 0,
+          },
+        });
+      }, 3000);
     } catch (error) {
       console.error("Грешка при изтриване:", error.message);
       setAlertType("error");
@@ -588,11 +603,21 @@ function EditUser() {
           </button>
           <button
             className="edit-secondary-button"
-            onClick={() => navigate("/admin/users")}
+            onClick={() =>
+              navigate("/admin/users", {
+                state: {
+                  previousBuilding: selectedBuilding,
+                  previousSearch: location.state?.searchTerm || "",
+                  previousPage: location.state?.currentPage || 1,
+                  scrollPosition: location.state?.scrollPosition || 0,
+                },
+              })
+            }
             disabled={loading}
           >
             Отказ
           </button>
+
           <button
             className="edit-danger-button"
             onClick={() => setShowConfirm(true)}

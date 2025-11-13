@@ -40,7 +40,7 @@ function EditProfile() {
   useEffect(() => {
     async function fetchUserData() {
       if (!savedUser?.id) return;
-      localStorage.removeItem(`userData_${savedUser.id}`); // 🧹
+      localStorage.removeItem(`userData_${savedUser.id}`);
 
       const { data, error } = await supabase
         .from("users")

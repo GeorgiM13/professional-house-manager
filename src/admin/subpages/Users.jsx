@@ -1,51 +1,137 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AsyncSelect from "react-select/async";
 import { supabase } from "../../supabaseClient";
+import debounce from "lodash.debounce";
 import "./styles/Users.css";
 
 function Users() {
-  const [rows, setRows] = useState([]); // 🔹 Преименувано от users → rows
-  const [selectedBuilding, setSelectedBuilding] = useState("all");
+  const [rows, setRows] = useState([]);
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pendingScroll, setPendingScroll] = useState(null);
+  const [allBuildings, setAllBuildings] = useState([]);
+  const pageSize = 50;
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    async function fetchUsers() {
-      const { data, error } = await supabase.from("users").select(`
-        id,
-        first_name,
-        second_name,
-        last_name,
-        apartments (
-          floor,
-          number,
-          residents,
-          area,
-          building:buildings ( id, name, address )
-        ),
-        garages (
-          floor,
-          number,
-          area,
-          building:buildings ( id, name, address )
-        ),
-        offices (
-          floor,
-          number,
-          area,
-          building:buildings ( id, name, address )
-        ),
-          retails (
-            floor,
-            number,
-            area,
-            building:buildings ( id, name, address )
-          )
-      `);
+    const fetchBuildings = async () => {
+      const { data, error } = await supabase
+        .from("buildings")
+        .select("id, name, address")
+        .order("name", { ascending: true });
+      if (!error && data) {
+        setAllBuildings(
+          data.map((b) => ({
+            value: b.id,
+            label: `${b.name}, ${b.address}`,
+          }))
+        );
+      }
+    };
+    fetchBuildings();
+  }, []);
+
+  const handleSelectBuilding = async (option, keepPage = false) => {
+    if (!option) {
+      setSelectedBuilding(null);
+      setRows([]);
+      return;
+    }
+
+    setSelectedBuilding(option);
+    setRows([]);
+    if (!keepPage) setCurrentPage(1);
+
+    const { data, error } = await supabase
+      .from("property_units")
+      .select("*")
+      .eq("building_id", option.value);
+
+    if (error) {
+      console.error("Грешка при зареждане на имоти:", error);
+      return;
+    }
+
+    const mappedRows = (data || []).map((r) => ({
+      userId: r.user_id,
+      fullName:
+        [r.first_name, r.second_name, r.last_name].filter(Boolean).join(" ") ||
+        "—",
+      type:
+        r.type === "apartment"
+          ? "Апартамент"
+          : r.type === "office"
+          ? "Офис"
+          : r.type === "garage"
+          ? "Гараж"
+          : "Ритейл",
+      floor: r.floor ?? "-",
+      number: r.number ?? "-",
+      residents: r.residents ?? "-",
+      area: r.area ?? "-",
+      building: {
+        id: r.building_id,
+        name: r.building_name,
+        address: r.building_address,
+      },
+    }));
+
+    setRows(mappedRows);
+  };
+
+  useEffect(() => {
+    if (location.state?.previousBuilding) {
+      setSelectedBuilding(location.state.previousBuilding);
+      setSearchTerm(location.state.previousSearch || "");
+      setCurrentPage(location.state.previousPage || 1);
+      setPendingScroll(location.state.scrollPosition || 0);
+
+      handleSelectBuilding(location.state.previousBuilding, true);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (pendingScroll !== null && rows.length > 0) {
+      setTimeout(() => {
+        window.scrollTo({ top: pendingScroll, behavior: "smooth" });
+        setPendingScroll(null);
+      }, 100);
+    }
+  }, [rows, pendingScroll]);
+  useEffect(() => {
+    const searchUsersGlobally = debounce(async () => {
+      if (!searchTerm.trim() && !selectedBuilding) {
+        setRows([]);
+        return;
+      }
+
+      if (selectedBuilding) return;
+
+      const cleanTerm = searchTerm.trim().replace(/[%]/g, "");
+      const { data, error } = await supabase
+        .from("users")
+        .select(
+          `
+            id,
+            first_name,
+            second_name,
+            last_name,
+            apartments(floor, number, residents, area, building:buildings(id, name, address)),
+            garages(floor, number, area, building:buildings(id, name, address)),
+            offices(floor, number, area, building:buildings(id, name, address)),
+            retails(floor, number, area, building:buildings(id, name, address))
+          `
+        )
+        .or(
+          `first_name.ilike.%${cleanTerm}%,second_name.ilike.%${cleanTerm}%,last_name.ilike.%${cleanTerm}%`
+        )
+        .limit(100);
 
       if (error) {
-        console.error("Грешка при зареждане на потребители:", error);
+        console.error("Грешка при глобално търсене:", error);
         return;
       }
 
@@ -55,57 +141,25 @@ function Users() {
           .join(" ");
         const rows = [];
 
-        (user.apartments || []).forEach((a) => {
-          rows.push({
-            userId: user.id,
-            fullName,
-            type: "Апартамент",
-            floor: a.floor ?? "-",
-            number: a.number ?? "-",
-            residents: a.residents ?? "-",
-            area: a.area ?? "-",
-            building: a.building,
-          });
-        });
+        const push = (items, type, hasResidents = false) => {
+          (items || []).forEach((x) =>
+            rows.push({
+              userId: user.id,
+              fullName,
+              type,
+              floor: x.floor ?? "-",
+              number: x.number ?? "-",
+              residents: hasResidents ? x.residents ?? "-" : "-",
+              area: x.area ?? "-",
+              building: x.building,
+            })
+          );
+        };
 
-        (user.offices || []).forEach((o) => {
-          rows.push({
-            userId: user.id,
-            fullName,
-            type: "Офис",
-            floor: o.floor ?? "-",
-            number: o.number ?? "-",
-            residents: "-",
-            area: o.area ?? "-",
-            building: o.building,
-          });
-        });
-
-        (user.garages || []).forEach((g) => {
-          rows.push({
-            userId: user.id,
-            fullName,
-            type: "Гараж",
-            floor: g.floor ?? "-",
-            number: g.number ?? "-",
-            residents: "-",
-            area: g.area ?? "-",
-            building: g.building,
-          });
-        });
-
-        (user.retails || []).forEach((r) => {
-          rows.push({
-            userId: user.id,
-            fullName,
-            type: "Ритейл",
-            floor: r.floor ?? "-",
-            number: r.number ?? "-",
-            residents: "-",
-            area: r.area ?? "-",
-            building: r.building,
-          });
-        });
+        push(user.apartments, "Апартамент", true);
+        push(user.offices, "Офис");
+        push(user.garages, "Гараж");
+        push(user.retails, "Ритейл");
 
         if (rows.length === 0) {
           rows.push({
@@ -124,57 +178,51 @@ function Users() {
       });
 
       setRows(mappedRows);
-    }
+    }, 400);
 
-    fetchUsers();
-  }, []);
+    searchUsersGlobally();
+    return () => searchUsersGlobally.cancel();
+  }, [searchTerm, selectedBuilding]);
 
-  const loadBuildings = async (inputValue) => {
-    const { data, error } = await supabase
-      .from("buildings")
-      .select("id, name, address")
-      .ilike("name", `%${inputValue || ""}%`)
-      .limit(10);
-
-    if (error) {
-      console.error("Грешка при зареждане на сгради:", error);
-      return [];
-    }
-
-    const allOption = { value: "all", label: "Всички сгради" };
-    const mapped = (data || []).map((b) => ({
-      value: b.id,
-      label: `${b.name}, ${b.address}`,
-    }));
-    return [allOption, ...mapped];
-  };
-
-  const filteredRows = rows.filter((r) => {
-    const matchName = r.fullName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchBuilding =
-      selectedBuilding === "all" ||
-      Number(r.building?.id) === Number(selectedBuilding);
-    return matchName && matchBuilding;
-  });
+  const filteredRows = selectedBuilding
+    ? rows.filter((r) =>
+        r.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : rows;
 
   const sortedRows = [...filteredRows].sort((a, b) => {
-    // Сортира първо по етаж (числово, но поддържа и отрицателни)
     const floorA = isNaN(Number(a.floor)) ? 9999 : Number(a.floor);
     const floorB = isNaN(Number(b.floor)) ? 9999 : Number(b.floor);
     if (floorA !== floorB) return floorA - floorB;
 
-    // Ако етажите са равни → сортирай по номер (числово, но поддържа и текстови като "27А")
     const numA = parseFloat(String(a.number).replace(/[^\d.-]/g, "")) || 0;
     const numB = parseFloat(String(b.number).replace(/[^\d.-]/g, "")) || 0;
 
-    // Ако има букви (напр. "27А"), сравни и по текстовата стойност
     if (numA === numB)
       return String(a.number).localeCompare(String(b.number), "bg");
     return numA - numB;
   });
 
+  useEffect(() => {
+    if (!location.state?.previousPage) {
+      setCurrentPage(1);
+    }
+  }, [searchTerm, selectedBuilding]);
+
+  const totalPages = Math.ceil(sortedRows.length / pageSize);
+  const currentData = sortedRows.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 50);
+    }
+  };
   return (
     <div className="users-page">
       <div className="users-header">
@@ -198,9 +246,16 @@ function Users() {
               className="custom-select"
               classNamePrefix="custom"
               cacheOptions
-              defaultOptions
-              loadOptions={loadBuildings}
-              onChange={(option) => setSelectedBuilding(option?.value || "all")}
+              defaultOptions={allBuildings}
+              loadOptions={(input) =>
+                Promise.resolve(
+                  allBuildings.filter((b) =>
+                    b.label.toLowerCase().includes(input.toLowerCase())
+                  )
+                )
+              }
+              onChange={handleSelectBuilding}
+              value={selectedBuilding}
               placeholder="Изберете сграда..."
               isClearable
             />
@@ -235,14 +290,14 @@ function Users() {
           </tr>
         </thead>
         <tbody>
-          {sortedRows.length === 0 ? (
+          {currentData.length === 0 ? (
             <tr>
               <td colSpan="8" style={{ textAlign: "center", padding: "1rem" }}>
-                Няма намерени потребители.
+                Изберете сграда за да видите потребителите ѝ.
               </td>
             </tr>
           ) : (
-            sortedRows.map((row, i) => (
+            currentData.map((row, i) => (
               <tr
                 key={`${row.userId}-${i}`}
                 onClick={() =>
@@ -260,12 +315,16 @@ function Users() {
                           ? "retail"
                           : null,
                       propertyNumber: row.number?.toString() || null,
+                      currentPage,
+                      searchTerm,
+                      selectedBuilding,
+                      scrollPosition: window.scrollY,
                     },
                   })
                 }
                 style={{ cursor: "pointer" }}
               >
-                <td>{i + 1}</td>
+                <td>{(currentPage - 1) * pageSize + i + 1}</td>
                 <td>{row.fullName}</td>
                 <td>{`${row.building?.name || "-"}, ${
                   row.building?.address || "-"
@@ -280,6 +339,26 @@ function Users() {
           )}
         </tbody>
       </table>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            ◀ Предишна
+          </button>
+          <span>
+            Страница {currentPage} от {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Следваща ▶
+          </button>
+        </div>
+      )}
     </div>
   );
 }

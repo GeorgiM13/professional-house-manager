@@ -19,7 +19,7 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     0
   );
 
-  const [{ data: apartments }, { data: offices }, { data: garages }] =
+  const [{ data: apartments }, { data: offices }, { data: garages }, { data: retails }] =
     await Promise.all([
       supabase
         .from("apartments")
@@ -33,12 +33,17 @@ export async function byExpensesPlusFee(buildingId, month, year) {
         .from("garages")
         .select("number, floor, user_id, area")
         .eq("building_id", buildingId),
+      supabase
+        .from("retails")
+        .select("number, floor, user_id, area")
+        .eq("building_id", buildingId),
     ]);
 
   const allObjects = [
     ...(apartments || []).map((o) => ({ ...o, type: "апартамент" })),
     ...(offices || []).map((o) => ({ ...o, type: "офис" })),
-    ...(garages || []).map((o) => ({ ...o, type: "гараж", area: 0 })),
+    ...(garages || []).map((o) => ({ ...o, type: "гараж" })),
+    ...(retails || []).map((o) => ({ ...o, type: "ритейл" })),
   ];
 
   const totalObjects = allObjects.length;

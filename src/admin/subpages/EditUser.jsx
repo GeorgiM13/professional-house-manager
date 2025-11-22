@@ -16,6 +16,7 @@ function EditUser() {
   const [secondName, setSecondName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
   const [buildings, setBuildings] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -40,12 +41,18 @@ function EditUser() {
   const isApartment = propertyType === "apartment";
 
   const loadBuildings = async (inputValue) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("buildings")
       .select("id, name, address")
       .ilike("name", `%${inputValue}%`)
       .limit(10);
-    return data.map((b) => ({
+
+    if (error) {
+      console.error("Грешка при зареждане на сгради:", error);
+      return [];
+    }
+
+    return (data || []).map((b) => ({
       value: b.id,
       label: `${b.name}, ${b.address}`,
     }));
@@ -63,12 +70,27 @@ function EditUser() {
       return [];
     }
 
-    return data.map((u) => ({
+    let options = data.map((u) => ({
       value: u.id,
-      label: `${u.first_name} ${u.second_name ?? ""} ${u.last_name} (${
-        u.email
-      })`,
+      label:
+        `${u.first_name ?? ""} ${u.second_name ?? ""} ${
+          u.last_name ?? ""
+        }`.trim() || u.email,
     }));
+
+    if (selectedUser) {
+      const exists = options.some((o) => o.value === selectedUser.value);
+      if (!exists) {
+        options = [selectedUser, ...options];
+      } else {
+        options = [
+          ...options.filter((o) => o.value === selectedUser.value),
+          ...options.filter((o) => o.value !== selectedUser.value),
+        ];
+      }
+    }
+
+    return options;
   };
 
   useEffect(() => {
@@ -92,12 +114,14 @@ function EditUser() {
         setLastName(userData.last_name);
         setSelectedUser({
           value: userData.id,
-          label: `${userData.first_name} ${userData.second_name ?? ""} ${
-            userData.last_name
-          } (${userData.email})`,
+          label:
+            `${userData.first_name ?? ""} ${userData.second_name ?? ""} ${
+              userData.last_name ?? ""
+            }`.trim() || userData.email,
         });
 
         setPhone(userData.phone || "");
+        setEmail(userData.email || "");
         setRole(userData.role);
 
         const resolveBuildingSelect = (bId) => {
@@ -191,7 +215,7 @@ function EditUser() {
     }
 
     fetchData();
-  }, [id, buildingId]);
+  }, [id, buildingId, propertyType, propertyNumber]);
 
   const handleChange = (setter) => (e) => {
     setter(e.target.value);
@@ -212,6 +236,7 @@ function EditUser() {
             second_name: secondName,
             last_name: lastName,
             phone,
+            email,
             role,
           })
           .eq("id", id);
@@ -390,7 +415,7 @@ function EditUser() {
               className="custom-select"
               classNamePrefix="custom"
               cacheOptions
-              defaultOptions
+              defaultOptions={selectedUser ? [selectedUser] : true}
               loadOptions={loadUsers}
               value={selectedUser}
               onChange={async (option) => {
@@ -399,17 +424,31 @@ function EditUser() {
                 if (option?.value) {
                   const { data, error } = await supabase
                     .from("users")
-                    .select("phone")
+                    .select("phone, email")
                     .eq("id", option.value)
                     .single();
 
-                  if (!error) setPhone(data?.phone || "");
+                  if (!error) {
+                    setPhone(data?.phone || "");
+                    setEmail(data?.email || "");
+                  }
                 } else {
                   setPhone("");
+                  setEmail("");
                 }
               }}
               placeholder="Търсене по име"
               isClearable
+            />
+          </div>
+
+          <div className="edit-form-group">
+            <label>Имейл</label>
+            <input
+              name="email"
+              type="email"
+              value={email}
+              onChange={handleChange(setEmail)}
             />
           </div>
 

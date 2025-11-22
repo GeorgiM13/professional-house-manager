@@ -47,18 +47,20 @@ function AdminFees() {
       .from("fees")
       .select(
         `
-            id,
-            object_number,
-            type,
-            floor,
-            current_month_due,
-            total_due,
-            paid,
-            users (
-                id,
-                first_name,second_name,last_name
-            )
-        `
+        id,
+        object_number,
+        type,
+        floor,
+        current_month_due,
+        total_due,
+        paid,
+        users (
+          id,
+          first_name,
+          second_name,
+          last_name
+        )
+      `
       )
       .eq("building_id", buildingId)
       .eq("month", month)
@@ -68,6 +70,7 @@ function AdminFees() {
       console.error("Грешка при зареждане на такси:", error);
       return;
     }
+
     setFees(data || []);
   };
 
@@ -91,6 +94,7 @@ function AdminFees() {
       );
 
       alert(`✅ Генерирани са ${count} такси по алгоритъм "${algorithmType}".`);
+      await fetchFees(selectedBuilding, selectedMonth, selectedYear);
     } catch (err) {
       alert("⚠️ " + err.message);
     }
@@ -115,6 +119,25 @@ function AdminFees() {
     { length: 10 },
     (_, i) => new Date().getFullYear() - i
   );
+
+   const sortedFees = [...fees].sort((a, b) => {
+    const floorA = isNaN(Number(a.floor)) ? 9999 : Number(a.floor);
+    const floorB = isNaN(Number(b.floor)) ? 9999 : Number(b.floor);
+    if (floorA !== floorB) return floorA - floorB;
+
+    const numA =
+      parseFloat(String(a.object_number).replace(/[^\d.-]/g, "")) || 0;
+    const numB =
+      parseFloat(String(b.object_number).replace(/[^\d.-]/g, "")) || 0;
+
+    if (numA === numB) {
+      return String(a.object_number).localeCompare(
+        String(b.object_number),
+        "bg"
+      );
+    }
+    return numA - numB;
+  });
 
   return (
     <div className="fees-page">
@@ -184,8 +207,8 @@ function AdminFees() {
           </tr>
         </thead>
         <tbody>
-          {fees.length > 0 ? (
-            fees.map((fee) => (
+          {sortedFees.length > 0 ? (
+            sortedFees.map((fee) => (
               <tr key={fee.id}>
                 <td>{fee.object_number}</td>
                 <td>{fee.type}</td>

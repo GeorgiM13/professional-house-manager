@@ -19,25 +19,29 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     0
   );
 
-  const [{ data: apartments }, { data: offices }, { data: garages }, { data: retails }] =
-    await Promise.all([
-      supabase
-        .from("apartments")
-        .select("number, floor, user_id, area")
-        .eq("building_id", buildingId),
-      supabase
-        .from("offices")
-        .select("number, floor, user_id, area")
-        .eq("building_id", buildingId),
-      supabase
-        .from("garages")
-        .select("number, floor, user_id, area")
-        .eq("building_id", buildingId),
-      supabase
-        .from("retails")
-        .select("number, floor, user_id, area")
-        .eq("building_id", buildingId),
-    ]);
+  const [
+    { data: apartments },
+    { data: offices },
+    { data: garages },
+    { data: retails },
+  ] = await Promise.all([
+    supabase
+      .from("apartments")
+      .select("number, floor, user_id, area")
+      .eq("building_id", buildingId),
+    supabase
+      .from("offices")
+      .select("number, floor, user_id, area")
+      .eq("building_id", buildingId),
+    supabase
+      .from("garages")
+      .select("number, floor, user_id, area")
+      .eq("building_id", buildingId),
+    supabase
+      .from("retails")
+      .select("number, floor, user_id, area")
+      .eq("building_id", buildingId),
+  ]);
 
   const allObjects = [
     ...(apartments || []).map((o) => ({ ...o, type: "апартамент" })),
@@ -63,12 +67,16 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     throw new Error(
       "❌ Няма дефинирана ставка за домоуправител (management_fee_m2) в fee_settings!"
     );
+
   const managementFeePerM2 = Number(feeSetting.setting_value);
   const baseFee = totalExpenses / totalObjects;
+
+  const round2 = (x) => Math.round(Number(x) * 100) / 100;
 
   const feesToInsert = allObjects.map((obj) => {
     const area = Number(obj.area || 0);
     const feeForObject = baseFee + area * managementFeePerM2;
+    const rounded = round2(feeForObject);
 
     return {
       building_id: buildingId,
@@ -78,9 +86,9 @@ export async function byExpensesPlusFee(buildingId, month, year) {
       floor: obj.floor || null,
       month,
       year,
-      current_month_due: feeForObject.toFixed(2),
-      total_due: feeForObject.toFixed(2),
-      paid: 0,
+      current_month_due: rounded, // САМО за този месец
+      total_due: rounded,         // = текущ месец
+      paid: 0,                    // платеното за този месец
     };
   });
 

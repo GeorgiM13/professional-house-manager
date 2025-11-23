@@ -101,6 +101,105 @@
     background-color: #1e40af;
 }
 
+.pay-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.pay-all-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.user-group-header {
+  background: #f5f6fb;
+  cursor: pointer;
+}
+
+.user-group-header:hover {
+  background: #e9ebf7;
+}
+
+.user-group-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.user-toggle-icon {
+  font-size: 14px;
+}
+
+.user-name {
+  flex: 1;
+}
+
+.user-total-debt {
+  font-weight: 500;
+  font-size: 14px;
+  color: #374151;
+}
+
+.amount-paid {
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.amount-unpaid-current {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.amount-unpaid-previous {
+  font-weight: 600;
+  color: #ea580c;
+}
+
+.generate-btn {
+  padding: 8px 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #1b6db1 0%, #00aeff 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.generate-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+}
+
+.generate-btn:active {
+  transform: translateY(0);
+}
+
+.generate-btn::before {
+  content: "+";
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+
+
 @media (max-width: 768px) {
     .fees-header {
         flex-direction: column;

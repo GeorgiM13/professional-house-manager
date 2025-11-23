@@ -10,12 +10,13 @@ function AdminFees() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [expandedUsers, setExpandedUsers] = useState({});
+  const [groupByClient, setGroupByClient] = useState(true);
 
   const loadBuildings = async (inputValue) => {
     const { data, error } = await supabase
       .from("buildings")
       .select("id, name, address")
-      .ilike("name", `%${inputValue}%`)
+      .ilike("name", `%${inputValue || ""}%`)
       .limit(10);
 
     if (error) {
@@ -278,6 +279,78 @@ function AdminFees() {
     }));
   };
 
+  const renderFeeRow = (fee) => {
+    const key = getObjectKey(fee);
+    const remainingForObject = remainingByObject[key] || 0;
+
+    const totalForRow = Number(fee.total_due || 0);
+    const paidForRow = Number(fee.paid || 0);
+    const rowRemaining = Math.max(totalForRow - paidForRow, 0);
+
+    const currentDue = Number(fee.current_month_due || fee.total_due || 0);
+    const remainingCurrent = rowRemaining;
+    const remainingPrevious = Math.max(
+      remainingForObject - rowRemaining,
+      0
+    );
+
+    const isPaidCurrentMonth = rowRemaining <= 0.01;
+
+    let amountClass = "amount-unpaid-current";
+    if (remainingForObject <= 0.01) {
+      amountClass = "amount-paid";
+    } else if (remainingPrevious > 0.01 && !isPaidCurrentMonth) {
+      amountClass = "amount-unpaid-previous";
+    }
+
+    const tooltipText =
+      remainingForObject <= 0.01
+        ? "Всичко е платено."
+        : `Предишни месеци: ${remainingPrevious.toFixed(
+            2
+          )} лв.\nТекущ месец: ${remainingCurrent.toFixed(2)} лв.`;
+
+    return (
+      <tr key={fee.id}>
+        <td>{fee.object_number}</td>
+        <td>{fee.type}</td>
+        <td>{fee.floor || "-"}</td>
+        <td>
+          {fee.users
+            ? `${fee.users.first_name} ${fee.users.second_name || ""} ${
+                fee.users.last_name
+              }`
+            : "-"}
+        </td>
+        <td>{currentDue.toFixed(2)} лв.</td>
+        <td>
+          <span className={amountClass} title={tooltipText}>
+            {remainingForObject.toFixed(2)} лв.
+          </span>
+        </td>
+        <td>
+          {isPaidCurrentMonth ? (
+            <span className="status-badge status-done">
+              Платено за този месец
+            </span>
+          ) : (
+            <span className="status-badge status-new">
+              Неплатено за този месец
+            </span>
+          )}
+        </td>
+        <td>
+          <button className="pay-btn" onClick={() => payCurrent(fee)}>
+            Плати текущ месец
+          </button>
+          <button className="pay-all-btn" onClick={() => payAll(fee)}>
+            Плати всичко
+          </button>
+        </td>
+      </tr>
+    );
+  };
+
   return (
     <div className="fees-page">
       <div className="fees-header">
@@ -326,6 +399,18 @@ function AdminFees() {
           </select>
         </div>
 
+        <div className="fees-view-toggle">
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={groupByClient}
+              onChange={() => setGroupByClient((prev) => !prev)}
+            />
+            <span className="slider"></span>
+            <span className="label-text">Групирай по клиенти</span>
+          </label>
+        </div>
+
         <button className="generate-btn" onClick={handleGenerateFees}>
           Генерирай такси
         </button>
@@ -346,124 +431,38 @@ function AdminFees() {
         </thead>
         <tbody>
           {userGroups.length > 0 ? (
-            userGroups.map((group) => {
-              const totalRemainingForUser =
-                totalRemainingByUser[group.clientId] ?? 0;
+            groupByClient ? (
+              userGroups.map((group) => {
+                const totalRemainingForUser =
+                  totalRemainingByUser[group.clientId] ?? 0;
+                const isExpanded = expandedUsers[group.clientId] ?? false;
 
-              const isExpanded = expandedUsers[group.clientId] ?? false;
-
-              return (
-                <Fragment key={group.clientId}>
-                  <tr
-                    className="user-group-header"
-                    onClick={() => toggleUser(group.clientId)}
-                  >
-                    <td colSpan="8">
-                      <div className="user-group-header-inner">
-                        <span className="user-toggle-icon">
-                          {isExpanded ? "▾" : "▸"}
-                        </span>
-                        <span className="user-name">{group.name}</span>
-                        <span className="user-total-debt">
-                          Общо задължения: {totalRemainingForUser.toFixed(2)}{" "}
-                          лв.
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {isExpanded &&
-                    group.rows.map((fee) => {
-                      const key = getObjectKey(fee);
-                      const remainingForObject = remainingByObject[key] || 0;
-
-                      const totalForRow = Number(fee.total_due || 0);
-                      const paidForRow = Number(fee.paid || 0);
-                      const rowRemaining = Math.max(
-                        totalForRow - paidForRow,
-                        0
-                      );
-
-                      const currentDue = Number(
-                        fee.current_month_due || fee.total_due || 0
-                      );
-                      const remainingCurrent = rowRemaining;
-                      const remainingPrevious = Math.max(
-                        remainingForObject - rowRemaining,
-                        0
-                      );
-
-                      const isPaidCurrentMonth = rowRemaining <= 0.01;
-
-                      let amountClass = "amount-unpaid-current";
-                      if (remainingForObject <= 0.01) {
-                        amountClass = "amount-paid";
-                      } else if (
-                        remainingPrevious > 0.01 &&
-                        !isPaidCurrentMonth
-                      ) {
-                        amountClass = "amount-unpaid-previous";
-                      }
-
-                      const tooltipText =
-                        remainingForObject <= 0.01
-                          ? "Всичко е платено."
-                          : `Предишни месеци: ${remainingPrevious.toFixed(
-                              2
-                            )} лв.\nТекущ месец: ${remainingCurrent.toFixed(
-                              2
-                            )} лв.`;
-
-                      return (
-                        <tr key={fee.id}>
-                          <td>{fee.object_number}</td>
-                          <td>{fee.type}</td>
-                          <td>{fee.floor || "-"}</td>
-                          <td>
-                            {fee.users
-                              ? `${fee.users.first_name} ${
-                                  fee.users.second_name || ""
-                                } ${fee.users.last_name}`
-                              : "-"}
-                          </td>
-                          <td>{currentDue.toFixed(2)} лв.</td>
-                          <td>
-                            <span className={amountClass} title={tooltipText}>
-                              {remainingForObject.toFixed(2)} лв.
-                            </span>
-                          </td>
-                          <td>
-                            {isPaidCurrentMonth ? (
-                              <span className="status-badge status-done">
-                                Платено за този месец
-                              </span>
-                            ) : (
-                              <span className="status-badge status-new">
-                                Неплатено за този месец
-                              </span>
-                            )}
-                          </td>
-
-                          <td>
-                            <button
-                              className="pay-btn"
-                              onClick={() => payCurrent(fee)}
-                            >
-                              Плати текущ месец
-                            </button>
-                            <button
-                              className="pay-all-btn"
-                              onClick={() => payAll(fee)}
-                            >
-                              Плати всичко
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </Fragment>
-              );
-            })
+                return (
+                  <Fragment key={group.clientId}>
+                    <tr
+                      className="user-group-header"
+                      onClick={() => toggleUser(group.clientId)}
+                    >
+                      <td colSpan="8">
+                        <div className="user-group-header-inner">
+                          <span className="user-toggle-icon">
+                            {isExpanded ? "▾" : "▸"}
+                          </span>
+                          <span className="user-name">{group.name}</span>
+                          <span className="user-total-debt">
+                            Общо задължения:{" "}
+                            {totalRemainingForUser.toFixed(2)} лв.
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && group.rows.map(renderFeeRow)}
+                  </Fragment>
+                );
+              })
+            ) : (
+              sortedFees.map(renderFeeRow)
+            )
           ) : (
             <tr>
               <td colSpan="8" style={{ textAlign: "center", color: "#777" }}>

@@ -167,6 +167,79 @@
     box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
 }
 
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.badge-apartment {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-garage {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.badge-office {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
+.badge-retail {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background-color: #f1f5f9;
+}
+
+.users-table tbody tr:hover {
+    background-color: #f1f7ff; /* Малко по-синьо при посочване */
+    transform: translateY(-3px); /* Лек повдигащ ефект */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Лека сянка */
+    transition: all 0.2s ease;
+}
+
 @media (max-width: 768px) {
     .users-page {
         margin: 0 !important;

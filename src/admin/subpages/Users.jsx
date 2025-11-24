@@ -60,6 +60,9 @@ function Users() {
       fullName:
         [r.first_name, r.second_name, r.last_name].filter(Boolean).join(" ") ||
         "—",
+      company: r.company_name || "-",
+      email: r.email || "-",
+      phone: r.phone || "-",
       type:
         r.type === "apartment"
           ? "Апартамент"
@@ -101,84 +104,88 @@ function Users() {
       }, 100);
     }
   }, [rows, pendingScroll]);
+
+
   useEffect(() => {
     const searchUsersGlobally = debounce(async () => {
+      // 1. Нулиране при празно търсене
       if (!searchTerm.trim() && !selectedBuilding) {
         setRows([]);
         return;
       }
 
+      // 2. Ако е избрана сграда, не правим нищо (другата функция работи)
       if (selectedBuilding) return;
 
       const cleanTerm = searchTerm.trim().replace(/[%]/g, "");
-      const { data, error } = await supabase
+      const searchFilter = `first_name.ilike.%${cleanTerm}%,last_name.ilike.%${cleanTerm}%,company_name.ilike.%${cleanTerm}%`;
+
+      // 3. СТЪПКА А: Търсим хора С имоти (от property_units)
+      const propertiesPromise = supabase
+        .from("property_units")
+        .select("*")
+        .or(searchFilter)
+        .limit(50);
+
+      // 4. СТЪПКА Б: Търсим ВСИЧКИ хора (от users), които отговарят на името
+      // Тук е уловката: Това ще върне и хора, които вече сме намерили в стъпка А.
+      // Ще ги филтрираме по-долу.
+      const usersPromise = supabase
         .from("users")
-        .select(
-          `
-            id,
-            first_name,
-            second_name,
-            last_name,
-            apartments(floor, number, residents, area, building:buildings(id, name, address)),
-            garages(floor, number, area, building:buildings(id, name, address)),
-            offices(floor, number, area, building:buildings(id, name, address)),
-            retails(floor, number, area, building:buildings(id, name, address))
-          `
-        )
-        .or(
-          `first_name.ilike.%${cleanTerm}%,second_name.ilike.%${cleanTerm}%,last_name.ilike.%${cleanTerm}%`
-        )
-        .limit(100);
+        .select("id, first_name, second_name, last_name, company_name, email, phone")
+        .or(searchFilter)
+        .limit(50);
 
-      if (error) {
-        console.error("Грешка при глобално търсене:", error);
-        return;
-      }
+      // Изпълняваме заявките паралелно за бързина
+      const [propsResult, usersResult] = await Promise.all([propertiesPromise, usersPromise]);
 
-      const mappedRows = (data || []).flatMap((user) => {
-        const fullName = [user.first_name, user.second_name, user.last_name]
-          .filter(Boolean)
-          .join(" ");
-        const rows = [];
+      if (propsResult.error) console.error(propsResult.error);
+      if (usersResult.error) console.error(usersResult.error);
 
-        const push = (items, type, hasResidents = false) => {
-          (items || []).forEach((x) =>
-            rows.push({
-              userId: user.id,
-              fullName,
-              type,
-              floor: x.floor ?? "-",
-              number: x.number ?? "-",
-              residents: hasResidents ? x.residents ?? "-" : "-",
-              area: x.area ?? "-",
-              building: x.building,
-            })
-          );
-        };
+      // 5. Обработка на резултатите
+      const propertyRows = propsResult.data || [];
+      const allUsers = usersResult.data || [];
 
-        push(user.apartments, "Апартамент", true);
-        push(user.offices, "Офис");
-        push(user.garages, "Гараж");
-        push(user.retails, "Ритейл");
+      // Мапваме имотите (както досега)
+      const mappedProperties = propertyRows.map((r) => ({
+        userId: r.user_id,
+        fullName: [r.first_name, r.second_name, r.last_name].filter(Boolean).join(" ") || "—",
+        company: r.company_name,
+        email: r.email,
+        phone: r.phone,
+        type: r.type === "apartment" ? "Апартамент" : r.type === "office" ? "Офис" : r.type === "garage" ? "Гараж" : "Ритейл",
+        floor: r.floor ?? "-",
+        number: r.number ?? "-",
+        residents: r.residents ?? "-",
+        area: r.area ?? "-",
+        building: { id: r.building_id, name: r.building_name, address: r.building_address },
+      }));
 
-        if (rows.length === 0) {
-          rows.push({
-            userId: user.id,
-            fullName,
-            type: "-",
-            floor: "-",
-            number: "-",
-            residents: "-",
-            area: "-",
-            building: { id: null, name: "-", address: "-" },
-          });
-        }
+      // 6. Намираме потребители, които НЯМАТ имоти в резултатите
+      // Създаваме Set с ID-тата на хората, които вече показахме като собственици
+      const usersWithPropertiesIds = new Set(mappedProperties.map(p => p.userId));
 
-        return rows;
-      });
+      const usersWithoutProperties = allUsers
+        .filter(u => !usersWithPropertiesIds.has(u.id)) // Филтрираме тези, които вече сме показали
+        .map(u => ({
+          userId: u.id,
+          fullName: [u.first_name, u.second_name, u.last_name].filter(Boolean).join(" ") || "—",
+          company: u.company_name,
+          email: u.email,
+          phone: u.phone,
+          // Тъй като нямат имот:
+          type: "Без имот", // Или остави "-"
+          floor: "-",
+          number: "-",
+          residents: "-",
+          area: "-",
+          building: { id: null, name: "-", address: "-" }
+        }));
 
-      setRows(mappedRows);
-    }, 400);
+      // 7. Слепваме двата списъка
+      setRows([...mappedProperties, ...usersWithoutProperties]);
+      
+    }, 500);
 
     searchUsersGlobally();
     return () => searchUsersGlobally.cancel();
@@ -223,6 +230,22 @@ function Users() {
       }, 50);
     }
   };
+
+  const getTypeBadgeClass = (type) => {
+    switch (type) {
+      case "Апартамент":
+        return "badge-apartment";
+      case "Гараж":
+        return "badge-garage";
+      case "Офис":
+        return "badge-office";
+      case "Ритейл":
+        return "badge-retail";
+      default:
+        return "badge-garage";
+    }
+  };
+
   return (
     <div className="users-page">
       <div className="users-header">
@@ -279,14 +302,17 @@ function Users() {
       <table className="users-table">
         <thead>
           <tr>
-            <th>№</th>
-            <th>Име</th>
-            <th>Адрес</th>
+            <th className="text-center" style={{ width: "50px" }}>
+              №
+            </th>
+            <th>Име / Фирма</th>
+            {!selectedBuilding && <th>Адрес</th>}
+            <th>Контакти</th>
             <th>Тип имот</th>
-            <th>Етаж</th>
-            <th>Номер</th>
-            <th>Живущи</th>
-            <th>Площ (m²)</th>
+            <th className="text-right">Етаж</th>
+            <th className="text-right">Номер</th>
+            <th className="text-right">Живущи</th>
+            <th className="text-right">Площ (m²)</th>
           </tr>
         </thead>
         <tbody>
@@ -325,15 +351,78 @@ function Users() {
                 style={{ cursor: "pointer" }}
               >
                 <td>{(currentPage - 1) * pageSize + i + 1}</td>
-                <td>{row.fullName}</td>
-                <td>{`${row.building?.name || "-"}, ${
-                  row.building?.address || "-"
-                }`}</td>
-                <td>{row.type}</td>
-                <td>{row.floor}</td>
-                <td>{row.number}</td>
-                <td>{row.residents}</td>
-                <td>{row.area}</td>
+                <td data-label="Име">
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontWeight: 500, color: "#1f2937" }}>
+                      {row.fullName}
+                    </span>
+                    {row.company && (
+                      <span
+                        style={{
+                          fontSize: "0.85em",
+                          color: "#6b7280",
+                          marginTop: "2px",
+                        }}
+                      >
+                        🏢 {row.company}
+                      </span>
+                    )}
+                  </div>
+                </td>
+                {!selectedBuilding && (
+                  <td
+                    data-label="Адрес"
+                    style={{ fontSize: "0.9em", color: "#666" }}
+                  >
+                    {`${row.building?.name || "-"}, ${
+                      row.building?.address || "-"
+                    }`}
+                  </td>
+                )}
+                <td data-label="Контакти">
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "2px",
+                    }}
+                  >
+                    {row.email ? (
+                      <span style={{ fontSize: "0.9em", color: "#374151" }}>
+                        {row.email}
+                      </span>
+                    ) : (
+                      <span style={{ color: "#9ca3af", fontSize: "0.85em" }}>
+                        -
+                      </span>
+                    )}
+
+                    {row.phone && (
+                      <span style={{ fontSize: "0.8em", color: "#6b7280" }}>
+                        📞 {row.phone}
+                      </span>
+                    )}
+                  </div>
+                </td>
+
+                <td data-label="Тип">
+                  <span className={`type-badge ${getTypeBadgeClass(row.type)}`}>
+                    {row.type}
+                  </span>
+                </td>
+
+                <td data-label="Етаж" className="text-right tabular-nums">
+                  {row.floor}
+                </td>
+                <td data-label="Номер" className="text-right tabular-nums">
+                  {row.number}
+                </td>
+                <td data-label="Живущи" className="text-right tabular-nums">
+                  {row.residents}
+                </td>
+                <td data-label="Площ" className="text-right tabular-nums">
+                  {row.area}
+                </td>
               </tr>
             ))
           )}

@@ -4,6 +4,39 @@ import { supabase } from "../supabaseClient";
 import { generateFees } from "../algorithms/fees";
 import "./styles/AdminFees.css";
 
+
+
+const AnimatedCounter = ({ value, duration = 1000 }) => {
+  const [count, setCount] = useState(value);
+
+  useEffect(() => {
+    let startTimestamp = null;
+    const startValue = count;
+    const endValue = value;
+
+    if (startValue === endValue) return;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+
+      setCount(startValue + (endValue - startValue) * easeOutQuart);
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  }, [value]);
+
+  return <>{count.toFixed(2)}</>;
+};
+
+
+
 function AdminFees() {
   const [fees, setFees] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState("");
@@ -288,68 +321,91 @@ function AdminFees() {
     const rowRemaining = Math.max(totalForRow - paidForRow, 0);
 
     const currentDue = Number(fee.current_month_due || fee.total_due || 0);
-    const remainingCurrent = rowRemaining;
-    const remainingPrevious = Math.max(
-      remainingForObject - rowRemaining,
-      0
-    );
 
     const isPaidCurrentMonth = rowRemaining <= 0.01;
+    const isFullyPaid = remainingForObject <= 0.01;
 
-    let amountClass = "amount-unpaid-current";
-    if (remainingForObject <= 0.01) {
-      amountClass = "amount-paid";
-    } else if (remainingPrevious > 0.01 && !isPaidCurrentMonth) {
-      amountClass = "amount-unpaid-previous";
-    }
-
-    const tooltipText =
-      remainingForObject <= 0.01
-        ? "Всичко е платено."
-        : `Предишни месеци: ${remainingPrevious.toFixed(
-            2
-          )} лв.\nТекущ месец: ${remainingCurrent.toFixed(2)} лв.`;
+    let amountClass = "amount-debt-current";
+    if (isFullyPaid) amountClass = "amount-paid";
+    else if (remainingForObject > rowRemaining + 0.1)
+      amountClass = "amount-debt-old";
 
     return (
       <tr key={fee.id}>
-        <td>{fee.object_number}</td>
-        <td>{fee.type}</td>
+        <td>
+          <span style={{ fontWeight: "600" }}>{fee.object_number}</span>
+        </td>
+        <td style={{ color: "#64748b", fontSize: "0.9em" }}>{fee.type}</td>
         <td>{fee.floor || "-"}</td>
         <td>
-          {fee.users
-            ? `${fee.users.first_name} ${fee.users.second_name || ""} ${
-                fee.users.last_name
-              }`
-            : "-"}
-        </td>
-        <td>{currentDue.toFixed(2)} лв.</td>
-        <td>
-          <span className={amountClass} title={tooltipText}>
-            {remainingForObject.toFixed(2)} лв.
-          </span>
-        </td>
-        <td>
-          {isPaidCurrentMonth ? (
-            <span className="status-badge status-done">
-              Платено за този месец
-            </span>
+          {fee.users ? (
+            `${fee.users.first_name} ${fee.users.second_name || ""} ${
+              fee.users.last_name
+            }`
           ) : (
-            <span className="status-badge status-new">
-              Неплатено за този месец
+            <span style={{ color: "#94a3b8", fontStyle: "italic" }}>
+              Няма ползвател
             </span>
           )}
         </td>
+
+        <td className="text-right tabular-nums">{currentDue.toFixed(2)} лв.</td>
+
+        <td className="text-right tabular-nums">
+          <span className={amountClass} style={{ fontSize: "1.05em" }}>
+            {remainingForObject.toFixed(2)} лв.
+          </span>
+        </td>
+
+        <td style={{ textAlign: "center" }}>
+          {isPaidCurrentMonth ? (
+            <span className="status-badge status-paid">Платено</span>
+          ) : (
+            <span className="status-badge status-unpaid">Неплатено</span>
+          )}
+        </td>
+
         <td>
-          <button className="pay-btn" onClick={() => payCurrent(fee)}>
-            Плати текущ месец
-          </button>
-          <button className="pay-all-btn" onClick={() => payAll(fee)}>
-            Плати всичко
-          </button>
+          <div className="actions-cell">
+            {!isPaidCurrentMonth && (
+              <button
+                className="btn-action btn-secondary"
+                onClick={() => payCurrent(fee)}
+                title="Плати само текущото задължение"
+              >
+                Текущо
+              </button>
+            )}
+
+            {!isFullyPaid && (
+              <button
+                className="btn-action btn-primary"
+                onClick={() => payAll(fee)}
+                title="Изчисти всички задължения"
+              >
+                Всичко
+              </button>
+            )}
+          </div>
         </td>
       </tr>
     );
   };
+
+  const stats = useMemo(() => {
+    let totalToCollect = 0;
+    let totalCollected = 0;
+
+    currentFees.forEach((f) => {
+      totalToCollect += Number(f.current_month_due || 0);
+      totalCollected += Number(f.paid || 0);
+    });
+
+    const progress =
+      totalToCollect > 0 ? (totalCollected / totalToCollect) * 100 : 0;
+
+    return { totalToCollect, totalCollected, progress };
+  }, [currentFees]);
 
   return (
     <div className="fees-page">
@@ -416,6 +472,38 @@ function AdminFees() {
         </button>
       </div>
 
+      <div className="summary-bar">
+        <div className="summary-card">
+          <div className="summary-label">Очаквани приходи (месец)</div>
+          <div className="summary-value val-dark">
+            <AnimatedCounter value={stats.totalToCollect} /> лв.
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div className="summary-label">Събрани до момента</div>
+          <div className="summary-value val-green">
+            <AnimatedCounter value={stats.totalCollected} /> лв.
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div className="summary-label">Събираемост</div>
+          <div className="progress-container">
+            <div className="summary-value val-blue">
+              <AnimatedCounter value={stats.progress} />%
+            </div>
+
+            <div className="progress-track">
+              <div
+                className="progress-fill"
+                style={{ width: `${stats.progress}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <table className="fees-table">
         <thead>
           <tr>
@@ -423,10 +511,10 @@ function AdminFees() {
             <th>Вид</th>
             <th>Етаж</th>
             <th>Клиент</th>
-            <th>Задължения за текущ месец</th>
-            <th>Задължения общо</th>
-            <th>Статус</th>
-            <th>Действие</th>
+            <th className="text-right">Текуща такса</th>
+            <th className="text-right">Общо дължи</th>
+            <th style={{ textAlign: "center" }}>Статус</th>
+            <th className="text-right">Действие</th>
           </tr>
         </thead>
         <tbody>
@@ -450,8 +538,8 @@ function AdminFees() {
                           </span>
                           <span className="user-name">{group.name}</span>
                           <span className="user-total-debt">
-                            Общо задължения:{" "}
-                            {totalRemainingForUser.toFixed(2)} лв.
+                            Общо задължения: {totalRemainingForUser.toFixed(2)}{" "}
+                            лв.
                           </span>
                         </div>
                       </td>

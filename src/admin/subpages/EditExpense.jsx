@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import AsyncSelect from "react-select/async"
-import { supabase } from "../../supabaseClient"
-import CustomAlert from "../../components/CustomAlert"
-import ConfirmModal from "../../components/ConfirmModal"
-import "./styles/EditExpense.css"
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import AsyncSelect from "react-select/async";
+import { supabase } from "../../supabaseClient";
+import CustomAlert from "../../components/CustomAlert";
+import ConfirmModal from "../../components/ConfirmModal";
+import "./styles/EditExpense.css";
 
 function EditExpense() {
   const navigate = useNavigate();
@@ -26,9 +26,18 @@ function EditExpense() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const months = [
-    "Януари", "Февруари", "Март", "Април",
-    "Май", "Юни", "Юли", "Август",
-    "Септември", "Октомври", "Ноември", "Декември"
+    "Януари",
+    "Февруари",
+    "Март",
+    "Април",
+    "Май",
+    "Юни",
+    "Юли",
+    "Август",
+    "Септември",
+    "Октомври",
+    "Ноември",
+    "Декември",
   ];
 
   const currentYear = new Date().getFullYear();
@@ -41,7 +50,7 @@ function EditExpense() {
       .select("id, name, address")
       .ilike("name", `%${inputValue || ""}%`)
       .limit(10);
-    return data.map(b => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+    return data.map((b) => ({ value: b.id, label: `${b.name}, ${b.address}` }));
   };
 
   useEffect(() => {
@@ -61,7 +70,9 @@ function EditExpense() {
           current_month: expense.current_month,
           paid: expense.paid,
           building_id: expense.building_id,
-          building_label: expense.building ? `${expense.building.name}, ${expense.building.address}` : "",
+          building_label: expense.building
+            ? `${expense.building.name}, ${expense.building.address}`
+            : "",
           notes: expense.notes || "",
         });
       } catch (err) {
@@ -82,10 +93,7 @@ function EditExpense() {
   async function handleDeleteConfirmed() {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("expenses").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -102,12 +110,11 @@ function EditExpense() {
     }
   }
 
-
   function handleChange(e) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   }
 
@@ -115,10 +122,10 @@ function EditExpense() {
     e.preventDefault();
 
     const newErrors = {};
-    if (!formData.type) newErrors.type = 'Моля въведете вид разход';
-    if (!formData.month) newErrors.month = 'Моля изберете месец';
-    if (!formData.year) newErrors.year = 'Моля въведете година';
-    if (!formData.building_id) newErrors.building_id = 'Моля изберете сграда';
+    if (!formData.type) newErrors.type = "Моля въведете вид разход";
+    if (!formData.month) newErrors.month = "Моля изберете месец";
+    if (!formData.year) newErrors.year = "Моля въведете година";
+    if (!formData.building_id) newErrors.building_id = "Моля изберете сграда";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -164,7 +171,40 @@ function EditExpense() {
       <h1 className="page-title">Редакция на разход</h1>
 
       <form className="edit-expense-form" onSubmit={handleSubmit}>
-        <div className={`form-group ${errors.type ? 'has-error' : ''}`}>
+        <div className="form-group">
+          <label>Сграда *</label>
+          <AsyncSelect
+            className="custom-select"
+            classNamePrefix="custom"
+            cacheOptions
+            defaultOptions
+            loadOptions={loadBuildings}
+            value={
+              formData.building_id
+                ? {
+                    value: formData.building_id,
+                    label: formData.building_label,
+                  }
+                : null
+            }
+            onChange={(option) => {
+              setFormData((prev) => ({
+                ...prev,
+                building_id: option?.value || "",
+                building_label: option?.label || "",
+              }));
+              if (errors.building_id)
+                setErrors((prev) => ({ ...prev, building_id: "" }));
+            }}
+            placeholder="Изберете сграда"
+            isClearable
+          />
+          {errors.building_id && (
+            <span className="error-message">{errors.building_id}</span>
+          )}
+        </div>
+
+        <div className={`form-group ${errors.type ? "has-error" : ""}`}>
           <label htmlFor="type">Вид разход *</label>
           <select
             id="type"
@@ -177,6 +217,12 @@ function EditExpense() {
             <option value="fee_lift">Сервиз асансьор</option>
             <option value="electricity_light">Ток осветление</option>
             <option value="cleaner">Хигиенист</option>
+            <option value="repair">Ремонт</option>
+            <option value="manager">Домоуправител</option>
+            <option value="water_building">Вода обща</option>
+            <option value="lighting">Осветление (Пури/Крушки)</option>
+            <option value="cleaning_supplies">Консумативи за почистване</option>
+            <option value="fee_annual_review">Годишен преглед асансьор</option>
             <option value="other">Други</option>
           </select>
           {errors.type && <span className="error-message">{errors.type}</span>}
@@ -188,14 +234,18 @@ function EditExpense() {
             name="month"
             value={formData.month}
             onChange={handleChange}
-            className={errors.month ? 'error' : ''}
+            className={errors.month ? "error" : ""}
           >
             <option value="">-- Избери месец --</option>
             {months.map((m, index) => (
-              <option key={index + 1} value={index + 1}>{m}</option>
+              <option key={index + 1} value={index + 1}>
+                {m}
+              </option>
             ))}
           </select>
-          {errors.month && <span className="error-message">{errors.month}</span>}
+          {errors.month && (
+            <span className="error-message">{errors.month}</span>
+          )}
         </div>
 
         <div className="form-group">
@@ -204,10 +254,12 @@ function EditExpense() {
             name="year"
             value={formData.year}
             onChange={handleChange}
-            className={errors.year ? 'error' : ''}
+            className={errors.year ? "error" : ""}
           >
-            {years.map(year => (
-              <option key={year} value={year}>{year}</option>
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
             ))}
           </select>
           {errors.year && <span className="error-message">{errors.year}</span>}
@@ -230,37 +282,10 @@ function EditExpense() {
 
         <div className="form-group">
           <label>Статус на плащане</label>
-          <select
-            name="paid"
-            value={formData.paid}
-            onChange={handleChange}
-          >
+          <select name="paid" value={formData.paid} onChange={handleChange}>
             <option value="не">Чака плащане</option>
             <option value="да">Платено</option>
           </select>
-        </div>
-
-        <div className="form-group">
-          <label>Сграда *</label>
-          <AsyncSelect
-            className="custom-select"
-            classNamePrefix="custom"
-            cacheOptions
-            defaultOptions
-            loadOptions={loadBuildings}
-            value={formData.building_id ? { value: formData.building_id, label: formData.building_label } : null}
-            onChange={(option) => {
-              setFormData(prev => ({
-                ...prev,
-                building_id: option?.value || "",
-                building_label: option?.label || ""
-              }));
-              if (errors.building_id) setErrors(prev => ({ ...prev, building_id: "" }));
-            }}
-            placeholder="Изберете сграда"
-            isClearable
-          />
-          {errors.building_id && <span className="error-message">{errors.building_id}</span>}
         </div>
 
         <div className="form-group">
@@ -276,16 +301,24 @@ function EditExpense() {
 
         <div className="form-buttons">
           <button type="submit" className="btn primary" disabled={loading}>
-            {loading ? 'Запазване...' : 'Запази промените'}
+            {loading ? "Запазване..." : "Запази промените"}
           </button>
-          <button type="button" className="btn secondary" onClick={() => navigate("/admin/expenses")}>
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => navigate("/admin/expenses")}
+          >
             Отказ
           </button>
-          <button type="button" className="btn danger" onClick={handleDelete} disabled={loading}>
+          <button
+            type="button"
+            className="btn danger"
+            onClick={handleDelete}
+            disabled={loading}
+          >
             Изтрий разход
           </button>
         </div>
-
       </form>
       <CustomAlert
         message={alertMessage}

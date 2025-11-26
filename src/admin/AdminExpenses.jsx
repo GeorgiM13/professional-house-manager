@@ -75,7 +75,27 @@ function AdminExpenses() {
     fee_lift: "Сервиз асансьор",
     electricity_light: "Ток осветление",
     cleaner: "Хигиенист",
+    repair: "Ремонт",
+    manager: "Домоуправител",
+    water_building: "Вода обща",
+    lighting: "Осветление",
+    cleaning_supplies: "Консумативи за почистване",
+    fee_annual_review: "Годишен преглед асансьор",
     other: "Други",
+  };
+
+  const getExpenseIcon = (type) => {
+    if (!type) return '📝';
+    const t = type.toLowerCase();
+    if (t.includes('electricity') || t.includes('tok')) return '⚡';
+    if (t.includes('lift') || t.includes('asansyor')) return '🛗';
+    if (t.includes('water')) return '💧';
+    if (t.includes('clean')) return '🧹';
+    if (t.includes('repair')) return '🛠️';
+    if (t.includes('manager')) return '👨‍💼';
+    if (t.includes('lighting')) return '💡';
+    if (t.includes('review')) return '📋';
+    return '📦'; // За други
   };
 
   return (
@@ -84,10 +104,7 @@ function AdminExpenses() {
         <div className="expenses-left">
           <h1>Разходи</h1>
           <div className="expenses-subheader">
-            <div className="left">
-              <span>Разходи, свързани със сгради</span>
-              <p>Преглед на всички разходи</p>
-            </div>
+            <p>Управление и преглед на финансовите отчети</p>
           </div>
         </div>
         <div className="expenses-right">
@@ -99,67 +116,88 @@ function AdminExpenses() {
             loadOptions={loadBuildings}
             onChange={(option) => {
               setSelectedBuilding(option ? option.value : "all");
+              setCurrentPage(1);
             }}
             placeholder="Изберете сграда"
             isClearable
           />
 
           <button className="add-expense-btn" onClick={() => navigate("/admin/addexpense")}>
-            Добавяне на разход
+            + Добави разход
           </button>
         </div>
       </div>
+
+      
 
       <table className="expenses-table">
         <thead>
           <tr>
             <th>№</th>
-            <th>Вид</th>
+            <th>Вид Разход</th>
             <th>Адрес</th>
-            <th>Месец</th>
-            <th>Година</th>
-            <th>Платено</th>
+            <th>Период</th>
+            <th>Статус</th>
+            <th>Бележка</th>
             <th>Сума</th>
           </tr>
         </thead>
         <tbody>
-          {filteredExpenses.length === 0 ? (
+          {expenses.length === 0 ? (
             <tr>
               <td colSpan="7" className="no-expenses">
-                Няма добавени разходи.
+                Няма намерени записи.
               </td>
             </tr>
           ) : (
-            filteredExpenses.map((exp, idx) => (
+            expenses.map((exp, idx) => (
               <tr
                 key={exp.id}
                 onClick={() => navigate(`/admin/editexpense/${exp.id}`)}
                 style={{ cursor: "pointer" }}
               >
-                <td data-label="№">{idx + 1}</td>
-                <td data-label="Вид">{expenseTypes[exp.type] || exp.type}</td>
-                <td data-label="Адрес">
+                <td style={{ color: '#999', fontSize: '0.85rem' }}>
+                   {(currentPage - 1) * pageSize + idx + 1}
+                </td>
+                
+                <td data-label="Вид">
+                  <span className="expense-icon">{getExpenseIcon(exp.type)}</span>
+                  {expenseTypes[exp.type] || exp.type}
+                </td>
+                
+                <td data-label="Адрес" style={{ fontWeight: 500 }}>
                   {exp.building?.name}, {exp.building?.address}
                 </td>
-                <td data-label="Месец">{monthNames[exp.month]}</td>
-                <td data-label="Година">{exp.year}</td>
+                
+                <td data-label="Период">
+                  {monthNames[exp.month]} {exp.year}
+                </td>
+                
                 <td data-label="Платено">
                   <span
                     className={
                       exp.paid === "да"
-                        ? "status-badge status-paid"
-                        : "status-badge status-unpaid"
+                        ? "status-badge-expenses status-paid-expenses"
+                        : "status-badge-expenses status-unpaid-expenses"
                     }
                   >
-                    {exp.paid === "да" ? "Да" : "Не"}
+                    {exp.paid === "да" ? "Платено" : "Неплатено"}
                   </span>
                 </td>
-                <td data-label="Сума">{exp.current_month} лв</td>
+
+                <td style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                    {exp.notes ? (exp.notes.length > 25 ? exp.notes.substring(0, 25) + '...' : exp.notes) : '-'}
+                </td>
+                
+                <td data-label="Сума" className="amount-cell">
+                  {Number(exp.current_month).toFixed(2)} лв.
+                </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
       <div className="pagination">
         <button
           disabled={currentPage === 1}
@@ -167,9 +205,9 @@ function AdminExpenses() {
         >
           ⬅ Предишна
         </button>
-        <span>Страница {currentPage} от {totalPages}</span>
+        <span>Страница {currentPage} от {totalPages || 1}</span>
         <button
-          disabled={currentPage === totalPages}
+          disabled={currentPage >= totalPages}
           onClick={() => setCurrentPage(p => p + 1)}
         >
           Следваща ➡

@@ -34,4 +34,5 @@ src/someOtherFile.js
 src/thirdFile.js
 tools/import/output/
 tools/import/data/
+tools/import/data_expenses/ledger.xlsx
 

@@ -1,234 +1,304 @@
 .expenses-page {
-    padding: 20px;
-    margin-left: 20px;
-    outline: none;
-    user-select: none;
-    background-color: rgba(0, 17, 255, 0.05);
-    border-radius: 30px;
-    min-height: 100vh;
-    font-family: Arial, sans-serif;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .expenses-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.expenses-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #1f2937;
+.expenses-left h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #2c3e50;
+}
+
+.expenses-subheader p {
+  margin: 5px 0 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
 }
 
 .expenses-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
-.expenses-right select {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #333;
-    background-color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+.custom-select {
+  width: 300px;
 }
 
 .add-expense-btn {
-    padding: 8px 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    background: linear-gradient(135deg, #1b6db1 0%, #00aeff 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
 }
 
-.expenses-header button:hover {
-    background-color: #1d4ed8;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
-}
-
-.add-expense-btn::before {
-    content: "+";
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.expenses-subheader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.expenses-subheader .left span {
-    font-weight: bold;
-    color: #2563eb;
-    font-size: 1.1rem;
-}
-
-.expenses-subheader .left p {
-    color: #64748b;
-    margin-top: 5px;
+.add-expense-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
 }
 
 .expenses-table {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    border-collapse: separate;
-    border-spacing: 0;
-    background-color: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    font-size: 0.9rem;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 20px;
 }
 
 .expenses-table thead {
-    background-color: #f7f9fc;
-}
-
-.expenses-table th,
-.expenses-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid #f0f0f0;
-    color: #333;
-    text-align: center;
+  background-color: #f1f3f5;
 }
 
 .expenses-table th {
-    font-weight: 600;
-    white-space: nowrap;
+  padding: 16px;
+  text-align: left;
+  color: #495057;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.expenses-table th:last-child,
+.expenses-table td:last-child {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.expenses-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f3f5;
+  color: #333;
+  vertical-align: middle;
 }
 
 .expenses-table tbody tr {
-    transition: background-color 0.2s ease;
-}
-
-.expenses-table tbody tr:nth-child(even) {
-    background-color: #f8f9fc;
+  transition: background-color 0.2s;
 }
 
 .expenses-table tbody tr:hover {
-    background-color: #eef5ff;
+  background-color: #f8f9fa;
+  transform: scale(1.005);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.expense-icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.amount-cell {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1.05rem;
+}
+
+.status-badge-expenses {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+}
+
+.status-paid-expenses {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+}
+
+.status-unpaid-expenses {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
 }
 
 .no-expenses {
-    text-align: center;
-    padding: 20px;
-    color: #64748b;
+  text-align: center;
+  padding: 40px;
+  color: #adb5bd;
+  font-style: italic;
 }
 
-.expense-row:hover {
-    background-color: #f8fafc;
-    cursor: pointer;
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 20px 0;
 }
 
-.status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    border-radius: 12px;
+.pagination button {
+  background: white;
+  border: 1px solid #dee2e6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #007bff;
+  font-weight: 600;
+  transition: all 0.2s;
 }
 
-.status-paid {
-    background: linear-gradient(135deg, #1bb14d 0%, #00832c 100%);
-    color: white;
+.pagination button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  border-color: #ced4da;
 }
 
-.status-unpaid {
-    background: linear-gradient(135deg, #a10000 0%, #ff0000 100%);
-    color: white;
+.pagination button:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
 }
+
+.pagination span {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
 
 @media (max-width: 768px) {
-    .expenses-page {
-        margin: 0 !important;
-        padding: 20px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        border-radius: 20px !important;
-    }
 
-    .expenses-header,
-    .reports-subheader {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
+  .expenses-page {
+    padding: 15px !important;
+    background: #f5f7fa;
+  }
 
-    .expenses-right,
-    .expenses-header select {
-        width: 100%;
-        justify-content: center;
-    }
+  .expenses-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
 
-    .expenses-table {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
+  .expenses-right, .custom-select, .add-expense-btn {
+    width: 100%;
+  }
 
-    .expenses-table thead {
-        display: none;
-    }
+  .expenses-table {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
 
-    .expenses-table tbody tr {
-        display: block;
-        width: 100% !important;
-        margin-bottom: 10px !important;
-        border-radius: 10px;
-        background-color: white;
-        padding: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.164);
-        box-sizing: border-box;
-    }
+  .expenses-table thead {
+    display: none;
+  }
 
-    .expenses-table tbody td {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        gap: 5px;
-        word-break: break-word;
-        padding: 6px 0;
-        border-bottom: 1px solid #f0f0f0;
-        box-sizing: border-box;
-        min-width: 0;
-    }
+  .expenses-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-    .expenses-table tbody td:last-child {
-        border-bottom: none;
-    }
+  .expenses-table tbody tr {
+    background: white;
+    display: grid;
+    grid-template-columns: 40px 1fr auto; 
+    grid-template-rows: auto auto;
+    gap: 2px 12px;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    align-items: center;
+    border: 1px solid #edf2f7;
+  }
 
-    .expenses-table tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #2563eb;
-        margin-right: 0;
-    }
+  .expenses-table td[data-label="№"],
+  .expenses-table td:nth-child(6) {
+    display: none; 
+  }
+
+  .expenses-table td[data-label="Вид"] {
+    grid-column: 1 / 3;
+    grid-row: 1 / 2;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+  }
+  
+  .expenses-table td[data-label="Вид"] .expense-icon {
+    font-size: 1.4rem; 
+    margin-right: 12px;
+    width: 40px;
+    height: 40px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .expenses-table td[data-label="Сума"] {
+    grid-column: 3 / 4;
+    grid-row: 1 / 2;
+    text-align: right;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #0f172a;
+    padding: 0;
+    border: none;
+  }
+
+  .expenses-table td[data-label="Адрес"] {
+    grid-column: 2 / 3; 
+    grid-row: 2 / 3;
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 0;
+    border: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: -5px;
+  }
+
+  .expenses-table td[data-label="Период"] {
+    display: none; 
+  }
+
+  .expenses-table td[data-label="Платено"] {
+    grid-column: 3 / 4;
+    grid-row: 2 / 3;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0;
+    border: none;
+    margin-top: 5px;
+  }
+
+  .expenses-table td::before {
+    content: none !important;
+  }
 }

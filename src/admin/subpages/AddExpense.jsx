@@ -133,6 +133,17 @@ function AddExpense() {
               <option value="fee_annual_review">
                 Годишен преглед асансьор
               </option>
+              <option value="internet_video">Интернет и Видеонаблюдение</option>
+              <option value="access_control">Контрол на достъп (Чипове)</option>
+              <option value="pest_control">Дезинсекция (Пръскане)</option>
+              <option value="cleaning_supplies">
+                Консумативи за почистване
+              </option>
+              <option value="fee_annual_review">
+                Годишен преглед асансьор
+              </option>
+              <option value="internet_video">Интернет и Видеонаблюдение</option>
+              <option value="access_control">Контрол на достъп (Чипове)</option>
               <option value="other">Други</option>
             </select>
             {errors.type && (

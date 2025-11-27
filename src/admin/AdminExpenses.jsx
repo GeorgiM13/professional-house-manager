@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import AsyncSelect from "react-select/async"
 import { supabase } from "../supabaseClient"
+import ExpenseForecast from "./ai/components/ExpenseForecast"
 import "./styles/AdminExpenses.css"
 
 function AdminExpenses() {
@@ -95,7 +96,10 @@ function AdminExpenses() {
     if (t.includes('manager')) return '👨‍💼';
     if (t.includes('lighting')) return '💡';
     if (t.includes('review')) return '📋';
-    return '📦'; // За други
+    if (t.includes('internet') || t.includes('video')) return '📡';
+    if (t.includes('Дезинсекция') || t.includes('pest')) return '🕷️';
+    if (t.includes('access') || t.includes('chip')) return '🔑';
+    return '📦';
   };
 
   return (
@@ -127,6 +131,8 @@ function AdminExpenses() {
           </button>
         </div>
       </div>
+
+      <ExpenseForecast buildingId={selectedBuilding} />
 
       
 

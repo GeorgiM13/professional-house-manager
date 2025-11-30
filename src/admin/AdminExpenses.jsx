@@ -82,6 +82,9 @@ function AdminExpenses() {
     lighting: "Осветление",
     cleaning_supplies: "Консумативи за почистване",
     fee_annual_review: "Годишен преглед асансьор",
+    internet_video: "Интернет/Видеонаблюдение",
+    access_control: "Контрол на достъп",
+    pest_control: "Дезинсекция",
     other: "Други",
   };
 

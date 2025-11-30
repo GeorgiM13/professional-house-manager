@@ -90,7 +90,6 @@ const ExpenseForecast = ({ buildingId }) => {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      // 🛡️ ЗАЩИТА: Проверяваме дали стойностите съществуват и са числа
       const actualItem = payload.find(p => p.dataKey === 'actual');
       const forecastItem = payload.find(p => p.dataKey === 'forecast');
       const trendItem = payload.find(p => p.dataKey === 'trend');
@@ -114,7 +113,6 @@ const ExpenseForecast = ({ buildingId }) => {
           <p style={{ margin: '0 0 12px', fontWeight: 600, color: COLORS.darkText, textTransform: 'capitalize' }}>{dateLabel}</p>
           
           <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-            {/* Показваме Фактура само ако има стойност */}
             {typeof actual === 'number' ? (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <span style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: COLORS.text}}>
@@ -133,7 +131,6 @@ const ExpenseForecast = ({ buildingId }) => {
                 </div>
             ) : null}
             
-            {/* Показваме Тренд само ако е наличен (Prophet модел) */}
             {typeof trend === 'number' && (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px dashed #e2e8f0'}}>
                     <span style={{fontSize: '0.8rem', color: '#94a3b8'}}>Базов Тренд:</span>
@@ -236,7 +233,6 @@ const ExpenseForecast = ({ buildingId }) => {
                     
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1 }} />
                     
-                    {/* Тренд линия - показва се само ако има данни за нея */}
                     <Line 
                         type="monotone" 
                         dataKey="trend" 
@@ -266,7 +262,6 @@ const ExpenseForecast = ({ buildingId }) => {
                         strokeDasharray="1 0" 
                     />
                     
-                    {/* Brush - само ако има достатъчно данни, за да не гърми */}
                     <Brush 
                         dataKey="date" 
                         height={30} 

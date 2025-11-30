@@ -1,12 +1,10 @@
 /**
- * importProperties.js (v5)
+ * importProperties.js (v6 - Fixes Applied)
  * -------------------------
- * - Без дублиране на акаунти
- * - Записване в базата: node tools/import/importProperties.js --file tools/import/data/Arena_shablon.xlsx --import
- * - Безопасен preview (--preview = без запис към Supabase)
- * - Записване в .doc node tools/import/exportDoc.js
- * - Коректно засичане на тип имот (апартамент / гараж / офис)
- * - Видим summary + skipped
+ * - Запазена оригинална логика на v5
+ * - FIX: Филтриране на празни редове (excel trailing commas)
+ * - FIX: Групиране на собственици (един имейл за всички имоти на един човек)
+ * node tools/import/importProperties.js --file tools/import/data/import_data.xlsx --preview
  */
 
 import XLSX from "xlsx";
@@ -54,35 +52,10 @@ function generateStrongPassword() {
 
 function transliterateToLatin(str) {
   const map = {
-    а: "a",
-    б: "b",
-    в: "v",
-    г: "g",
-    д: "d",
-    е: "e",
-    ж: "zh",
-    з: "z",
-    и: "i",
-    й: "y",
-    к: "k",
-    л: "l",
-    м: "m",
-    н: "n",
-    о: "o",
-    п: "p",
-    р: "r",
-    с: "s",
-    т: "t",
-    у: "u",
-    ф: "f",
-    х: "h",
-    ц: "ts",
-    ч: "ch",
-    ш: "sh",
-    щ: "sht",
-    ъ: "a",
-    ю: "yu",
-    я: "ya",
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z",
+    и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p",
+    р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch",
+    ш: "sh", щ: "sht", ъ: "a", ю: "yu", я: "ya",
   };
   return (str || "")
     .toLowerCase()
@@ -94,28 +67,23 @@ function transliterateToLatin(str) {
 
 /**
  * Генерира четим и уникален username.
- * Пример: Георги Пейчев → gpeichev, Камен Патриков → kpatrikov, ПИК 2003 ООД → pik2003
  */
 async function generateUsername(first, last, company) {
   let base = "";
 
   if (first && last) {
-    // ако имаме име и фамилия → gpeichev
     base = `${transliterateToLatin(first)}${transliterateToLatin(last)}`;
   } else if (company) {
-    // ако няма име, но има фирма → първата дума от фирмата
     base = transliterateToLatin(company);
   } else {
     base = "user";
   }
 
-  // премахваме нежелани символи
   base = base.replace(/[^a-z0-9]/g, "");
 
   let username = base || "user";
   let counter = 1;
 
-  // проверка за дубликат само при реален импорт
   if (!isPreview) {
     let exists;
     do {
@@ -133,47 +101,18 @@ async function generateUsername(first, last, company) {
 }
 
 function generateEmail(building, type, number) {
-  // Транслитерация от кирилица → латиница
   const cyrToLat = {
-    а: "a",
-    б: "b",
-    в: "v",
-    г: "g",
-    д: "d",
-    е: "e",
-    ж: "zh",
-    з: "z",
-    и: "i",
-    й: "y",
-    к: "k",
-    л: "l",
-    м: "m",
-    н: "n",
-    о: "o",
-    п: "p",
-    р: "r",
-    с: "s",
-    т: "t",
-    у: "u",
-    ф: "f",
-    х: "h",
-    ц: "ts",
-    ч: "ch",
-    ш: "sh",
-    щ: "sht",
-    ъ: "a",
-    ю: "yu",
-    я: "ya",
-    ь: "",
-    ы: "i",
-    э: "e",
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z",
+    и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p",
+    р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch",
+    ш: "sh", щ: "sht", ъ: "a", ю: "yu", я: "ya", ь: "", ы: "i", э: "e",
   };
 
   const slug = normalize(building)
     .split("")
     .map((ch) => cyrToLat[ch] || ch)
     .join("")
-    .replace(/[^a-z0-9]/g, ""); // маха всичко освен букви и цифри
+    .replace(/[^a-z0-9]/g, "");
 
   return `${slug}.${type}.${number}@example.com`;
 }
@@ -194,8 +133,6 @@ async function getBuildingIdByName(name) {
   if (buildingCache.has(name)) return buildingCache.get(name);
 
   if (isPreview) {
-    // в preview не удряме базата, но все пак връщаме фиктивно id,
-    // за да може редът да мине и да падне в CSV
     buildingCache.set(name, 0);
     return 0;
   }
@@ -224,18 +161,15 @@ async function getAuthUserByEmail(email) {
 
 /**
  * Връща: { user, passwordPlain, status }
- * - user: { id, ... }
- * - passwordPlain: генерирана парола или "" ако е съществуващ
- * - status: текст за лога
  */
 async function findOrCreateUser(row, type, number, building) {
-  const { first_name, second_name, last_name, company_name, email, phone } =
-    row;
+  const { first_name, second_name, last_name, company_name, email, phone } = row;
+  
   const cleanedPhone = String(phone || "")
-    .replace(/[^0-9]/g, "") // само цифри
-    .replace(/^0+/, ""); // маха водещи нули
+    .replace(/[^0-9]/g, "") 
+    .replace(/^0+/, ""); 
 
-  // 🧩 Уникален cacheKey
+  // 1. Първо определяме ключа за кеша (Кой е човекът?)
   let cacheKey = "";
   if (email && email.trim() !== "") {
     cacheKey = normalize(email);
@@ -248,44 +182,62 @@ async function findOrCreateUser(row, type, number, building) {
     const combined = `${first_name || ""} ${second_name || ""} ${
       last_name || ""
     } ${cleanCompany}`.trim();
-    cacheKey = `person:${normalize(combined)}`;
+    
+    // Ако случайно няма нито име, нито фирма, ползваме имота като ID
+    if (!combined) {
+        cacheKey = `object:${normalize(building)}-${normalize(type)}-${number}`;
+    } else {
+        cacheKey = `person:${normalize(combined)}`;
+    }
   } else {
-    cacheKey = `object:${normalize(building)}-${normalize(type)}`;
+    cacheKey = `object:${normalize(building)}-${normalize(type)}-${number}`;
   }
 
-  // 🧠 Повторно използване от кеша
+  // 2. ПРОВЕРКА В КЕША: Преди да генерираме нов имейл!
   if (userCache.has(cacheKey)) {
     const cached = userCache.get(cacheKey);
-    cached.reused = true;
-    cached.status = "🔁 Повторно използван акаунт";
-    cached.source = "local-cache";
-    return cached;
+    // Връщаме намерения потребител. Така той запазва оригиналния си имейл (от първия имот)
+    // и не генерираме нов адрес (напр. arena.offices.28)
+    return {
+        ...cached,
+        reused: true,
+        status: "🔁 Повторно използван акаунт",
+        source: "local-cache"
+    };
   }
 
-  // 🧩 Генерираме имейл, ако няма реален
+  // 3. Едва ако НЕ е намерен в кеша, генерираме имейл
+  // Ако в ексела няма имейл, генерираме го на база текущия имот.
+  // За следващите имоти на същия човек, кодът ще спре на т.2 и ще ползва този първи имейл.
   const finalEmail = email?.trim()
     ? email
     : generateEmail(building, type, number);
+
   let user = null;
   let passwordPlain = null;
   let status = "";
   let source = "";
+  let username = "";
 
-  // 🧪 Preview режим (без запис)
+  // 🧪 Preview режим
   if (isPreview) {
     passwordPlain = generateStrongPassword();
-    const username = await generateUsername(
-      first_name,
-      last_name,
-      company_name
-    );
-    status = "🧪 Нов акаунт (симулиран)";
-    const fakeUser = { id: cacheKey.length, email: finalEmail, username };
+    username = row.username || await generateUsername(first_name, last_name, company_name);
+    
+    // Fallback за username
+    if (!username || username === "(няма)") {
+        username = finalEmail.split('@')[0];
+    }
 
-    // 🧩 Проверка за вече генериран акаунт без имейл
+    status = "🧪 Нов акаунт (симулиран)";
+    
+    const fakeUser = { id: cacheKey.length + Date.now(), email: finalEmail, username };
+
+    // Проверка за всеки случай (ако кеш логиката по-горе е пропуснала нещо)
     if (!email && userCache.has(cacheKey)) {
       const existing = userCache.get(cacheKey);
       fakeUser.email = existing.user.email;
+      fakeUser.username = existing.user.username;
       passwordPlain = existing.passwordPlain;
       status = "🔁 Повторно използван акаунт";
     }
@@ -303,11 +255,11 @@ async function findOrCreateUser(row, type, number, building) {
   }
 
   // 💾 Реален режим — Supabase
-  if (email) {
+  if (finalEmail) { // Ползваме вече дефинирания finalEmail
     const { data } = await supabase
       .from("users")
-      .select("id, email, auth_user_id")
-      .eq("email", email)
+      .select("id, email, auth_user_id, username") // взимаме и username
+      .eq("email", finalEmail)
       .maybeSingle();
     if (data) {
       user = data;
@@ -319,7 +271,7 @@ async function findOrCreateUser(row, type, number, building) {
   if (!user && cleanedPhone) {
     const { data } = await supabase
       .from("users")
-      .select("id, phone, auth_user_id")
+      .select("id, phone, auth_user_id, username") // взимаме и username
       .eq("phone", cleanedPhone)
       .maybeSingle();
     if (data) {
@@ -330,10 +282,11 @@ async function findOrCreateUser(row, type, number, building) {
   }
 
   if (!user) {
+    // Проверка по имена (DB fallback)
     const { data } = await supabase
       .from("users")
       .select(
-        "id, first_name, second_name, last_name, company_name, auth_user_id"
+        "id, first_name, second_name, last_name, company_name, auth_user_id, username, email"
       );
 
     const match = data?.find(
@@ -352,18 +305,13 @@ async function findOrCreateUser(row, type, number, building) {
 
   if (!user) {
     passwordPlain = generateStrongPassword();
+    username = await generateUsername(first_name, last_name, company_name);
 
     const { data: createdAuth } = await supabase.auth.admin.createUser({
       email: finalEmail,
       password: passwordPlain,
       email_confirm: true,
     });
-
-    const genUsername = await generateUsername(
-      first_name,
-      last_name,
-      company_name
-    );
 
     const authUser = createdAuth?.user;
     if (authUser) {
@@ -379,12 +327,12 @@ async function findOrCreateUser(row, type, number, building) {
             email: finalEmail,
             phone: phone || null,
             role: "user",
-            username: genUsername,
+            username: username,
             password_hash: passwordHash,
             auth_user_id: authUser.id,
           },
         ])
-        .select("id")
+        .select("*")
         .single();
 
       user = data;
@@ -393,14 +341,13 @@ async function findOrCreateUser(row, type, number, building) {
     }
   }
 
-  const result = { user, passwordPlain, status, source, reused: false };
+  const result = { user, passwordPlain, status, source, reused: !!user && !passwordPlain }; // ако има user, но няма парола (значи е стар) -> reused
   userCache.set(cacheKey, result);
   return result;
 }
 
 /**
  * insertOrUpdateProperty()
- * - Създава или обновява апартамент / гараж / офис
  */
 async function insertOrUpdateProperty(
   type,
@@ -479,17 +426,13 @@ async function insertOrUpdateProperty(
 
 /**
  * detectType(row)
- * Опитва да определи дали редът е за апартамент, гараж или офис,
- * и връща { type: "garages"|"apartments"|"offices", number: <value> }
  */
 function detectType(row) {
-  // map: lowerKey -> originalKey
   const lowerToOriginal = {};
   for (const originalKey of Object.keys(row)) {
     lowerToOriginal[originalKey.toLowerCase().trim()] = originalKey;
   }
 
-  // намери съответния ключ за всяка категория
   const aptLower = Object.keys(lowerToOriginal).find((k) =>
     k.includes("apartment")
   );
@@ -560,14 +503,25 @@ function parseArea(val) {
 
 async function main() {
   const workbook = XLSX.readFile(argv.file);
-  const rows = XLSX.utils.sheet_to_json(
+  let rows = XLSX.utils.sheet_to_json(
     workbook.Sheets[workbook.SheetNames[0]]
   );
+
+  // --- FIX START: Изчистване на празните редове ---
+  const initialLength = rows.length;
+  rows = rows.filter(r => {
+      // Редът е валиден, ако има поне Име на собственик ИЛИ Име на сграда
+      const hasOwner = (r.first_name || r.company_name || r.Owner || "").toString().trim().length > 0;
+      const hasBuilding = (r.building_name || "").toString().trim().length > 0;
+      return hasOwner || hasBuilding;
+  });
+  console.log(`🧹 Изчистени празни редове: ${initialLength - rows.length}`);
+  // --- FIX END ---
 
   const csvRows = [];
   const summary = { apartments: 0, garages: 0, offices: 0, skipped: 0 };
 
-  console.log(`\n📖 Заредени редове: ${rows.length}`);
+  console.log(`\n📖 Заредени редове за обработка: ${rows.length}`);
   console.log(
     isPreview ? "🔍 PREVIEW (без запис)\n" : "🚀 IMPORT ⚠️ реални промени\n"
   );
@@ -605,16 +559,21 @@ async function main() {
       )) || {};
 
     const owner = formatOwner(row);
+    // Използваме имейла от user обекта, за да сме сигурни, че е правилният (за груповите собственици)
     const email =
       user?.email ||
       row.email ||
       generateEmail(row.building_name, typeInfo.type, typeInfo.number);
+
     const password = passwordPlain || (reused ? "(съществуващ акаунт)" : "");
     const area = parseArea(row.area);
     const floor =
       row.floor !== undefined && row.floor !== null && row.floor !== ""
         ? Number(row.floor)
         : null;
+
+    // Взимаме коректен username (ако няма в ексела, взимаме от user обекта)
+    const username = user?.username || "(няма)";
 
     // лог ред
     const link = `${typeInfo.type} #${typeInfo.number} (${row.building_name})`;
@@ -636,7 +595,7 @@ async function main() {
       number: typeInfo.number,
       owner,
       email,
-      username: user?.username || "(няма)",
+      username,
       password: passwordPlain || "",
       status,
       source,
@@ -669,7 +628,7 @@ async function main() {
     "Building,Type,Number,Owner,Email,Username,Password,Status,Area,Floor",
     ...csvRows.map(
       (r) =>
-        `${r.building},${r.type},${r.number},${r.owner},${r.email},${r.username},${r.password},${r.status},${r.area},${r.floor}`
+        `"${r.building}",${r.type},${r.number},${r.owner},${r.email},${r.username},${r.password},${r.status},${r.area},${r.floor}`
     ),
   ].join("\n");
 

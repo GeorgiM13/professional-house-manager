@@ -1,35 +1,500 @@
-.building-badge {
+.expenses-page {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.expenses-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.expenses-left h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #2c3e50;
+}
+
+.expenses-subheader p {
+  margin: 5px 0 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.expenses-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.user-expenses-filters-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.user-expenses-filter-select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    min-width: 120px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.user-expenses-filter-select:hover {
+    border-color: #b0b0b0;
+}
+
+.user-expenses-filters-row select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+}
+
+.expenses-table {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.expenses-table thead {
+  background-color: #f1f3f5;
+}
+
+.expenses-table th {
+  padding: 16px;
+  text-align: left;
+  color: #495057;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.expenses-table th:last-child,
+.expenses-table td:last-child {
+  text-align: right;
+  padding-right: 20px;
+}
+
+.expenses-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f3f5;
+  color: #333;
+  vertical-align: middle;
+}
+
+.expenses-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.expenses-table tbody tr:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.005);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.expense-icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.amount-cell {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1.05rem;
+}
+
+.status-badge-expenses {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+}
+
+.status-paid-expenses {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+}
+
+.status-unpaid-expenses {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+
+.no-expenses {
+  text-align: center;
+  padding: 40px;
+  color: #adb5bd;
+  font-style: italic;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 20px 0;
+  margin-top: 10px;
+}
+
+.pagination button {
+  background: white;
+  border: 1px solid #dee2e6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #007bff;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  border-color: #ced4da;
+}
+
+.pagination button:disabled {
+  color: #adb5bd;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.pagination span {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 5px;
+}
+
+.toolbar-left h3 {
+    margin: 0;
+    color: #34495e;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.toolbar-right {
+    display: flex;
+gap: 12px;
+}
+
+.custom-select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.modern-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 40px 10px 16px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    min-width: 160px;
+}
+
+.modern-select:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.modern-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modern-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.building-stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.b-stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
-    border-radius: 12px;
-    background-color: #ffffff;
-    border: 1px solid #000000;
-    margin-top: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    border: 1px solid #f1f5f9;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.expenses-header select {
-    padding: 8px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background-color: white;
-    font-size: 0.95rem;
-    color: #334155;
-    min-width: 200px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
+.b-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
 }
 
+.b-stat-card.total { border-left: 4px solid #3b82f6; }
+.b-stat-card.count { border-left: 4px solid #8b5cf6; }
+.b-stat-card.max   { border-left: 4px solid #f97316; }
 
-.building-label {
+.b-stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+}
+
+.b-stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.b-stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #64748b;
     font-weight: 600;
-    color: #334155;
-    margin: 0;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
 
-.building-info {
+.b-stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.b-stat-value small {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-left: 2px;
+}
+
+.b-stat-subtext {
+    font-size: 0.85rem;
+    color: #f97316;
     font-weight: 500;
-    color: #334155;
-    margin: 0;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.b-stat-card.updating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.b-stat-card.updating .b-stat-value {
+    transition: opacity 0.2s;
+}
+@media (max-width: 768px) {
+.building-stats-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .table-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .toolbar-right {
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .custom-select-wrapper {
+        width: 100%;
+    }
+    
+    .modern-select {
+        width: 100%;
+    }
+  .expenses-page {
+    padding: 15px !important;
+    background: #f5f7fa;
+  }
+
+  .expenses-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    align-items: stretch;
+  }
+
+  .expenses-right {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .user-expenses-filters-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .user-expenses-filter-select, 
+  .user-expenses-filters-row select {
+    width: 100%;
+  }
+
+  .expenses-table {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .expenses-table thead {
+    display: none;
+  }
+
+  .expenses-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .expenses-table tbody tr {
+    background: white;
+    display: grid;
+    grid-template-columns: 40px 1fr auto; 
+    grid-template-rows: auto auto auto;
+    gap: 2px 12px;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    align-items: center;
+    border: 1px solid #edf2f7;
+  }
+
+  .expenses-table td:first-child {
+    display: none; 
+  }
+
+  .expenses-table td[data-label="Вид"] {
+    grid-column: 1 / 3;
+    grid-row: 1 / 2;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: none;
+  }
+  
+  .expenses-table td[data-label="Вид"] .expense-icon {
+    font-size: 1.4rem; 
+    margin-right: 12px;
+    width: 40px;
+    height: 40px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .expenses-table td[data-label="Сума"] {
+    grid-column: 3 / 4;
+    grid-row: 1 / 2;
+    text-align: right;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #0f172a;
+    padding: 0;
+    border: none;
+  }
+
+  .expenses-table td[data-label="Адрес"] {
+    grid-column: 2 / 3; 
+    grid-row: 2 / 3;
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 0;
+    border: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: -5px;
+  }
+
+  .expenses-table td:nth-child(6) {
+    display: none; 
+  }
+
+  .expenses-table td[data-label="Период"] {
+     grid-column: 3 / 4;
+     grid-row: 2 / 3;
+     font-size: 0.8rem;
+     text-align: right;
+     color: #64748b;
+     padding: 0;
+     border: none;
+  }
+
+  .expenses-table td[data-label="Платено"] {
+    grid-column: 3 / 4;
+    grid-row: 3 / 4;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0;
+    border: none;
+    margin-top: 8px;
+  }
+
+  .expenses-table td::before {
+    content: none !important;
+  }
 }

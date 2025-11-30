@@ -1,6 +1,17 @@
 import fs from "fs";
 import { Document, Packer, Paragraph, Table, TableRow, TableCell } from "docx";
 
+// 🛠️ Помощна функция за правилно парсване на CSV ред
+// Разделя по запетая, но ИГНОРИРА запетаите вътре в кавички (напр. "Цар Асен, вх.А")
+function parseCSVLine(text) {
+  if (!text) return [];
+  // Regex магия: хваща запетая, само ако след нея има четен брой кавички (т.е. е извън кавички)
+  const parts = text.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+  
+  // Изчистваме кавичките, ако има такива около стойността (напр. "Име" -> Име)
+  return parts.map(val => val.trim().replace(/^"|"$/g, ''));
+}
+
 async function exportDoc() {
   const csvPath = "tools/import/output/users_preview.csv";
   if (!fs.existsSync(csvPath)) {
@@ -9,8 +20,11 @@ async function exportDoc() {
   }
 
   const csv = fs.readFileSync(csvPath, "utf8");
-  const [headerLine, ...lines] = csv.trim().split("\n");
-  const headers = headerLine.split(",");
+  // Премахваме празните редове, за да не чупят логиката
+  const [headerLine, ...lines] = csv.trim().split("\n").filter(l => l.trim() !== "");
+  
+  // Използваме новата функция за хедърите
+  const headers = parseCSVLine(headerLine);
 
   // 🔍 Интересуващи ни колони
   const keepCols = ["Owner", "Email", "Username", "Password"];
@@ -19,16 +33,20 @@ async function exportDoc() {
     .filter((i) => i >= 0);
 
   if (indexes.length === 0) {
-    console.error("⚠️ Не са намерени нужните колони в CSV!");
+    console.error("⚠️ Не са намерени нужните колони в CSV! Налични: ", headers);
     return;
   }
 
-  const rows = lines.map((line) => line.split(","));
+  // Използваме новата функция за всеки ред
+  const rows = lines.map((line) => parseCSVLine(line));
 
   const seen = new Set();
   const uniqueRows = [];
+  
   for (const cols of rows) {
-    const email = (cols[indexes[1]] || "").trim().toLowerCase(); // Email колоната
+    // Вече данните са подравнени правилно и indexes[1] ще сочи към Email, не към част от адреса
+    const email = (cols[indexes[1]] || "").trim().toLowerCase(); 
+    
     if (!seen.has(email) && email !== "") {
       seen.add(email);
       uniqueRows.push(cols);
@@ -37,6 +55,7 @@ async function exportDoc() {
 
   console.log(`🧾 Общо редове в CSV: ${rows.length}`);
   console.log(`✨ Уникални акаунти за DOCX: ${uniqueRows.length}`);
+
   // 🧱 Създаване на таблица
   const tableRows = [
     new TableRow({

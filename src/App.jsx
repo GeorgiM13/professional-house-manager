@@ -1,6 +1,4 @@
-import { useState } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
-
 
 import Home from "./Home"
 import ForUs from "./ForUs"
@@ -10,7 +8,8 @@ import Login from "./Login"
 import EmailConfirm from "./EmailConfirm"
 import "./App.css"
 
-import PrivateRoute from "./components/PrivateRoute"
+// ВНИМАНИЕ: Използваме новия компонент, който създадохме
+import ProtectedRoute from "./components/ProtectedRoute"
 
 import AdminLayout from "./admin/AdminLayout"
 
@@ -53,9 +52,6 @@ import AddUserToBuilding from "./admin/subpages/AddUserToBuilding"
 
 
 function App() {
-
-    const user = JSON.parse(localStorage.getItem('user'));
-
     return (
         <Router>
             <div className="app-container">
@@ -68,51 +64,49 @@ function App() {
                         <Route path="/contacts" element={<Contacts />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/confirm-email" element={<EmailConfirm />} />    
-                        <Route path="/admin/*" element={
-                        <PrivateRoute allowedRoles={['admin']} userRole={user?.role}>
-                            <AdminLayout />
-                        </PrivateRoute>
-                        }>
-                            <Route path="adminevents" element={<AdminEvents />} />
-                            <Route path="addevent" element={<AddEvent />} />
-                            <Route path="event/:id" element={<EventDetails />} />
-                            <Route path="editevent/:id" element={<EditEvent />} />
-                            <Route path="reports" element={<AdminReports />} />
-                            <Route path="report/:id" element={<ReportDetails />} />
-                            <Route path="editreport/:id" element={<EditReport />} />
-                            <Route path="contactforms" element={<AdminContactForms />} />
-                            <Route path="message/:id" element={<FormDetails />}/>
-                            <Route path="fees" element={<AdminFees />} />
-                            <Route path="expenses" element={<AdminExpenses />} />
-                            <Route path="addexpense" element={<AddExpense />} />
-                            <Route path="editexpense/:id" element={<EditExpense />} />
-                            <Route path="buildingcash" element={<AdminBuildingCash />} />
-                            <Route path="profile/change" element={<EditProfile />} />
-                            <Route path="buildings" element={<Buildings />} />
-                            <Route path="addbuilding" element={<AddBuilding />} />
-                            <Route path="buildings/:id/edit" element={<EditBuilding />} />
-                            <Route path="users" element={<Users />} />
-                            <Route path="add-user" element={<AddUser />} />
-                            <Route path="edit-user/:id" element={<EditUser />} />
-                            <Route path="add-user-to-building" element={<AddUserToBuilding />} />
+
+                        <Route element={<ProtectedRoute requiredRole="admin" />}>
+                            <Route path="/admin" element={<AdminLayout />}>
+                                <Route path="adminevents" element={<AdminEvents />} />
+                                <Route path="addevent" element={<AddEvent />} />
+                                <Route path="event/:id" element={<EventDetails />} />
+                                <Route path="editevent/:id" element={<EditEvent />} />
+                                <Route path="reports" element={<AdminReports />} />
+                                <Route path="report/:id" element={<ReportDetails />} />
+                                <Route path="editreport/:id" element={<EditReport />} />
+                                <Route path="contactforms" element={<AdminContactForms />} />
+                                <Route path="message/:id" element={<FormDetails />}/>
+                                <Route path="fees" element={<AdminFees />} />
+                                <Route path="expenses" element={<AdminExpenses />} />
+                                <Route path="addexpense" element={<AddExpense />} />
+                                <Route path="editexpense/:id" element={<EditExpense />} />
+                                <Route path="buildingcash" element={<AdminBuildingCash />} />
+                                <Route path="profile/change" element={<EditProfile />} />
+                                <Route path="buildings" element={<Buildings />} />
+                                <Route path="addbuilding" element={<AddBuilding />} />
+                                <Route path="buildings/:id/edit" element={<EditBuilding />} />
+                                <Route path="users" element={<Users />} />
+                                <Route path="add-user" element={<AddUser />} />
+                                <Route path="edit-user/:id" element={<EditUser />} />
+                                <Route path="add-user-to-building" element={<AddUserToBuilding />} />
+                            </Route>
                         </Route>
 
-                        <Route path="/client/*" element={
-                            <PrivateRoute allowedRoles={['user']} userRole={user?.role}>
-                            <UserLayout />
-                        </PrivateRoute>
-                        }>
-                            <Route path="userevents" element={<UserEvents />} />
-                            <Route path="event/:id" element={<UserEventDetails />} />
-                            <Route path="reports" element={<UserReports />} />
-                            <Route path="addreport" element={<UserAddReport />} />
-                            <Route path="report/:id" element={<UserReportDetails />} />
-                            <Route path="fees" element={<UserFees />} />
-                            <Route path="expenses" element={<UserExpenses />} />
-                            <Route path="expense/:id" element={<UserExpensesDetails />} />
-                            <Route path="buildingCash" element={<UserBuildingCash />} />
-                            <Route path="profile/change" element={<EditProfile />} />
+                        <Route element={<ProtectedRoute requiredRole="user" />}>
+                            <Route path="/client" element={<UserLayout />}>
+                                <Route path="userevents" element={<UserEvents />} />
+                                <Route path="event/:id" element={<UserEventDetails />} />
+                                <Route path="reports" element={<UserReports />} />
+                                <Route path="addreport" element={<UserAddReport />} />
+                                <Route path="report/:id" element={<UserReportDetails />} />
+                                <Route path="fees" element={<UserFees />} />
+                                <Route path="expenses" element={<UserExpenses />} />
+                                <Route path="expense/:id" element={<UserExpensesDetails />} />
+                                <Route path="buildingCash" element={<UserBuildingCash />} />
+                                <Route path="profile/change" element={<EditProfile />} />
+                            </Route>
                         </Route>
+
                     </Routes>
                 </main>
                 

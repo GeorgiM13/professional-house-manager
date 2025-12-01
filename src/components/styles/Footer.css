@@ -1,93 +1,162 @@
-footer {
+.site-footer {
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 60px;
     margin-top: auto;
-    background-color: #525252;
-    border-top: 2px solid #ddd;
-    outline: none; 
-    user-select: none;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #475569;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-footer .footer-container {
+.footer-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    padding: 0 20px 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 40px;
-    flex-wrap: wrap;
 }
 
-
-footer h2 {
-    margin-bottom: 10px;
-    font-size: 18px;
-    color: #f8f8f8;
+.footer-section h3 {
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    position: relative;
+    padding-bottom: 10px;
 }
 
-footer p {
-    margin: 5px 0;
-    color: #f8f8f8;
+.footer-section h3::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, #8b61c2, #a78bfa);
+    border-radius: 2px;
 }
 
-footer ul {
-    list-style: none;
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.footer-icon {
+    width: 22px;
+    height: 22px;
+    color: #8b61c2;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.info-item p {
     margin: 0;
-    padding: 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
 }
 
-footer li {
-    margin-bottom: 5px;
+.highlight-text {
+    color: #d97706;
+    font-weight: 600;
 }
 
-footer a {
+.phone-link {
+    color: #475569;
     text-decoration: none;
-    color: #f8f8f8;
+    font-weight: 700;
+    transition: color 0.2s ease;
 }
 
-footer a:hover {
-    color: #0073e6;
+.phone-link:hover {
+    color: #8b61c2;
 }
 
-.copyright {
-    margin-top: 20px;
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    text-decoration: none;
+    color: #475569;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.footer-links a:hover {
+    color: #8b61c2;
+    transform: translateX(5px);
+}
+
+.footer-bottom {
+    background-color: #f1f5f9;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+    color: #64748b;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.footer-bottom p {
+    margin: 0;
+}
+
+body.dark-mode .site-footer {
+    background-color: #111827;
+    border-top: 1px solid #374151;
+    color: #94a3b8;
+}
+
+body.dark-mode .footer-section h3 {
+    color: #f8fafc;
+}
+
+body.dark-mode .footer-links a,
+body.dark-mode .phone-link {
+    color: #94a3b8;
+}
+
+body.dark-mode .footer-links a:hover,
+body.dark-mode .phone-link:hover {
+    color: #a78bfa;
+}
+
+body.dark-mode .footer-bottom {
+    background-color: #0f172a;
+    border-top: 1px solid #1e293b;
+    color: #64748b;
+}
+
+body.dark-mode .footer-icon {
+    color: #a78bfa;
 }
 
 @media (max-width: 768px) {
-    footer .footer-container {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 20px;
-        padding: 15px;
+    .footer-content {
+        gap: 30px;
+        padding-bottom: 20px;
+    }
+    
+    .footer-section {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding-bottom: 20px;
     }
 
-    footer .footer-container > div {
-        min-width: unset;
-        width: 100%;
+    body.dark-mode .footer-section {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
-    footer h2 {
-        font-size: 16px;
-    }
-
-    footer p,
-    footer a {
-        font-size: 14px;
-    }
-}
-
-@media (max-width: 480px) {
-    footer .footer-container {
-        padding: 10px;
-        gap: 15px;
-    }
-
-    footer h2 {
-        font-size: 15px;
-    }
-
-    footer p,
-    footer a {
-        font-size: 13px;
+    .footer-section:last-child {
+        border-bottom: none;
     }
 }

@@ -1,12 +1,13 @@
+import "./styles/Home.css";
 
-function HomeCard(props) {
-    return (
-        <div>
-            <h2>{props.title}</h2>
-            <p>{props.para}</p>
-        </div>
-    );
-
+function HomeCard({ title, para, icon }) {
+  return (
+    <div className="service-card">
+      {icon && <div className="icon-wrapper">{icon}</div>}
+      <h3>{title}</h3>
+      <p>{para}</p>
+    </div>
+  );
 }
 
-export default HomeCard
+export default HomeCard;

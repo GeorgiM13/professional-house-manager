@@ -2,6 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./styles/Header.css";
 
+import { useTheme } from "./ThemeContext.jsx";
+
 import logoImg from "./assets/logo.svg"; 
 import logoDark from "./assets/logo_dark.svg"; 
 
@@ -12,33 +14,13 @@ function Header() {
   const navigate = useNavigate();
   const closeMenu = () => setMenuOpen(false);
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      return savedTheme === "dark";
-    }
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
+  const { isDarkMode, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add("dark-mode");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.body.classList.remove("dark-mode");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
-  };
 
   return (
     <>

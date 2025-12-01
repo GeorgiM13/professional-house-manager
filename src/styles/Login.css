@@ -16,6 +16,7 @@
   background: linear-gradient(-45deg, #5b1fa8, #3b82f6, #876caa, #2563eb);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
+  min-height: 80vh;
 }
 
 @keyframes gradientBG {
@@ -37,7 +38,7 @@
   width: 100%;
   max-width: 420px;
   text-align: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .login-glass-card:hover {
@@ -218,6 +219,57 @@
   75% { transform: translateX(5px); }
 }
 
+body.dark-mode .login-glass-card {
+    background: rgba(30, 41, 59, 0.95); 
+    border-color: rgba(68, 77, 85, 0.8);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .login-header h2 {
+    color: #f1f5f9;
+}
+
+body.dark-mode .login-header p {
+    color: #cbd5e1;
+}
+
+body.dark-mode .input-group input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+body.dark-mode .input-group label {
+    color: #94a3b8;
+}
+
+body.dark-mode .input-group input:focus,
+body.dark-mode .input-group input:not(:placeholder-shown) {
+    border-color: #a78bfa; 
+    background: #0f172a;
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.3);
+}
+
+body.dark-mode .input-group input:focus ~ .input-icon {
+    color: #a78bfa;
+}
+
+body.dark-mode .input-icon {
+    color: #94a3b8;
+}
+
+body.dark-mode .input-group input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+}
+
+body.dark-mode .error-message-animated {
+    background-color: #3f1717;
+    color: #fca5a5;
+    border: 1px solid #991b1b;
+}
+
+
 @media (max-width: 480px) {
   .login-main-area {
     padding: 60px 24px; 
@@ -240,6 +292,10 @@
     font-size: 14px;
     margin-bottom: 25px;
     color: #475569;
+  }
+  
+  body.dark-mode .login-header p {
+      color: #cbd5e1;
   }
 
   .input-group input {

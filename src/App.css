@@ -1,6 +1,25 @@
+:root {
+    color-scheme: light dark;
+}
+
+body.dark-mode {
+    color-scheme: dark;
+}
+
+body:not(.dark-mode) {
+    color-scheme: light;
+}
+
+.main-header, .site-footer, .home-page, .documents-page-wrapper, .service-card {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
 html, body {
     height: 100%;
     margin: 0;
+    background-color: #f8fafc;
+    color-scheme: light dark !important; 
 }
 
 .app-container {
@@ -13,4 +32,8 @@ html, body {
     flex-grow: 1;       
     display: flex;      
     flex-direction: column;
+}
+
+body.dark-mode {
+    background-color: #0f172a;
 }

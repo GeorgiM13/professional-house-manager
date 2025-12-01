@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/src/components/assets/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Профи Дом-Русе</title>
+    <script>
+  (function() {
+    const savedTheme = localStorage.getItem('theme');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+      document.body.classList.add('dark-mode');
+    }
+  })();
+</script>
   </head>
   <body>
     <div id="root"></div>

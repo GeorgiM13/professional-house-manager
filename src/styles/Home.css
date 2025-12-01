@@ -71,3 +71,21 @@
         font-size: 0.95rem;
     }
 }
+
+body.dark-mode .card-wrapper, 
+body.dark-mode .card {
+    background-color: #1e293b;
+    color: #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    border: 1px solid #334155;
+}
+
+body.dark-mode .card-wrapper h3,
+body.dark-mode .card h3 {
+    color: #a78bfa;
+}
+
+body.dark-mode .card-wrapper p,
+body.dark-mode .card p {
+    color: #cbd5e1;
+}

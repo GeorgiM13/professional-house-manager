@@ -1,280 +1,291 @@
+/* --- ГЛОБАЛНИ ПРОМЕНЛИВИ --- */
 :root {
-    --sidebar-width: 260px;
-    --sidebar-collapsed-width: 70px;
-    --primary-color: #2d3748;
-    --secondary-color: #4a5568;
-    --accent-color: #4299e1;
-    --text-light: #f7fafc;
-    --text-dark: #2d3748;
-    --transition-speed: 0.3s;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* --- СВЕТЪЛ РЕЖИМ (Default) --- */
+  --bg-body: #f8f9fa;            /* Много светло сиво за основен фон */
+  --bg-sidebar: #ffffff;         /* Бяло меню */
+  --bg-header: rgba(255, 255, 255, 0.9);
+  
+  /* Текстове в Светъл режим */
+  --text-primary: #1e293b;       /* Тъмно синьо-сиво (почти черно) */
+  --text-secondary: #64748b;     /* Меко сиво */
+  --text-sidebar: #475569;       /* Текст на линковете */
+  --text-sidebar-active: #4f46e5; /* Активен линк (Indigo) */
+  
+  /* Елементи */
+  --border-color: #e2e8f0;       /* Светла граница */
+  --hover-bg: #f1f5f9;           /* Светъл фон при ховър */
+  --active-bg: #eef2ff;          /* Фон на активния таб */
+  
+  /* Потребителска карта (долу) */
+  --user-bg-hover: #f1f5f9;
+  --user-text-name: #0f172a;     /* Тъмно име */
+  --user-text-role: #64748b;     /* Сива роля */
 }
 
-.client-container {
-    display: flex;
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #f7fafc;
-    outline: none; 
-    user-select: none;
+/* --- ТЪМЕН РЕЖИМ (Dark Mode) --- */
+.dark {
+  --bg-body: #0f172a;            /* Тъмно синьо (Slate 900) */
+  --bg-sidebar: #1e293b;         /* По-светло тъмно синьо (Slate 800) */
+  --bg-header: rgba(30, 41, 59, 0.9);
+  
+  /* Текстове в Тъмен режим */
+  --text-primary: #f1f5f9;       /* Почти бяло */
+  --text-secondary: #94a3b8;     /* Светло сиво */
+  --text-sidebar: #cbd5e1;       /* Текст на линковете */
+  --text-sidebar-active: #818cf8; /* Активен линк (светло Indigo) */
+  
+  /* Елементи */
+  --border-color: #334155;       /* Тъмна граница */
+  --hover-bg: rgba(255, 255, 255, 0.05); /* Прозрачно бяло при ховър */
+  --active-bg: rgba(99, 102, 241, 0.15); /* Прозрачно лилаво */
+  
+  /* Потребителска карта (долу) */
+  --user-bg-hover: rgba(255, 255, 255, 0.1);
+  --user-text-name: #ffffff;     /* Бяло име */
+  --user-text-role: #94a3b8;     /* Сива роля */
 }
 
+/* --- ОСНОВНА СТРУКТУРА --- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+}
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* --- SIDEBAR (МЕНЮ) --- */
 .sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--primary-color);
-    color: var(--text-light);
-    padding: 1.5rem 1rem;
-    position: fixed;
-    height: 100vh;
-    z-index: 100;
-    transition: all var(--transition-speed) ease;
-    box-shadow: var(--shadow);
+  width: 260px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; bottom: 0; left: 0;
+  z-index: 50;
+  transition: all 0.3s ease;
 }
 
-.sidebar-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Лого зона */
+.sidebar-header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon { font-size: 1.5rem; }
+.brand-text { 
+  font-size: 1.25rem; 
+  font-weight: 700; 
+  color: var(--text-primary); /* Автоматично се сменя бяло/черно */
+}
+.close-sidebar-btn { display: none; background: none; border: none; font-size: 1.5rem; color: var(--text-primary); }
+
+/* Линкове */
+.sidebar-content {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
 }
 
-.sidebar-link {
-    color: var(--text-light);
-    text-decoration: none;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transition: all var(--transition-speed) ease;
+.nav-group { margin-bottom: 2rem; }
+.group-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  padding-left: 0.75rem;
 }
 
-.sidebar-close-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-light);
-    cursor: pointer;
-    display: none;
+.nav-list { display: flex; flex-direction: column; gap: 4px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: var(--text-sidebar);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.sidebar-link:hover {
-    background-color: var(--secondary-color);
+.nav-item:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
 }
 
-.sidebar-link.active {
-    background-color: rgba(66, 153, 225, 0.2);
-    color: var(--accent-color);
+.nav-item.active {
+  background-color: var(--active-bg);
+  color: var(--text-sidebar-active);
+  font-weight: 600;
 }
 
+.nav-icon { font-size: 1.2rem; }
+
+/* --- ПОТРЕБИТЕЛСКИ ПРОФИЛ (ДОЛУ) --- */
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-sidebar);
+}
+
+/* ЕТО ГО FIX-A ЗА БЯЛАТА КУТИЯ */
+.user-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: transparent; /* Прозрачно е по подразбиране! */
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-profile-card:hover {
+  background-color: var(--user-bg-hover); /* Светва леко при ховър */
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.user-details { display: flex; flex-direction: column; overflow: hidden; }
+
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--user-text-name); /* Чете се и на светло, и на тъмно */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: var(--user-text-role);
+}
+
+/* --- MAIN CONTENT (ДЯСНО) --- */
 .main-wrapper {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    transition: margin-left var(--transition-speed) ease;
+  margin-left: 260px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
 }
 
-.client-header {
-    background-color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: flex-end;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 90;
+.top-header {
+  height: 70px;
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(8px);
 }
 
-.client-main {
-    flex: 1;
-    padding: 2rem;
-}
+.header-left { display: flex; align-items: center; gap: 15px; }
+.menu-toggle-btn { display: none; background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; }
+.page-title-mobile { display: none; font-size: 1.2rem; margin: 0; color: var(--text-primary); }
 
-.user-dropdown {
-    position: relative;
-}
+.header-right { display: flex; align-items: center; gap: 15px; }
 
-.user-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: all var(--transition-speed) ease;
+.theme-toggle {
+  background: none; border: none; font-size: 1.4rem; cursor: pointer;
+  padding: 6px; border-radius: 50%;
+  color: var(--text-primary);
 }
+.theme-toggle:hover { background-color: var(--hover-bg); }
 
-.user-button:hover {
-    background-color: #f0f4f8;
+/* Бутон Профил в Хедъра */
+.user-menu-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
+.user-menu-btn:hover { border-color: var(--text-sidebar-active); }
+.user-menu-btn .arrow { font-size: 0.7rem; }
 
+/* DROPDOWN */
+.user-dropdown-container { position: relative; }
+.dropdown-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 90; }
 .dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    min-width: 220px;
-    overflow: hidden;
-    z-index: 100;
-    margin-top: 0.5rem;
-    opacity: 0;
-    transform: translateY(-15px);
-    animation: fadeInDrop 0.25s ease-out forwards;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+  position: absolute; top: 120%; right: 0;
+  width: 220px;
+  background-color: var(--bg-sidebar); /* Взима цвета на менюто */
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  z-index: 100;
+  overflow: hidden;
+  padding: 5px;
 }
-
-.dropdown-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    text-decoration: none;
-    color: var(--text-dark);
-    transition: background-color 0.2s, color 0.2s;
-    border-bottom: 1px solid #edf2f7;
-    font-size: 0.95rem;
-    font-weight: 500;
+.dropdown-header { padding: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 5px;}
+.d-name { font-weight: 600; margin: 0; color: var(--text-primary); }
+.d-email { font-size: 0.8rem; color: var(--text-secondary); margin: 0; }
+.dropdown-item {
+  display: block; width: 100%; text-align: left; padding: 10px 12px;
+  background: none; border: none; color: var(--text-primary);
+  text-decoration: none; cursor: pointer; border-radius: 6px;
 }
+.dropdown-item:hover { background-color: var(--hover-bg); }
+.dropdown-item.logout { color: #ef4444; }
+.dropdown-item.logout:hover { background-color: #fee2e2; }
 
-.dropdown-link:hover {
-    background-color: var(--accent-color);
-    color: white;
+.content-area { padding: 2rem; flex: 1; }
+
+/* --- МОБИЛНА ВЕРСИЯ --- */
+.mobile-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 45;
+  display: none;
 }
+.mobile-overlay.show { display: block; }
 
-.dropdown-link:last-child {
-    display: block;
-    width: 100%;
-    text-align: center;
-    color: #e53e3e;
-    border-bottom: none;
-}
-
-.dropdown-link:last-child:hover {
-    background-color: #fed7d7;
-    color: #c53030;
-}
-
-.mobile-menu-button {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 110;
-    color: var(--text-dark);
-}
-
-.sidebar-link::before {
-    font-size: 1.1rem;
-    min-width: 24px;
-    text-align: center;
-}
-
-.sidebar-link[href*="userevents"]::before { content: "📅"; }
-.sidebar-link[href*="adminevents"]::before { content: "📅"; }
-.sidebar-link[href*="reports"]::before { content: "⚠️"; }
-.sidebar-link[href*="contactforms"]::before { content: "✉️"; }
-.sidebar-link[href*="fees"]::before { content: "💰"; }
-.sidebar-link[href*="expenses"]::before { content: "💸"; }
-.sidebar-link[href*="buildingcash"]::before { content: "🏦"; }
-
-@media (max-width: 992px) {
-    .sidebar {
-        width: var(--sidebar-collapsed-width);
-        padding: 1.5rem 0.5rem;
-    }
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+  .sidebar.open { transform: translateX(0); }
+  .close-sidebar-btn { display: block; margin-left: auto; }
   
-    .sidebar-title span,
-    .sidebar-link span {
-        display: none;
-    }
+  .main-wrapper { margin-left: 0; }
+  .menu-toggle-btn { display: block; }
+  .page-title-mobile { display: block; }
+  .top-header { padding: 0 1rem; }
+  .content-area { padding: 1rem; }
   
-    .sidebar-link {
-        justify-content: center;
-        padding: 0.75rem 0.5rem;
-    }
-  
-    .main-wrapper {
-        margin-left: var(--sidebar-collapsed-width);
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        width: 260px;
-    }
-
-    .sidebar.open {
-        transform: translateX(0);
-    }
-
-    .sidebar-close-button {
-        display: block;
-    }
-
-    .sidebar-title span,
-    .sidebar-link span {
-        display: inline;
-    }
-
-    .sidebar-link {
-        justify-content: flex-start;
-        padding: 0.75rem 1rem;
-    }
-
-    .main-wrapper {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    .mobile-menu-button {
-        display: block;
-    }
-
-    .client-header {
-        padding: 1rem;
-        justify-content: flex-end;
-    }
-
-    .client-main {
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .page-content-wrapper {
-        width: 100%;
-        max-width: 100%;
-    }
-}
-
-@keyframes fadeIn {
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+  .user-menu-btn span:first-child { display: none; } /* Скрива текста "Профил" */
 }

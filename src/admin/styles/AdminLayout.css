@@ -1,316 +1,407 @@
-:root {
-    --sidebar-width: 260px;
-    --sidebar-collapsed-width: 70px;
-    --primary-color: #2d3748;
-    --secondary-color: #4a5568;
-    --accent-color: #4299e1;
-    --text-light: #f7fafc;
-    --text-dark: #2d3748;
-    --transition-speed: 0.3s;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* --- Специфични променливи само за Admin Layout --- */
+.admin-light {
+  --adm-bg-body: #f8fafc; /* Светъл фон на страницата */
+  --adm-bg-sidebar: #ffffff; /* Бял сайдбар */
+  --adm-bg-header: rgba(255, 255, 255, 0.95);
+
+  --adm-text-main: #0f172a; /* Тъмен текст (почти черен) */
+  --adm-text-muted: #64748b; /* Сив текст */
+  --adm-text-nav: #334155; /* Тъмно сиво за менюто */
+
+  --adm-hover: #f1f5f9; /* Светло сиво при hover */
+  --adm-active-bg: #e0e7ff; /* Светло лилаво за активен бутон */
+  --adm-active-text: #4f46e5; /* Лилаво за активен текст */
+
+  --adm-border: #e2e8f0;
+  --adm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.admin-dark {
+  --adm-bg-body: #0f172a; /* Тъмно синьо (Slate 900) */
+  --adm-bg-sidebar: #1e293b; /* Тъмно синьо (Slate 800) */
+  --adm-bg-header: rgba(30, 41, 59, 0.95);
+
+  --adm-text-main: #f8fafc; /* Бял текст */
+  --adm-text-muted: #94a3b8; /* Светло сив текст */
+  --adm-text-nav: #cbd5e1; /* Светло сиво меню */
+
+  --adm-hover: rgba(255, 255, 255, 0.05); /* Прозрачно бяло при hover */
+  --adm-active-bg: rgba(99, 102, 241, 0.15); /* Прозрачно лилаво */
+  --adm-active-text: #818cf8; /* Светло лилаво */
+
+  --adm-border: #334155;
+  --adm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Global Reset for Admin --- */
+.admin-container * {
+  box-sizing: border-box;
 }
 
 .admin-container {
-    display: flex;
-    min-height: 100vh;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #f7fafc;
-    outline: none;
-    user-select: none;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: var(--adm-bg-body);
+  color: var(--adm-text-main);
+  transition: background-color 0.3s, color 0.3s;
 }
 
-.sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--primary-color);
-    color: var(--text-light);
-    padding: 1.5rem 1rem;
-    position: fixed;
-    height: 100vh;
-    z-index: 100;
-    transition: all var(--transition-speed) ease;
-    box-shadow: var(--shadow);
+/* --- SIDEBAR --- */
+.admin-sidebar {
+  width: 260px;
+  background-color: var(--adm-bg-sidebar);
+  border-right: 1px solid var(--adm-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  transition: transform 0.3s ease, background-color 0.3s;
 }
 
-.sidebar-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Header (Brand) */
+.admin-sidebar-header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--adm-border);
 }
 
-.sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-brand-icon {
+  font-size: 1.5rem;
+}
+.admin-brand-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--adm-text-main);
+}
+.admin-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--adm-text-main);
+  font-size: 1.5rem;
 }
 
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+/* Navigation Area */
+.admin-sidebar-scroll {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
 }
 
-.sidebar-link {
-    color: var(--text-light);
-    text-decoration: none;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transition: all var(--transition-speed) ease;
+.admin-nav-group {
+  margin-bottom: 1.5rem;
+}
+.admin-group-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--adm-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  padding-left: 10px;
 }
 
-.sidebar-close-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-light);
-    cursor: pointer;
-    display: none;
+.admin-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.sidebar-link:hover {
-    background-color: var(--secondary-color);
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--adm-text-nav);
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.sidebar-link.active {
-    background-color: rgba(66, 153, 225, 0.2);
-    color: var(--accent-color);
+.admin-nav-item:hover {
+  background-color: var(--adm-hover);
+  color: var(--adm-text-main);
 }
 
-.main-wrapper {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    transition: margin-left var(--transition-speed) ease;
+.admin-nav-item.active {
+  background-color: var(--adm-active-bg);
+  color: var(--adm-active-text);
+  font-weight: 600;
 }
 
-.admin-header {
-    background-color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: flex-end;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 90;
+/* --- USER CARD (FIXED) --- */
+.admin-sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--adm-border);
+  background-color: var(--adm-bg-sidebar);
 }
 
-.admin-main {
-    flex: 1;
-    padding: 2rem;
+.admin-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  /* ПРОЗРАЧЕН ФОН - За да няма "бяла кутия" */
+  background-color: transparent;
+  transition: background-color 0.2s;
 }
 
-.user-dropdown {
-    position: relative;
+.admin-user-card:hover {
+  background-color: var(--adm-hover); /* Леко осветяване при hover */
 }
 
-.user-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: all var(--transition-speed) ease;
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
-.user-button:hover {
-    background-color: #f0f4f8;
+.admin-user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    min-width: 220px;
-    overflow: hidden;
-    z-index: 100;
-    margin-top: 0.5rem;
-    opacity: 0;
-    transform: translateY(-15px);
-    animation: fadeInDrop 0.25s ease-out forwards;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+.admin-user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--adm-text-main); /* Автоматично бяло/черно */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dropdown-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    text-decoration: none;
-    color: var(--text-dark);
-    transition: background-color 0.2s, color 0.2s;
-    border-bottom: 1px solid #edf2f7;
-    font-size: 0.95rem;
-    font-weight: 500;
+.admin-user-role {
+  font-size: 0.75rem;
+  color: var(--adm-text-muted);
 }
 
-.dropdown-link:hover {
-    background-color: var(--accent-color);
-    color: white;
+/* --- MAIN WRAPPER --- */
+.admin-main-wrapper {
+  margin-left: 260px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s;
 }
 
-.dropdown-link:last-child {
-    display: block;
-    width: 100%;
-    text-align: center;
-    color: #e53e3e;
-    border-bottom: none;
+/* Top Header */
+.admin-top-header {
+  height: 70px;
+  background-color: var(--adm-bg-header);
+  border-bottom: 1px solid var(--adm-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
 }
 
-.dropdown-link:last-child:hover {
-    background-color: #fed7d7;
-    color: #c53030;
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.admin-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--adm-text-main);
+  cursor: pointer;
+}
+.admin-page-title-mobile {
+  display: none;
+  font-size: 1.1rem;
+  color: var(--adm-text-main);
+  margin: 0;
 }
 
-.mobile-menu-button {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 110;
-    color: var(--text-dark);
+.admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.sidebar-link::before {
-    font-size: 1.1rem;
-    min-width: 24px;
-    text-align: center;
+.admin-theme-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--adm-text-main);
+}
+.admin-theme-btn:hover {
+  background-color: var(--adm-hover);
 }
 
-.sidebar-link[href*="adminevents"]::before {
-    content: "📅";
+/* Profile Dropdown Trigger */
+.admin-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--adm-border);
+  border-radius: 20px;
+  color: var(--adm-text-main);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
-.sidebar-link[href*="reports"]::before {
-    content: "⚠️";
+.admin-profile-btn:hover {
+  border-color: var(--adm-active-text);
 }
-.sidebar-link[href*="contactforms"]::before {
-    content: "✉️";
-}
-.sidebar-link[href*="fees"]::before {
-    content: "💰";
-}
-.sidebar-link[href*="expenses"]::before {
-    content: "💸";
-}
-.sidebar-link[href*="buildingcash"]::before {
-    content: "🏦";
+.admin-profile-btn .admin-arrow {
+  font-size: 0.7rem;
 }
 
-@media (max-width: 992px) {
-    .sidebar {
-        width: var(--sidebar-collapsed-width);
-        padding: 1.5rem 0.5rem;
-    }
+/* Dropdown Menu */
+.admin-dropdown-container {
+  position: relative;
+}
+.admin-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 90;
+}
 
-    .sidebar-title span,
-    .sidebar-link span {
-        display: none;
-    }
+.admin-dropdown-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 240px;
+  background-color: var(--adm-bg-sidebar);
+  border: 1px solid var(--adm-border);
+  border-radius: 12px;
+  box-shadow: var(--adm-shadow);
+  z-index: 100;
+  padding: 5px;
+  overflow: hidden;
+}
 
-    .sidebar-link {
-        justify-content: center;
-        padding: 0.75rem 0.5rem;
-    }
+.admin-dd-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--adm-border);
+  margin-bottom: 5px;
+}
+.admin-dd-name {
+  font-weight: 600;
+  margin: 0;
+  color: var(--adm-text-main);
+}
+.admin-dd-email {
+  font-size: 0.8rem;
+  color: var(--adm-text-muted);
+  margin: 0;
+}
 
-    .main-wrapper {
-        margin-left: var(--sidebar-collapsed-width);
-    }
+.admin-dd-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: var(--adm-text-main);
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+.admin-dd-item:hover {
+  background-color: var(--adm-hover);
+}
+.admin-dd-item.logout {
+  color: #ef4444;
+}
+.admin-dd-item.logout:hover {
+  background-color: #fee2e2;
+}
+
+/* Content Area */
+.admin-content-area {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* --- MOBILE RESPONSIVE --- */
+.admin-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  display: none;
+}
+.admin-overlay.show {
+  display: block;
 }
 
 @media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        width: 260px;
-    }
+  .admin-sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+  .admin-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+  .admin-close-btn {
+    display: block;
+    margin-left: auto;
+  }
 
-    .sidebar.open {
-        transform: translateX(0);
-    }
+  .admin-main-wrapper {
+    margin-left: 0;
+  }
 
-    .sidebar-close-button {
-        display: block;
-    }
+  .admin-menu-toggle {
+    display: block;
+  }
+  .admin-page-title-mobile {
+    display: block;
+  }
 
-    .sidebar-title span,
-    .sidebar-link span {
-        display: inline;
-    }
+  .admin-top-header {
+    padding: 0 1rem;
+  }
+  .admin-content-area {
+    padding: 1rem;
+  }
 
-    .sidebar-link {
-        justify-content: flex-start;
-        padding: 0.75rem 1rem;
-    }
-
-    .main-wrapper {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    .mobile-menu-button {
-        display: block;
-    }
-
-    .admin-header {
-        padding: 1rem;
-        justify-content: flex-end;
-    }
-
-    .admin-main {
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .admin-main > * {
-        width: 100%;
-        max-width: 100%;
-    }
-}
-
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeInDrop {
-    from {
-        opacity: 0;
-        transform: translateY(-15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  /* Скриваме текста "Профил" на мобилни */
+  .admin-profile-btn span:first-child {
+    display: none;
+  }
 }

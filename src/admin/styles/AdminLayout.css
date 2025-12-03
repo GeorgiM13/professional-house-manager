@@ -1,39 +1,37 @@
-/* --- Специфични променливи само за Admin Layout --- */
 .admin-light {
-  --adm-bg-body: #f8fafc; /* Светъл фон на страницата */
-  --adm-bg-sidebar: #ffffff; /* Бял сайдбар */
+  --adm-bg-body: #f8fafc;
+  --adm-bg-sidebar: #ffffff;
   --adm-bg-header: rgba(255, 255, 255, 0.95);
 
-  --adm-text-main: #0f172a; /* Тъмен текст (почти черен) */
-  --adm-text-muted: #64748b; /* Сив текст */
-  --adm-text-nav: #334155; /* Тъмно сиво за менюто */
+  --adm-text-main: #0f172a;
+  --adm-text-muted: #64748b;
+  --adm-text-nav: #334155;
 
-  --adm-hover: #f1f5f9; /* Светло сиво при hover */
-  --adm-active-bg: #e0e7ff; /* Светло лилаво за активен бутон */
-  --adm-active-text: #4f46e5; /* Лилаво за активен текст */
+  --adm-hover: #f1f5f9;
+  --adm-active-bg: #e0e7ff;
+  --adm-active-text: #4f46e5;
 
   --adm-border: #e2e8f0;
   --adm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .admin-dark {
-  --adm-bg-body: #0f172a; /* Тъмно синьо (Slate 900) */
-  --adm-bg-sidebar: #1e293b; /* Тъмно синьо (Slate 800) */
+  --adm-bg-body: #0f172a;
+  --adm-bg-sidebar: #1e293b;
   --adm-bg-header: rgba(30, 41, 59, 0.95);
 
-  --adm-text-main: #f8fafc; /* Бял текст */
-  --adm-text-muted: #94a3b8; /* Светло сив текст */
-  --adm-text-nav: #cbd5e1; /* Светло сиво меню */
+  --adm-text-main: #f8fafc;
+  --adm-text-muted: #94a3b8;
+  --adm-text-nav: #cbd5e1;
 
-  --adm-hover: rgba(255, 255, 255, 0.05); /* Прозрачно бяло при hover */
-  --adm-active-bg: rgba(99, 102, 241, 0.15); /* Прозрачно лилаво */
-  --adm-active-text: #818cf8; /* Светло лилаво */
+  --adm-hover: rgba(255, 255, 255, 0.05);
+  --adm-active-bg: rgba(99, 102, 241, 0.15);
+  --adm-active-text: #818cf8;
 
   --adm-border: #334155;
   --adm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Global Reset for Admin --- */
 .admin-container * {
   box-sizing: border-box;
 }
@@ -48,7 +46,6 @@
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* --- SIDEBAR --- */
 .admin-sidebar {
   width: 260px;
   background-color: var(--adm-bg-sidebar);
@@ -63,7 +60,6 @@
   transition: transform 0.3s ease, background-color 0.3s;
 }
 
-/* Header (Brand) */
 .admin-sidebar-header {
   height: 70px;
   display: flex;
@@ -93,7 +89,6 @@
   font-size: 1.5rem;
 }
 
-/* Navigation Area */
 .admin-sidebar-scroll {
   flex: 1;
   padding: 1.5rem 1rem;
@@ -142,7 +137,6 @@
   font-weight: 600;
 }
 
-/* --- USER CARD (FIXED) --- */
 .admin-sidebar-footer {
   padding: 1rem;
   border-top: 1px solid var(--adm-border);
@@ -155,13 +149,12 @@
   gap: 12px;
   padding: 8px 10px;
   border-radius: 8px;
-  /* ПРОЗРАЧЕН ФОН - За да няма "бяла кутия" */
   background-color: transparent;
   transition: background-color 0.2s;
 }
 
 .admin-user-card:hover {
-  background-color: var(--adm-hover); /* Леко осветяване при hover */
+  background-color: var(--adm-hover);
 }
 
 .admin-avatar {
@@ -186,7 +179,7 @@
 .admin-user-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--adm-text-main); /* Автоматично бяло/черно */
+  color: var(--adm-text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -197,7 +190,6 @@
   color: var(--adm-text-muted);
 }
 
-/* --- MAIN WRAPPER --- */
 .admin-main-wrapper {
   margin-left: 260px;
   flex: 1;
@@ -206,7 +198,6 @@
   transition: margin-left 0.3s;
 }
 
-/* Top Header */
 .admin-top-header {
   height: 70px;
   background-color: var(--adm-bg-header);
@@ -260,7 +251,6 @@
   background-color: var(--adm-hover);
 }
 
-/* Profile Dropdown Trigger */
 .admin-profile-btn {
   display: flex;
   align-items: center;
@@ -281,7 +271,6 @@
   font-size: 0.7rem;
 }
 
-/* Dropdown Menu */
 .admin-dropdown-container {
   position: relative;
 }
@@ -347,13 +336,11 @@
   background-color: #fee2e2;
 }
 
-/* Content Area */
 .admin-content-area {
   padding: 2rem;
   flex: 1;
 }
 
-/* --- MOBILE RESPONSIVE --- */
 .admin-overlay {
   position: fixed;
   top: 0;
@@ -400,7 +387,6 @@
     padding: 1rem;
   }
 
-  /* Скриваме текста "Профил" на мобилни */
   .admin-profile-btn span:first-child {
     display: none;
   }

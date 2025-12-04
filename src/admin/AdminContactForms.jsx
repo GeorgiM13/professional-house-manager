@@ -1,115 +1,339 @@
-import { useState, useEffect } from "react"
-import { supabase } from "../supabaseClient"
-import { useNavigate } from "react-router-dom"
-import "./styles/AdminEvents.css"
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import Select from "react-select";
+import { supabase } from "../supabaseClient";
+import { useTheme } from "../components/ThemeContext";
+import "./styles/AdminContactForms.css";
 
-function AdminContactForms() {
-  const [messages, setMessages] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 20;
+const CountUp = ({ value, duration = 800, decimals = 0 }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    let startTime = null;
+    let frame;
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      const current = start + (value - start) * easeProgress;
+      setDisplayValue(current);
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      } else {
+        setDisplayValue(value);
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [value, duration]);
+  return <>{displayValue.toFixed(decimals)}</>;
+};
+
+const PERIOD_OPTIONS = [
+  { value: "all", label: "📅 Всички периоди" },
+  { value: "today", label: "📅 Днес" },
+  { value: "week", label: "📅 Тази седмица" },
+  { value: "month", label: "📅 Този месец" },
+];
+
+const CUSTOM_SELECT_STYLES = {
+  control: (provided, state) => ({
+    ...provided,
+    backgroundColor: "var(--acf-bg-card)",
+    borderColor: state.isFocused ? "var(--acf-accent)" : "var(--acf-border)",
+    borderRadius: "8px",
+    color: "var(--acf-text-main)",
+    boxShadow: state.isFocused ? "0 0 0 2px var(--acf-accent-light)" : "none",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    zIndex: 9999,
+    backgroundColor: "var(--acf-bg-card)",
+  }),
+  singleValue: (provided) => ({ ...provided, color: "var(--acf-text-main)" }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "var(--acf-accent)"
+      : state.isFocused
+      ? "var(--acf-bg-page)"
+      : "transparent",
+    color: state.isSelected ? "white" : "var(--acf-text-main)",
+    cursor: "pointer",
+  }),
+};
+
+export default function AdminContactForms() {
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
+
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ total: 0, today: 0, week: 0 });
+  const [filterPeriod, setFilterPeriod] = useState("all");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
     async function fetchMessages() {
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize - 1;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("contact_messages")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      const { data, error, count } = await supabase
-        .from("contact_messages")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(from, to);
+        if (error) throw error;
 
-      if (error) {
-        console.error("Supabase error:", error);
-      } else {
-        setMessages(data || []);
-        setTotalCount(count || 0);
+        const allData = data || [];
+        setMessages(allData);
+        calculateStats(allData);
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
     fetchMessages();
-  }, [currentPage, pageSize]);
+  }, []);
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const calculateStats = (data) => {
+    const now = new Date();
+    const todayStr = now.toDateString();
 
-  function formatDateTime(dateString) {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay() || 7;
+    if (day !== 1) startOfWeek.setHours(-24 * (day - 1));
+    startOfWeek.setHours(0, 0, 0, 0);
 
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
-  }
+    const total = data.length;
+    const todayCount = data.filter(
+      (m) => new Date(m.created_at).toDateString() === todayStr
+    ).length;
+    const weekCount = data.filter(
+      (m) => new Date(m.created_at) >= startOfWeek
+    ).length;
+
+    setStats({ total, today: todayCount, week: weekCount });
+  };
+
+  const filteredMessages = useMemo(() => {
+    let data = [...messages];
+    const now = new Date();
+    const todayStr = now.toDateString();
+
+    if (filterPeriod === "today") {
+      data = data.filter(
+        (m) => new Date(m.created_at).toDateString() === todayStr
+      );
+    } else if (filterPeriod === "week") {
+      const startOfWeek = new Date(now);
+      const day = startOfWeek.getDay() || 7;
+      if (day !== 1) startOfWeek.setHours(-24 * (day - 1));
+      startOfWeek.setHours(0, 0, 0, 0);
+      data = data.filter((m) => new Date(m.created_at) >= startOfWeek);
+    } else if (filterPeriod === "month") {
+      data = data.filter((m) => {
+        const d = new Date(m.created_at);
+        return (
+          d.getMonth() === now.getMonth() &&
+          d.getFullYear() === now.getFullYear()
+        );
+      });
+    }
+
+    return data;
+  }, [messages, filterPeriod]);
+
+  const paginatedMessages = filteredMessages.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+  const totalPages = Math.ceil(filteredMessages.length / pageSize);
+
+  const getSelectValue = (options, value) =>
+    options.find((o) => String(o.value) === String(value)) || options[0];
+
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const d = new Date(dateString);
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const yearFull = d.getFullYear();
+    const yearShort = String(yearFull).slice(-2);
+    const time = d.toLocaleTimeString("bg-BG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return (
+      <>
+        <span className="date-desktop">
+          {day}.{month}.{yearFull} г.{" "}
+          <span style={{ color: "var(--acf-text-sec)", marginLeft: "4px" }}>
+            {time}
+          </span>
+        </span>
+
+        <div className="date-mobile">
+          <div className="dm-date">
+            {day}.{month}.{yearShort}
+          </div>
+          <div className="dm-time">{time}</div>
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div className="events-page">
-      <div className="events-header">
-        <h1>Съобщения от контактната форма</h1>
+    <div className={`acf-page ${isDarkMode ? "acf-dark" : "acf-light"}`}>
+      <div className="acf-header">
+        <div className="acf-header-left">
+          <h1>Контактни форми</h1>
+          <p className="acf-subtitle">Входяща поща и запитвания</p>
+        </div>
+        <div className="acf-header-right"></div>
       </div>
 
-      <div className="events-subheader">
-        <div className="left">
-          <span>Съобщения, получени от контактна форма</span>
-          <p>Преглед на всички съобщения</p>
+      <div className="acf-stats-grid">
+        <div className="acf-stat-card blue">
+          <div className="acf-stat-icon">📨</div>
+          <div className="acf-stat-info">
+            <span className="acf-stat-label">Общо съобщения</span>
+            <span className="acf-stat-value">
+              <CountUp value={stats.total} /> <small>бр.</small>
+            </span>
+          </div>
+        </div>
+        <div className="acf-stat-card purple">
+          <div className="acf-stat-icon">📅</div>
+          <div className="acf-stat-info">
+            <span className="acf-stat-label">Днес</span>
+            <span className="acf-stat-value">
+              <CountUp value={stats.today} /> <small>бр.</small>
+            </span>
+          </div>
+        </div>
+        <div className="acf-stat-card green">
+          <div className="acf-stat-icon">📈</div>
+          <div className="acf-stat-info">
+            <span className="acf-stat-label">Тази седмица</span>
+            <span className="acf-stat-value">
+              <CountUp value={stats.week} /> <small>бр.</small>
+            </span>
+          </div>
         </div>
       </div>
 
-      <table className="events-table">
-        <thead>
-          <tr>
-            <th>№</th>
-            <th>Име</th>
-            <th>Фамилия</th>
-            <th>Email</th>
-            <th>Телефон</th>
-            <th>Съобщение</th>
-            <th>Дата на изпращане</th>
-          </tr>
-        </thead>
-        <tbody>
-          {messages.map((msg, idx) => (
-            <tr key={msg.id} style={{ cursor: "pointer" }} onClick={() => navigate(`/admin/message/${msg.id}`)}>
-              <td data-label="№">{idx + 1}</td>
-              <td data-label="Име">{msg.first_name}</td>
-              <td data-label="Фамилия">{msg.last_name}</td>
-              <td data-label="Email">{msg.email}</td>
-              <td data-label="Телефон">{msg.phone}</td>
-              <td data-label="Съобщение" style={{
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                maxWidth: "250px"
-              }}>
-                {msg.message}
-              </td>
-              <td data-label="Дата ма изпращане">{formatDateTime(msg.created_at)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="pagination">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(p => p - 1)}
-        >
-          ⬅ Предишна
-        </button>
-        <span>Страница {currentPage} от {totalPages}</span>
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage(p => p + 1)}
-        >
-          Следваща ➡
-        </button>
+      <div className="acf-toolbar">
+        <h3>Списък съобщения</h3>
+        <div className="acf-filters-right">
+          <div style={{ width: "220px" }}>
+            <Select
+              options={PERIOD_OPTIONS}
+              value={getSelectValue(PERIOD_OPTIONS, filterPeriod)}
+              onChange={(opt) => setFilterPeriod(opt.value)}
+              styles={CUSTOM_SELECT_STYLES}
+              isSearchable={false}
+              placeholder="Период"
+            />
+          </div>
+        </div>
       </div>
+
+      {loading ? (
+        <div className="acf-loading">
+          <span className="acf-spinner">↻</span> Зареждане...
+        </div>
+      ) : (
+        <>
+          <table className="acf-table">
+            <thead>
+              <tr>
+                <th>№</th>
+                <th>Подател</th>
+                <th>Контакти</th>
+                <th>Съобщение</th>
+                <th>Дата</th>
+                <th style={{ textAlign: "right" }}>Действие</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedMessages.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="acf-no-data">
+                    Няма намерени съобщения за избрания период.
+                  </td>
+                </tr>
+              ) : (
+                paginatedMessages.map((msg, idx) => (
+                  <tr
+                    key={msg.id}
+                    onClick={() => navigate(`/admin/message/${msg.id}`)}
+                    className="acf-row"
+                  >
+                    <td className="acf-idx">
+                      {(currentPage - 1) * pageSize + idx + 1}
+                    </td>
+
+                    <td data-label="Подател" className="acf-sender">
+                      <span className="acf-icon">👤</span>
+                      {msg.first_name} {msg.last_name}
+                    </td>
+
+                    <td data-label="Контакти" className="acf-contacts">
+                      <div className="contact-row">✉️ {msg.email}</div>
+                      <div className="contact-row">📞 {msg.phone}</div>
+                    </td>
+
+                    <td data-label="Съобщение" className="acf-message-cell">
+                      {msg.message}
+                    </td>
+
+                    <td data-label="Дата">{formatDate(msg.created_at)}</td>
+
+                    <td data-label="Действие" className="acf-actions">
+                      <button
+                        className="action-btn view"
+                        title="Преглед"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/admin/message/${msg.id}`);
+                        }}
+                      >
+                        👁️
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+
+          {totalPages > 1 && (
+            <div className="acf-pagination">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                ⬅ Предишна
+              </button>
+              <span>
+                Страница {currentPage} от {totalPages}
+              </span>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Следваща ➡
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
-
-export default AdminContactForms;

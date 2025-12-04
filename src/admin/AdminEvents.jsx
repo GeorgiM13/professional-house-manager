@@ -111,6 +111,7 @@ export default function AdminEvents() {
   const [selectedBuilding, setSelectedBuilding] = useState("all");
   const [filterYear, setFilterYear] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
+  const [filterToday, setFilterToday] = useState(false);
   const [stats, setStats] = useState({ total: 0, meetings: 0, fees: 0 });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -153,23 +154,33 @@ export default function AdminEvents() {
         const allData = data || [];
         let tableData = [...allData];
 
-        if (filterYear !== "all") {
-          tableData = tableData.filter(
-            (e) =>
-              new Date(e.completion_date || e.created_at).getFullYear() ===
-              Number(filterYear)
-          );
-        }
-        if (filterMonth !== "all") {
-          tableData = tableData.filter(
-            (e) =>
-              new Date(e.completion_date || e.created_at).getMonth() + 1 ===
-              Number(filterMonth)
-          );
+        if (filterToday) {
+            const todayStr = new Date().toDateString();
+            
+            tableData = tableData.filter((e) => {
+               const d = new Date(e.completion_date || e.created_at);
+               return d.toDateString() === todayStr;
+            });
+  
+        } else {
+            if (filterYear !== "all") {
+            tableData = tableData.filter(
+                (e) =>
+                new Date(e.completion_date || e.created_at).getFullYear() ===
+                Number(filterYear)
+            );
+            }
+            if (filterMonth !== "all") {
+            tableData = tableData.filter(
+                (e) =>
+                new Date(e.completion_date || e.created_at).getMonth() + 1 ===
+                Number(filterMonth)
+            );
+            }
         }
 
         let statsData = [];
-        const isFilterActive = filterYear !== "all" || filterMonth !== "all";
+        const isFilterActive = filterToday || filterYear !== "all" || filterMonth !== "all";
         if (isFilterActive) {
           statsData = tableData;
         } else {
@@ -196,6 +207,7 @@ export default function AdminEvents() {
     selectedBuilding,
     filterYear,
     filterMonth,
+    filterToday,
     buildings,
     userId,
     loadingBuildings,
@@ -354,6 +366,13 @@ export default function AdminEvents() {
       <div className="adev-toolbar">
         <h3>Списък събития</h3>
         <div className="adev-filters-right">
+            <button 
+            className={`adev-today-toggle ${filterToday ? 'active' : ''}`}
+            onClick={() => setFilterToday(!filterToday)}
+            title="Покажи събития само за днес"
+          >
+            {filterToday ? "✅ Днес" : "📅 Днес"}
+          </button>
           <div style={{ width: "160px" }}>
             <Select
               options={YEAR_OPTIONS}

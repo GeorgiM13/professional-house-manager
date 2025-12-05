@@ -19,24 +19,30 @@ function Login() {
     setLoading(true);
 
     try {
-      const { data: userRecord, error: fetchError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('username', username)
-        .maybeSingle();
+      const { data: emailData, error: fetchError } = await supabase
+        .rpc('get_email_by_username', { p_username: username });
 
-      if (fetchError || !userRecord) {
+      if (fetchError) {
+         console.error("RPC Error:", fetchError);
+         setError('Грешка при проверка на потребител.');
+         setLoading(false);
+         return;
+      }
+
+      if (!emailData) {
         setError('Грешно потребителско име или парола');
+        setLoading(false);
         return;
       }
 
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: userRecord.email,
+        email: emailData,
         password: password
       });
 
       if (authError) {
         setError('Грешно потребителско име или парола');
+        setLoading(false);
         return;
       }
 
@@ -48,14 +54,17 @@ function Login() {
 
       if (profileError) {
         setError('Грешка при връзка с базата данни.');
+        setLoading(false);
         return;
       }
 
       if (!profileData) {
         setError('Успешен вход, но липсва профил в системата. Свържете се с администратор.');
         console.error("Липсва запис в public.users за ID:", authData.user.id);
+        setLoading(false);
         return;
       }
+      
       const sessionData = {
         ...profileData,
         access_token: authData.session.access_token,
@@ -74,6 +83,7 @@ function Login() {
     } catch (err) {
       setError('Възникна неочаквана грешка');
       console.error(err);
+      setLoading(false);
     }
   };
 

@@ -78,7 +78,7 @@ export default function AdminLayout() {
         <div className="admin-sidebar-header">
           <div className="admin-brand">
             <span className="admin-brand-icon">🏠</span>
-            <h2 className="admin-brand-text">Профи Дом</h2>
+            <h2 className="admin-brand-text">Профи Дом - Русе</h2>
           </div>
           <button className="admin-close-btn" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>

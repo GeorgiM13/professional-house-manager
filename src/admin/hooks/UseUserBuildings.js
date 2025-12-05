@@ -13,7 +13,7 @@ export function useUserBuildings(userId) {
       try {
         const { data, error } = await supabase
           .from("buildings")
-          .select("id, name, address")
+          .select("*")
           .order("name", { ascending: true });
 
         if (error) {

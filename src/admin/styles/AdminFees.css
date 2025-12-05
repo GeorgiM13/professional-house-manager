@@ -59,7 +59,7 @@ html, body {
     background: var(--af-bg-card);
     border: 1px solid var(--af-border);
     border-radius: 12px;
-    padding: 12px 20px;
+    padding: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;

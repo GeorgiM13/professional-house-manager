@@ -38,3 +38,5 @@ export function useUserBuildings(userId) {
 
   return { buildings, loading };
 }
+
+export default useUserBuildings;

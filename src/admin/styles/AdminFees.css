@@ -194,6 +194,7 @@ input:checked + .af-slider:before { transform: translateX(18px); }
 
 .af-table-wrapper {
   background: var(--af-bg-card);
+  width: 100%;
   border-radius: 12px;
   border: 1px solid var(--af-border);
   overflow: hidden; 

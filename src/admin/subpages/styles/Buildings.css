@@ -136,6 +136,7 @@
 
 .ab-table-wrapper {
     background: var(--ab-bg-card);
+    width: 100%;
     border-radius: 12px;
     border: 1px solid var(--ab-border);
     overflow: hidden;

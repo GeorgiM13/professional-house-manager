@@ -60,11 +60,18 @@ export default function AdminLayout() {
       items: [
         { to: "/admin/buildings", label: "Сгради", icon: "🏢" },
         { to: "/admin/users", label: "Потребители", icon: "👥" },
+        { to: "/admin/users-building", label: "Потребители по сгради", icon: "👥" },
       ],
     },
   ];
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path) => {
+    if (location.pathname === path) return true;
+    
+    if (location.pathname.startsWith(path + "/")) return true;
+
+    return false;
+  };
 
   return (
     <div className={`admin-container ${isDarkMode ? "admin-dark" : "admin-light"}`}>

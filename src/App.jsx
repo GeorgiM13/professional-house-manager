@@ -28,6 +28,7 @@ import EditReport from "./admin/subpages/EditReport";
 import AddExpense from "./admin/subpages/AddExpense";
 import EditExpense from "./admin/subpages/EditExpense";
 import FormDetails from "./admin/subpages/FormDetails";
+import EditGlobalUser from "./admin/subpages/EditGlobalUser";
 
 import UserEvents from "./client/UserEvents";
 import UserLayout from "./client/UserLayout";
@@ -45,9 +46,10 @@ import EditProfile from "./EditProfile";
 import Buildings from "./admin/subpages/Buildings";
 import AddBuilding from "./admin/subpages/AddBuilding";
 import EditBuilding from "./admin/subpages/EditBuilding";
-import Users from "./admin/subpages/Users";
+import Users from "./admin/subpages/GlobalUsers";
+import BuildingUsers from "./admin/subpages/BuildingUsers";
 import AddUser from "./admin/subpages/AddUser";
-import EditUser from "./admin/subpages/EditUser";
+import EditUser from "./admin/subpages/EditBuildingUser";
 import AddUserToBuilding from "./admin/subpages/AddUserToBuilding";
 
 function App() {
@@ -85,8 +87,10 @@ function App() {
                   <Route path="addbuilding" element={<AddBuilding />} />
                   <Route path="buildings/:id/edit" element={<EditBuilding />} />
                   <Route path="users" element={<Users />} />
+                  <Route path="/admin/users-building" element={<BuildingUsers />} />
                   <Route path="add-user" element={<AddUser />} />
                   <Route path="edit-user/:id" element={<EditUser />} />
+                  <Route path="/admin/edit-global-user/:id" element={<EditGlobalUser />} />
                   <Route
                     path="add-user-to-building"
                     element={<AddUserToBuilding />}

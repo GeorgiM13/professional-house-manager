@@ -2,29 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { 
     Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Brush 
 } from 'recharts';
+import { useTheme } from '../../../components/ThemeContext';
 
-const COLORS = {
-    history: "#3b82f6",
-    forecast: "#10b981",
-    trend: "#f59e0b",
-    grid: "#f1f5f9",
-    text: "#64748b",
-    darkText: "#1e293b",
-    brushStroke: "#cbd5e1",
-    brushFill: "#f8fafc"
-};
-
-const CardStyle = {
-    background: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
-    border: '1px solid #f1f5f9',
-    padding: '24px',
-    marginBottom: '24px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
-};
+const getColors = (isDark) => ({
+    history: isDark ? "#60a5fa" : "#3b82f6",
+    forecast: isDark ? "#34d399" : "#10b981",
+    trend: isDark ? "#fbbf24" : "#f59e0b",
+    grid: isDark ? "#334155" : "#f1f5f9",
+    text: isDark ? "#94a3b8" : "#64748b",
+    darkText: isDark ? "#f1f5f9" : "#1e293b",
+    brushStroke: isDark ? "#475569" : "#cbd5e1",
+    brushFill: isDark ? "#1e293b" : "#f8fafc",
+    cardBg: isDark ? "#1e293b" : "#ffffff",
+    cardBorder: isDark ? "#334155" : "#f1f5f9",
+    tooltipBg: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(255, 255, 255, 0.98)"
+});
 
 const ExpenseForecast = ({ buildingId }) => {
+  const { isDarkMode } = useTheme();
+  const COLORS = getColors(isDarkMode);
+
+  const cardStyle = {
+    background: COLORS.cardBg,
+    borderRadius: '16px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+    border: `1px solid ${COLORS.cardBorder}`,
+    padding: '24px',
+    marginBottom: '24px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    transition: 'background-color 0.3s, border-color 0.3s'
+  };
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -75,7 +83,7 @@ const ExpenseForecast = ({ buildingId }) => {
   if (!buildingId || buildingId === 'all') return null;
 
   const StatCard = ({ label, value, subtext, color }) => (
-      <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', flex: 1, minWidth: '140px' }}>
+      <div style={{ background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', borderRadius: '12px', padding: '16px', flex: 1, minWidth: '140px' }}>
           <p style={{ margin: '0 0 8px', fontSize: '0.85rem', color: COLORS.text, fontWeight: 500 }}>{label}</p>
           <h4 style={{ margin: 0, fontSize: '1.5rem', color: COLORS.darkText, fontWeight: 700 }}>
               {value} <span style={{fontSize: '0.9rem', fontWeight: 400, color: COLORS.text}}>лв.</span>
@@ -102,18 +110,18 @@ const ExpenseForecast = ({ buildingId }) => {
 
       return (
         <div style={{ 
-            background: 'rgba(255, 255, 255, 0.98)', 
+            background: COLORS.tooltipBg, 
             backdropFilter: 'blur(8px)',
-            border: '1px solid #e2e8f0', 
+            border: `1px solid ${COLORS.grid}`, 
             borderRadius: '12px', 
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
             padding: '16px',
             minWidth: '200px'
         }}>
           <p style={{ margin: '0 0 12px', fontWeight: 600, color: COLORS.darkText, textTransform: 'capitalize' }}>{dateLabel}</p>
           
           <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-            {typeof actual === 'number' ? (
+            {typeof actual === 'number' && (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <span style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: COLORS.text}}>
                         <span style={{width: 8, height: 8, borderRadius: '50%', background: COLORS.history}}></span>
@@ -121,7 +129,9 @@ const ExpenseForecast = ({ buildingId }) => {
                     </span>
                     <span style={{fontWeight: 700, color: COLORS.history}}>{actual.toFixed(2)} лв.</span>
                 </div>
-            ) : typeof forecast === 'number' ? (
+            )}
+            
+            {typeof forecast === 'number' && (
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <span style={{display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: COLORS.text}}>
                         <span style={{width: 8, height: 8, borderRadius: '50%', background: COLORS.forecast}}></span>
@@ -129,11 +139,11 @@ const ExpenseForecast = ({ buildingId }) => {
                     </span>
                     <span style={{fontWeight: 700, color: COLORS.forecast}}>{forecast.toFixed(2)} лв.</span>
                 </div>
-            ) : null}
+            )}
             
             {typeof trend === 'number' && (
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px dashed #e2e8f0'}}>
-                    <span style={{fontSize: '0.8rem', color: '#94a3b8'}}>Базов Тренд:</span>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: `1px dashed ${COLORS.grid}`}}>
+                    <span style={{fontSize: '0.8rem', color: COLORS.text}}>Базов Тренд:</span>
                     <span style={{fontSize: '0.8rem', fontWeight: 500, color: COLORS.trend}}>{trend.toFixed(2)} лв.</span>
                 </div>
             )}
@@ -145,10 +155,10 @@ const ExpenseForecast = ({ buildingId }) => {
   };
 
   return (
-    <div style={CardStyle}>
+    <div style={cardStyle}>
       
       <div style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
             <div>
                 <h3 style={{ margin: '0 0 6px', color: COLORS.darkText, fontSize: '1.25rem', fontWeight: 700 }}>
                     Прогноза на Бюджета
@@ -186,13 +196,13 @@ const ExpenseForecast = ({ buildingId }) => {
 
       <div style={{ width: '100%', height: 400, position: 'relative' }}>
         {loading && (
-            <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.8)', zIndex: 10}}>
+            <div style={{position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDarkMode ? 'rgba(30,41,59,0.8)' : 'rgba(255,255,255,0.8)', zIndex: 10, borderRadius: '12px'}}>
                 <span style={{color: COLORS.history, fontWeight: 500}}>Зареждане на данни...</span>
             </div>
         )}
         
         {error ? (
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', background: '#fef2f2', borderRadius: '12px' }}>
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', background: isDarkMode ? 'rgba(239,68,68,0.1)' : '#fef2f2', borderRadius: '12px' }}>
                 ⚠️ {error}
             </div>
         ) : (
@@ -214,7 +224,7 @@ const ExpenseForecast = ({ buildingId }) => {
                     <XAxis 
                         dataKey="date" 
                         style={{fontSize: '0.75rem', fontWeight: 500}} 
-                        tick={{fill: '#94a3b8'}} 
+                        tick={{fill: COLORS.text}} 
                         axisLine={false}
                         tickLine={false}
                         minTickGap={40}
@@ -226,12 +236,12 @@ const ExpenseForecast = ({ buildingId }) => {
                     />
                     <YAxis 
                         style={{fontSize: '0.75rem', fontWeight: 500}} 
-                        tick={{fill: '#94a3b8'}} 
+                        tick={{fill: COLORS.text}} 
                         axisLine={false}
                         tickLine={false}
                     />
                     
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1 }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: COLORS.brushStroke, strokeWidth: 1 }} />
                     
                     <Line 
                         type="monotone" 
@@ -252,14 +262,13 @@ const ExpenseForecast = ({ buildingId }) => {
                         fill="url(#gradientHistory)" 
                     />
 
-                    <Area 
+                    <Line 
                         type="monotone" 
                         dataKey="forecast" 
                         stroke={COLORS.forecast} 
                         strokeWidth={3} 
-                        fillOpacity={1} 
-                        fill="url(#gradientForecast)" 
-                        strokeDasharray="1 0" 
+                        strokeDasharray="5 5"
+                        dot={false}
                     />
                     
                     <Brush 

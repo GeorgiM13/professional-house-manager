@@ -10,7 +10,7 @@ from datetime import datetime
 
 load_dotenv()
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/predict": {"origins": ["https://professional-house-manager.netlify.app", "http://localhost:5173"]}})
 
 SUPABASE_URL = os.getenv("VITE_SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")

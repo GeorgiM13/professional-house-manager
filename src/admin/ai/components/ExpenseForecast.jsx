@@ -41,11 +41,12 @@ const ExpenseForecast = ({ buildingId }) => {
   useEffect(() => {
     if (!buildingId || buildingId === 'all') { setData([]); return; }
 
-    const fetchForecast = async () => {
+   const fetchForecast = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`http://localhost:5000/predict?building_id=${buildingId}`);
+        const apiUrl = 'https://python-backend-site.onrender.com' || 'http://localhost:5000'; 
+        const response = await fetch(`${apiUrl}/predict?building_id=${buildingId}`);
         const result = await response.json();
 
         if (response.ok) {

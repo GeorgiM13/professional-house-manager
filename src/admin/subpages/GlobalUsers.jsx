@@ -5,7 +5,6 @@ import debounce from "lodash.debounce";
 import { useTheme } from "../../components/ThemeContext";
 import "./styles/Users.css";
 
-// Helper за анимацията на цифрите
 const CountUp = ({ value, duration = 800 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   useEffect(() => {
@@ -36,18 +35,14 @@ function GlobalUsers() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   
-  // State за статистиката
   const [stats, setStats] = useState({ total: 0, admins: 0, withPhone: 0 });
   
   const PAGE_SIZE = 20;
 
-  // 1. Зареждане на статистиката (Global Stats)
   useEffect(() => {
     const fetchStats = async () => {
-      // Използваме head: true за да не теглим данните, а само бройката - много бързо
       const totalPromise = supabase.from("users").select("id", { count: "exact", head: true });
       const adminsPromise = supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "admin");
-      // Броим хората с въведен телефон (не е null и не е празен стринг)
       const phonePromise = supabase.from("users").select("id", { count: "exact", head: true }).not("phone", "is", null).neq("phone", "");
 
       const [totalRes, adminsRes, phoneRes] = await Promise.all([totalPromise, adminsPromise, phonePromise]);
@@ -62,7 +57,6 @@ function GlobalUsers() {
     fetchStats();
   }, []);
 
-  // 2. Зареждане на таблицата с потребители
   const fetchUsers = async (pageArg, searchArg) => {
     setLoading(true);
     try {
@@ -105,7 +99,6 @@ function GlobalUsers() {
   return (
     <div className={`au-page ${isDarkMode ? "au-dark" : "au-light"}`}>
       
-      {/* HEADER */}
       <div className="au-header">
         <div className="au-header-left">
           <h1>Глобален регистър</h1>
@@ -118,7 +111,6 @@ function GlobalUsers() {
         </div>
       </div>
 
-      {/* STATS CARDS (Нови) */}
       <div className="au-stats-container">
         <div className="au-stat-card blue">
           <div className="au-stat-icon">🌍</div>
@@ -143,7 +135,6 @@ function GlobalUsers() {
         </div>
       </div>
 
-      {/* SEARCH TOOLBAR (Преместен тук) */}
       <div className="au-toolbar">
          <input
            type="text"
@@ -161,7 +152,6 @@ function GlobalUsers() {
         </div>
       ) : (
         <>
-            {/* DESKTOP TABLE */}
             <table className="au-table desktop-view">
               <thead>
                 <tr>
@@ -189,7 +179,6 @@ function GlobalUsers() {
               </tbody>
             </table>
 
-            {/* MOBILE CARDS */}
             <div className="au-mobile-list mobile-view">
                 {users.map((user) => (
                     <div key={user.id} className="au-mobile-card" onClick={() => navigate(`/admin/edit-global-user/${user.id}`)}>
@@ -204,7 +193,6 @@ function GlobalUsers() {
                 ))}
             </div>
 
-            {/* PAGINATION */}
             {totalPages > 1 && (
                 <div className="au-pagination">
                   <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>⬅ Предишна</button>

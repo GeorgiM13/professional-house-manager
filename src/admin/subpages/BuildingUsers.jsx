@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Добавих useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import Select from "react-select";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
@@ -31,7 +31,7 @@ function BuildingUsers() {
   const { isDarkMode } = useTheme();
   const { userId } = useLocalUser();
   const navigate = useNavigate();
-  const location = useLocation(); // Трябва ни за state-a
+  const location = useLocation();
   const { buildings } = useUserBuildings(userId);
 
   const [selectedBuilding, setSelectedBuilding] = useState(null);
@@ -41,7 +41,6 @@ function BuildingUsers() {
   const [localSearch, setLocalSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  // Нов state за отложен скрол
   const [pendingScroll, setPendingScroll] = useState(null);
 
   const PAGE_SIZE = 50;
@@ -56,16 +55,12 @@ function BuildingUsers() {
     return { total, residents, empty };
   }, [filteredUnits]);
 
-  // 1. Fetch Logic
   useEffect(() => {
     if (!selectedBuilding) {
       setUnits([]);
       setFilteredUnits([]);
       return;
     }
-
-    // ВАЖНО: Махнахме setCurrentPage(1) от тук!
-    // То пречеше на възстановяването на страницата.
 
     const fetchUnits = async () => {
       setLoading(true);
@@ -94,12 +89,11 @@ function BuildingUsers() {
     fetchUnits();
   }, [selectedBuilding]);
 
-  // 2. Search Logic
   useEffect(() => {
     if (!localSearch) {
       setFilteredUnits(units);
     } else {
-      setCurrentPage(1); // При търсене връщаме на 1-ва страница
+      setCurrentPage(1);
       const lower = localSearch.toLowerCase();
       setFilteredUnits(
         units.filter(
@@ -112,36 +106,29 @@ function BuildingUsers() {
     }
   }, [localSearch, units]);
 
-  // 3. Restore State Logic (Възстановяване)
   useEffect(() => {
     if (location.state?.previousBuilding) {
-      // Възстановяваме сградата
       setSelectedBuilding(location.state.previousBuilding);
 
-      // Възстановяваме търсенето
       if (location.state.previousSearch) {
         setLocalSearch(location.state.previousSearch);
       }
 
-      // Възстановяваме страницата
       if (location.state.previousPage) {
         setCurrentPage(location.state.previousPage);
       }
 
-      // Запазваме скрола за по-късно (когато зареди loading: false)
       if (location.state.scrollPosition) {
         setPendingScroll(location.state.scrollPosition);
       }
     }
   }, [location.state]);
 
-  // 4. Scroll Execution Logic (Изпълнение на скрола)
   useEffect(() => {
     if (!loading && pendingScroll !== null && units.length > 0) {
-      // Изчакваме малко DOM-а да се нарисува
       setTimeout(() => {
         window.scrollTo({ top: pendingScroll, behavior: "auto" });
-        setPendingScroll(null); // Чистим, за да не скролва пак
+        setPendingScroll(null);
       }, 100);
     }
   }, [loading, pendingScroll, units]);
@@ -159,11 +146,10 @@ function BuildingUsers() {
     }
   };
 
-  // Ръчна смяна на сграда
   const handleBuildingChange = (option) => {
     setSelectedBuilding(option);
-    setCurrentPage(1); // Само тук нулираме страницата
-    setLocalSearch(""); // Чистим търсенето при смяна на сграда
+    setCurrentPage(1);
+    setLocalSearch("");
   };
 
   const buildingOptions = buildings.map((b) => ({
@@ -342,7 +328,6 @@ function BuildingUsers() {
                               buildingId: u.building_id,
                               propertyId: u.id,
                               propertyType: u.type,
-                              // Пращаме state за връщане
                               previousBuilding: selectedBuilding,
                               previousPage: currentPage,
                               previousSearch: localSearch,

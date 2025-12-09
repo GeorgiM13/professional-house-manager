@@ -22,10 +22,9 @@
     margin-top: 5px;
 }
 
-/* CARDS LAYOUT */
 .ebu-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* Основна форма и Инфо панел */
+    grid-template-columns: 2fr 1fr;
     gap: 1.5rem;
 }
 
@@ -52,7 +51,6 @@
     gap: 0.5rem;
 }
 
-/* FORM ELEMENTS */
 .ebu-form-group {
     display: flex;
     flex-direction: column;
@@ -80,7 +78,6 @@
     background: var(--au-bg-card);
 }
 
-/* ACTIONS */
 .ebu-actions {
     margin-top: 2rem;
     padding-top: 1.5rem;
@@ -101,7 +98,6 @@
 .ebu-btn-secondary { background: transparent; border: 1px solid var(--au-border); color: var(--au-text-sec); }
 .ebu-btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
 
-/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
     .ebu-container { padding: 1rem; }
     .ebu-grid { grid-template-columns: 1fr; }

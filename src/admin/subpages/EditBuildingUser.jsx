@@ -26,7 +26,6 @@ function EditBuildingUser() {
   const location = useLocation();
   const { isDarkMode } = useTheme();
 
-  // Взимаме целия state, включително променливите за навигация
   const {
     buildingId,
     propertyType: initialType,
@@ -37,7 +36,6 @@ function EditBuildingUser() {
     scrollPosition,
   } = location.state || {};
 
-  // Функция за връщане с правилния state
   const goBack = () => {
     navigate("/admin/users-building", {
       state: {
@@ -183,7 +181,7 @@ function EditBuildingUser() {
       if (error) throw error;
 
       setAlert({ show: true, message: "✅ Запазено!", type: "success" });
-      setTimeout(() => goBack(), 1000); // Използваме goBack тук
+      setTimeout(() => goBack(), 1000);
     } catch (err) {
       setAlert({
         show: true,
@@ -206,7 +204,7 @@ function EditBuildingUser() {
         .eq("id", propertyData.id);
       if (error) throw error;
       setAlert({ show: true, message: "Имотът е изтрит.", type: "success" });
-      setTimeout(() => goBack(), 1000); // Използваме goBack тук
+      setTimeout(() => goBack(), 1000);
     } catch (err) {
       setAlert({
         show: true,

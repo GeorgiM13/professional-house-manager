@@ -1,135 +1,286 @@
-import { useState, useEffect } from "react"
-import { supabase } from "../../supabaseClient"
-import AsyncSelect from "react-select/async"
-import { useNavigate } from "react-router-dom"
-import CustomAlert from "../../components/CustomAlert"
-import "./styles/AddEvent.css"
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import Select from "react-select";
+import Swal from "sweetalert2";
+import DatePicker, { registerLocale } from "react-datepicker";
+import bg from "date-fns/locale/bg";
+import "react-datepicker/dist/react-datepicker.css";
+import { supabase } from "../../supabaseClient";
+import { useTheme } from "../../components/ThemeContext";
+import { useUserBuildings } from "../hooks/UseUserBuildings";
+import { useLocalUser } from "../hooks/UseLocalUser";
+
+import "./styles/AddEvent.css";
+
+registerLocale("bg", bg);
+
+const STATUS_OPTIONS = [
+  { value: "ново", label: "🔵 Ново", color: "#3b82f6" },
+  { value: "изпълнено", label: "🟢 Изпълнено", color: "#22c55e" },
+];
 
 function AddEventPage() {
-    const navigate = useNavigate();
-    const [buildings, setBuildings] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [alertMessage, setAlertMessage] = useState("");
-    const [alertType, setAlertType] = useState("info");
-    const [loading, setLoading] = useState(false);
-    const [newEvent, setNewEvent] = useState({
-        status: "ново",
-        subject: "",
-        description: "",
-        completion_date: "",
-        assigned_to: "",
-        building_id: ""
-    });
+  const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
 
-    const loadBuildings = async (inputValue) => {
-        const { data } = await supabase
-            .from("buildings")
-            .select("id, name, address")
-            .ilike("name", `%${inputValue || ""}%`)
-            .limit(10);
-        return data.map(b => ({
-            value: b.id,
-            label: `${b.name}, ${b.address}`
-        }));
+  const { user: currentUser } = useLocalUser();
+  const { buildings, loading: loadingBuildings } = useUserBuildings(
+    currentUser?.id
+  );
+
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [newEvent, setNewEvent] = useState({
+    status: "ново",
+    subject: "",
+    description: "",
+    completion_date: null,
+    assigned_to: "",
+    building_id: "",
+  });
+
+  useEffect(() => {
+    async function fetchUsers() {
+      const { data } = await supabase
+        .from("users")
+        .select("id, first_name, last_name, role")
+        .or("role.eq.admin,role.eq.manager");
+
+      setUsers(data || []);
+    }
+    fetchUsers();
+  }, []);
+
+  const buildingOptions = useMemo(() => {
+    return buildings.map((b) => ({
+      value: b.id,
+      label: `${b.name}, ${b.address}`,
+    }));
+  }, [buildings]);
+
+  const assignedOptions = useMemo(() => {
+    return users.map((u) => ({
+      value: u.id,
+      label: `${u.first_name} ${u.last_name}`,
+    }));
+  }, [users]);
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      background: isDarkMode ? "#0f172a" : "#f8fafc",
+      borderColor: state.isFocused
+        ? "var(--au-primary)"
+        : isDarkMode
+        ? "#334155"
+        : "#cbd5e1",
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+      minHeight: "42px",
+      borderRadius: "8px",
+      boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+    }),
+    menu: (base) => ({
+      ...base,
+      background: isDarkMode ? "#1e293b" : "white",
+      zIndex: 9999,
+      border: "1px solid var(--au-border)",
+    }),
+    option: (base, state) => {
+      if (state.isSelected)
+        return {
+          ...base,
+          backgroundColor: "#3b82f6",
+          color: "white",
+          cursor: "pointer",
+        };
+      if (state.isFocused)
+        return {
+          ...base,
+          backgroundColor: isDarkMode ? "#334155" : "#eff6ff",
+          color: isDarkMode ? "#f1f5f9" : "#1e293b",
+          cursor: "pointer",
+        };
+      return {
+        ...base,
+        backgroundColor: "transparent",
+        color: isDarkMode ? "#f1f5f9" : "#1e293b",
+        cursor: "pointer",
+      };
+    },
+    singleValue: (base) => ({
+      ...base,
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+    }),
+    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#1e293b" }),
+    placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
+  };
+
+  const handleChange = (name, value) => {
+    setNewEvent((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const toLocalISOString = (date) => {
+    if (!date) return null;
+    const tzOffset = date.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(date.getTime() - tzOffset)
+      .toISOString()
+      .slice(0, -1);
+    return localISOTime;
+  };
+
+  const handleCreateEvent = async () => {
+    if (!newEvent.subject || !newEvent.building_id) {
+      Swal.fire({
+        icon: "warning",
+        title: "Липсват данни",
+        text: "Моля попълнете Относно и Сграда.",
+      });
+      return;
     }
 
-    useEffect(() => {
-        async function fetchUsers() {
-            setLoading(false);
+    setLoading(true);
+    try {
+      const payload = {
+        ...newEvent,
+        completion_date: toLocalISOString(newEvent.completion_date),
+      };
 
-            const { data } = await supabase.from("users").select("*");
-            setUsers((data || []).filter(u => u.role === "admin"));
-        }
-        fetchUsers();
-    }, []);
+      const { error } = await supabase.from("events").insert([payload]);
+      if (error) throw error;
 
-    const handleCreateEvent = async () => {
-        try {
-            const { error } = await supabase.from("events").insert([newEvent]);
-            if (error) {
-                setAlertType("error");
-                setAlertMessage("Възникна грешка при добавяне: " + error.message);
-            } else {
-                setAlertType("success");
-                setAlertMessage("Събитието е добавено успешно!");
-                setTimeout(() => navigate("/admin/adminevents"), 2000);
-            }
-        } catch (err) {
-            setAlertType("error");
-            setAlertMessage("Неуспешна операция: " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+      await Swal.fire({
+        icon: "success",
+        title: "Успех!",
+        text: "Събитието е добавено успешно.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      navigate("/admin/adminevents");
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Грешка", text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="add-event-container">
-            <div className="form-header">
-                <h1>Добавяне на ново събитие</h1>
-                <p>Попълнете формата за ново събитие</p>
-            </div>
+  const goBack = () => navigate("/admin/adminevents");
 
-            <form className="event-form">
-                <div className="form-grid">
-                    <div className="form-group">
-                        <label>Статус</label>
-                        <select value={newEvent.status} onChange={(e) => setNewEvent({ ...newEvent, status: e.target.value })}>
-                            <option value="ново">ново</option>
-                            <option value="изпълнено">изпълнено</option>
-                        </select>
-                    </div>
+  return (
+    <div className={`adev-container ${isDarkMode ? "au-dark" : "au-light"}`}>
+      <div className="adev-header">
+        <div>
+          <h1>Добавяне на събитие</h1>
+          <p>Планиране на нова задача или среща</p>
+        </div>
+        <button className="adev-btn adev-btn-secondary" onClick={goBack}>
+          Назад
+        </button>
+      </div>
 
-                    <div className="form-group">
-                        <label>Относно</label>
-                        <input value={newEvent.subject} onChange={(e) => setNewEvent({ ...newEvent, subject: e.target.value })} />
-                    </div>
+      <div className="adev-grid">
+        <div className="adev-card">
+          <div className="adev-section-title">📝 Описание на задачата</div>
 
-                    <div className="form-group">
-                        <label>Дата и час на изпълнение</label>
-                        <input type="datetime-local" value={newEvent.completion_date} onChange={(e) => setNewEvent({ ...newEvent, completion_date: e.target.value })} />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Сграда</label>
-                        <AsyncSelect
-                            className="custom-select"
-                            classNamePrefix="custom"
-                            cacheOptions
-                            defaultOptions
-                            loadOptions={loadBuildings}
-                            onChange={(option) => setNewEvent({ ...newEvent, building_id: option ? option.value : "" })}
-                            placeholder="Търсене на сграда..."
-                            isClearable
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Възложено на</label>
-                        <select value={newEvent.assigned_to} onChange={(e) => setNewEvent({ ...newEvent, assigned_to: e.target.value })}>
-                            <option value="">Възложено на</option>
-                            {users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="form-group full-width">
-                        <label>Описание</label>
-                        <textarea value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} />
-                    </div>
-                </div>
-
-                <div className="form-actions">
-                    <button type="button" className="primary-button" onClick={handleCreateEvent}>Запази</button>
-                    <button type="button" className="secondary-button" onClick={() => navigate("/admin/adminevents")}>Отказ</button>
-                </div>
-            </form>
-            <CustomAlert
-                message={alertMessage}
-                type={alertType}
-                onClose={() => setAlertMessage("")}
+          <div className="adev-form-group">
+            <label>Относно *</label>
+            <input
+              className="adev-input"
+              value={newEvent.subject}
+              onChange={(e) => handleChange("subject", e.target.value)}
+              placeholder="Напр. Общо събрание"
             />
+          </div>
+
+          <div className="adev-form-group">
+            <label>Описание</label>
+            <textarea
+              className="adev-textarea"
+              value={newEvent.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              placeholder="Детайли за събитието..."
+            />
+          </div>
         </div>
 
-    );
+        <div className="adev-card" style={{ height: "fit-content" }}>
+          <div className="adev-section-title">⚙️ Детайли за изпълнение</div>
+
+          <div className="adev-form-group">
+            <label>Сграда *</label>
+            <Select
+              options={buildingOptions}
+              isLoading={loadingBuildings}
+              onChange={(opt) => handleChange("building_id", opt?.value)}
+              placeholder="Избери сграда..."
+              styles={selectStyles}
+              noOptionsMessage={() => "Няма намерени"}
+            />
+          </div>
+
+          <div className="adev-form-group" style={{ marginTop: "1rem" }}>
+            <label>Статус</label>
+            <Select
+              options={STATUS_OPTIONS}
+              defaultValue={STATUS_OPTIONS[0]}
+              onChange={(opt) => handleChange("status", opt?.value)}
+              styles={selectStyles}
+              isSearchable={false}
+            />
+          </div>
+
+          <div className="adev-form-group" style={{ marginTop: "1rem" }}>
+            <label>Дата и час на изпълнение</label>
+            <div className="custom-datepicker-wrapper">
+              <span className="calendar-icon">📅</span>
+              <DatePicker
+                selected={newEvent.completion_date}
+                onChange={(date) => handleChange("completion_date", date)}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                timeCaption="Час"
+                dateFormat="dd MMMM yyyy, HH:mm"
+                placeholderText="Изберете дата и час..."
+                className="adev-input date-input-field"
+                locale="bg"
+                autoComplete="off"
+                isClearable
+              />
+            </div>
+          </div>
+
+          <div className="adev-form-group" style={{ marginTop: "1rem" }}>
+            <label>Възложено на</label>
+            <Select
+              options={assignedOptions}
+              onChange={(opt) => handleChange("assigned_to", opt?.value)}
+              placeholder="Избери служител..."
+              styles={selectStyles}
+              isSearchable={false}
+            />
+          </div>
+        </div>
+
+        <div className="adev-actions">
+          <button
+            className="adev-btn adev-btn-secondary"
+            onClick={goBack}
+            disabled={loading}
+          >
+            Отказ
+          </button>
+          <button
+            className="adev-btn adev-btn-primary"
+            onClick={handleCreateEvent}
+            disabled={loading}
+          >
+            {loading ? "Запазване..." : "Създай събитие"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default AddEventPage;

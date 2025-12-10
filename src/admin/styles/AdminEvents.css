@@ -176,6 +176,11 @@
   padding: 14px 16px;
   border-bottom: 1px solid var(--ae-border);
   vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 60px;
+  max-width: 250px;
 }
 .adev-row {
   cursor: pointer;
@@ -456,6 +461,7 @@
     align-self: start;
     padding-top: 2px;
     margin-bottom: 2px;
+    max-width: 350px;
   }
   .adev-subject .adev-icon {
     flex-shrink: 0;
@@ -508,6 +514,8 @@
     margin: 0;
     display: flex;
     justify-content: flex-end;
+    width: 1%;
+  white-space: nowrap;
   }
 
   .action-btn.docx {

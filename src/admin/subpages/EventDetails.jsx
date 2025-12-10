@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
+import { useTheme } from "../../components/ThemeContext";
 import "./styles/EventDetails.css";
 
 function EventDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
   const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -14,16 +17,16 @@ function EventDetails() {
         .from("events")
         .select(
           `
-                id,
-                status,
-                subject,
-                description,
-                completion_date,
-                created_at,
-                assigned_user:assigned_to(first_name,last_name),
-                building_id,
-                building:building_id(name,address)
-                `
+            id,
+            status,
+            subject,
+            description,
+            completion_date,
+            created_at,
+            assigned_user:assigned_to(first_name,last_name),
+            building_id,
+            building:building_id(name,address)
+          `
         )
         .eq("id", id)
         .single();
@@ -33,64 +36,122 @@ function EventDetails() {
       } else {
         setEvent(data);
       }
+      setLoading(false);
     }
     fetchEvent();
   }, [id]);
 
   function formatDateTime(dateString) {
-    if (!dateString) return "";
+    if (!dateString) return "-";
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
+    return date.toLocaleString("bg-BG", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
-  if (!event) return <p>Зареждане...</p>;
+  const getStatusClass = (status) => {
+    const s = status ? status.toLowerCase() : "";
+    if (s.includes("ново") || s.includes("new")) return "status-new";
+    if (s.includes("изпълнено") || s.includes("done")) return "status-done";
+    return "status-default";
+  };
+
+  if (loading) return (
+      <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
+          <div className="evd-loading">
+            <div className="spinner"></div>
+            <p>Зареждане на детайли...</p>
+          </div>
+      </div>
+  );
+
+  if (!event) return (
+      <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
+          <div className="evd-error">Събитието не е намерено.</div>
+      </div>
+  );
+
+  const statusClass = getStatusClass(event.status);
 
   return (
-    <div className="event-details-page">
-      <h1>Детайли за събитието</h1>
-      <p>
-        <strong>Адрес: </strong> {event.building?.name},{" "}
-        {event.building?.address}
-      </p>
-      <p>
-        <strong>Състояние: </strong> {event.status}
-      </p>
-      <p>
-        <strong>Относно: </strong>
-        {event.subject}
-      </p>
-      <p>
-        <strong>Описание: </strong>
-        {event.description || "-"}
-      </p>
-      <p>
-        <strong>Дата на изпълнение: </strong>
-        {formatDateTime(event.completion_date)}
-      </p>
-      <p>
-        <strong>Дата на добавяне: </strong>
-        {formatDateTime(event.created_at)}
-      </p>
-      <p>
-        <strong>Възложено на: </strong>{" "}
-        {event.assigned_user
-          ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
-          : "-"}
-      </p>
+    <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
+      
+      <div className="evd-page-header">
+        <button className="evd-back-link" onClick={() => navigate("/admin/adminevents")}>
+          ← Назад към списъка
+        </button>
+        <div className={`evd-status-pill ${statusClass}`}>
+            {event.status || "Няма статус"}
+        </div>
+      </div>
 
-      <div className="buttons">
-        <button onClick={() => navigate(`/admin/editevent/${event.id}`)}>
-          Редактиране
-        </button>
-        <button onClick={() => navigate("/admin/adminevents")}>
-          Назад към списъка
-        </button>
+      <div className="evd-main-card fade-in">
+        
+        <div className="evd-card-header">
+            <div className="evd-location-badge">
+                <span className="icon">🏢</span>
+                <div>
+                    <h3>{event.building?.name || "Неизвестна сграда"}</h3>
+                    <small>{event.building?.address || "Няма адрес"}</small>
+                </div>
+            </div>
+            <div className="evd-dates">
+                <div className="date-item">
+                    <span>📅 Краен срок:</span>
+                    <strong>{formatDateTime(event.completion_date)}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div className="evd-divider"></div>
+
+        <div className="evd-body">
+            <h1 className="evd-title">{event.subject}</h1>
+            
+            <div className="evd-description-container">
+                <span className="evd-section-label">Описание на задачата</span>
+                <div className="evd-description-content">
+                    {event.description || <em className="text-muted">Няма въведено описание.</em>}
+                </div>
+            </div>
+
+            <div className="evd-meta-grid">
+                <div className="meta-box">
+                    <span className="meta-icon">👤</span>
+                    <div className="meta-info">
+                        <span className="meta-label">Възложено на</span>
+                        <span className="meta-value">
+                            {event.assigned_user
+                                ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
+                                : "Не е назначено"}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="meta-box">
+                    <span className="meta-icon">📝</span>
+                    <div className="meta-info">
+                        <span className="meta-label">Създадено на</span>
+                        <span className="meta-value">
+                            {formatDateTime(event.created_at)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div className="evd-footer">
+            <button 
+                className="evd-btn evd-btn-primary" 
+                onClick={() => navigate(`/admin/editevent/${event.id}`)}
+            >
+                Редактирай събитието
+            </button>
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,6 @@ import Select from "react-select";
 import Swal from "sweetalert2";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
-
 import { useUserBuildings } from "../hooks/UseUserBuildings";
 import { useLocalUser } from "../hooks/UseLocalUser";
 
@@ -292,7 +291,6 @@ function AddUserToBuilding() {
               type="number"
               value={floor}
               onChange={(e) => setFloor(e.target.value)}
-              placeholder="напр. 3"
             />
           </div>
 
@@ -303,7 +301,6 @@ function AddUserToBuilding() {
               type="number"
               value={area}
               onChange={(e) => setArea(e.target.value)}
-              placeholder="напр. 85.5"
             />
             {errors.area && <span className="error-msg">{errors.area}</span>}
           </div>
@@ -318,7 +315,6 @@ function AddUserToBuilding() {
                   className="aub-input"
                   value={apartmentNumber}
                   onChange={(e) => setApartmentNumber(e.target.value)}
-                  placeholder="напр. 12"
                 />
               </div>
               <div className="aub-form-group">
@@ -328,7 +324,6 @@ function AddUserToBuilding() {
                   type="number"
                   value={residents}
                   onChange={(e) => setResidents(e.target.value)}
-                  placeholder="0"
                 />
               </div>
             </>
@@ -341,7 +336,6 @@ function AddUserToBuilding() {
                 className="aub-input"
                 value={garageNumber}
                 onChange={(e) => setGarageNumber(e.target.value)}
-                placeholder="напр. G-5"
               />
             </div>
           )}
@@ -353,7 +347,6 @@ function AddUserToBuilding() {
                 className="aub-input"
                 value={officeNumber}
                 onChange={(e) => setOfficeNumber(e.target.value)}
-                placeholder="напр. A-2"
               />
             </div>
           )}

@@ -1,12 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import AsyncSelect from "react-select/async";
+import Select from "react-select";
+import Swal from "sweetalert2";
 import { supabase } from "../../supabaseClient";
-import CustomAlert from "../../components/CustomAlert";
+import { useTheme } from "../../components/ThemeContext";
+import { useUserBuildings } from "../hooks/UseUserBuildings";
+import { useLocalUser } from "../hooks/UseLocalUser";
+
 import "./styles/AddExpense.css";
 
 function AddExpense() {
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
+
+  const { user: currentUser } = useLocalUser();
+  const { buildings, loading: loadingBuildings } = useUserBuildings(
+    currentUser?.id
+  );
+
   const [formData, setFormData] = useState({
     type: "",
     month: "",
@@ -16,29 +27,79 @@ function AddExpense() {
     building_id: "",
     notes: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState("info");
 
-  const loadBuildings = async (inputValue) => {
-    const { data } = await supabase
-      .from("buildings")
-      .select("id, name, address")
-      .ilike("name", `%${inputValue || ""}%`)
-      .limit(10);
-    return data.map((b) => ({ value: b.id, label: `${b.name}, ${b.address}` }));
+  const months = [
+    "Януари",
+    "Февруари",
+    "Март",
+    "Април",
+    "Май",
+    "Юни",
+    "Юли",
+    "Август",
+    "Септември",
+    "Октомври",
+    "Ноември",
+    "Декември",
+  ];
+  const currentYear = new Date().getFullYear();
+  const nextYear = new Date().getFullYear() + 1;
+  const years = Array.from({ length: 6 }, (_, i) => nextYear - i);
+
+  const buildingOptions = useMemo(() => {
+    return buildings.map((b) => ({
+      value: b.id,
+      label: `${b.name}, ${b.address}`,
+    }));
+  }, [buildings]);
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      background: isDarkMode ? "#0f172a" : "#f8fafc",
+      borderColor: state.isFocused
+        ? "var(--au-primary)"
+        : isDarkMode
+        ? "#334155"
+        : "#cbd5e1",
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+      minHeight: "42px",
+      borderRadius: "8px",
+    }),
+    menu: (base) => ({
+      ...base,
+      background: isDarkMode ? "#1e293b" : "white",
+      zIndex: 999,
+      border: "1px solid var(--au-border)",
+    }),
+    option: (base, state) => ({
+      ...base,
+      background: state.isFocused
+        ? isDarkMode
+          ? "#334155"
+          : "#eff6ff"
+        : "transparent",
+      color: isDarkMode ? "#f1f5f9" : "#334155",
+      cursor: "pointer",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: isDarkMode ? "#f1f5f9" : "#334155",
+    }),
+    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#334155" }),
+    placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
   };
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+  };
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
@@ -69,52 +130,45 @@ function AddExpense() {
 
       if (error) throw error;
 
-      setAlertType("success");
-      setAlertMessage("Разходът е добавен успешно!");
-      setTimeout(() => navigate("/admin/expenses"), 2000);
+      await Swal.fire({
+        icon: "success",
+        title: "Успех!",
+        text: "Разходът е добавен успешно.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      navigate("/admin/expenses");
     } catch (err) {
       console.error("Грешка при добавяне на разход:", err.message);
-      setAlertType("error");
-      alert("Възникна грешка при добавяне: " + err.message);
+      Swal.fire({ icon: "error", title: "Грешка", text: err.message });
     } finally {
       setLoading(false);
-      setShowConfirm(false);
     }
-  }
+  };
 
-  const months = [
-    "Януари",
-    "Февруари",
-    "Март",
-    "Април",
-    "Май",
-    "Юни",
-    "Юли",
-    "Август",
-    "Септември",
-    "Октомври",
-    "Ноември",
-    "Декември",
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const nextYear = new Date().getFullYear() + 1;
-  const years = Array.from({ length: 15 }, (_, i) => nextYear - i);
+  const goBack = () => navigate("/admin/expenses");
 
   return (
-    <div className="add-expense-container">
-      <div className="form-header">
-        <h1>Добавяне на нов разход</h1>
-        <p>Попълнете формата за добавяне на нов разход</p>
+    <div className={`ade-container ${isDarkMode ? "au-dark" : "au-light"}`}>
+      <div className="ade-header">
+        <div>
+          <h1>Добавяне на разход</h1>
+          <p>Въведете детайли за новото плащане</p>
+        </div>
+        <button className="ade-btn ade-btn-secondary" onClick={goBack}>
+          Назад
+        </button>
       </div>
 
-      <form className="expense-form" onSubmit={handleSubmit}>
-        <div className="form-grid">
-          <div className={`form-group ${errors.type ? "has-error" : ""}`}>
-            <label htmlFor="type">Вид разход *</label>
+      <div className="ade-grid">
+        <div className="ade-card">
+          <div className="ade-section-title">📄 Основна информация</div>
+
+          <div className="ade-form-group">
+            <label>Вид разход *</label>
             <select
-              id="type"
               name="type"
+              className="ade-select"
               value={formData.type}
               onChange={handleChange}
             >
@@ -127,163 +181,158 @@ function AddExpense() {
               <option value="manager">Домоуправител</option>
               <option value="water_building">Вода обща</option>
               <option value="lighting">Осветление (Пури/Крушки)</option>
-              <option value="cleaning_supplies">
-                Консумативи за почистване
-              </option>
+              <option value="cleaning_supplies">Материали почистване</option>
               <option value="fee_annual_review">
                 Годишен преглед асансьор
               </option>
               <option value="internet_video">Интернет и Видеонаблюдение</option>
               <option value="access_control">Контрол на достъп (Чипове)</option>
               <option value="pest_control">Дезинсекция (Пръскане)</option>
-              <option value="cleaning_supplies">
-                Консумативи за почистване
-              </option>
-              <option value="fee_annual_review">
-                Годишен преглед асансьор
-              </option>
-              <option value="internet_video">Интернет и Видеонаблюдение</option>
-              <option value="access_control">Контрол на достъп (Чипове)</option>
               <option value="other">Други</option>
             </select>
-            {errors.type && (
-              <span className="error-message">{errors.type}</span>
-            )}
+            {errors.type && <span className="error-msg">{errors.type}</span>}
           </div>
 
-          <div className={`form-group ${errors.month ? "has-error" : ""}`}>
-            <label htmlFor="month">Месец *</label>
-            <select
-              id="month"
-              name="month"
-              value={formData.month}
+          <div className="ade-form-group">
+            <label>Сума (лв)</label>
+            <input
+              type="number"
+              step="0.01"
+              name="current_month"
+              className="ade-input"
+              value={formData.current_month}
               onChange={handleChange}
-            >
-              <option value="">-- Избери месец --</option>
-              {months.map((m, index) => (
-                <option key={index + 1} value={index + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            {errors.month && (
-              <span className="error-message">{errors.month}</span>
-            )}
+              placeholder="0.00"
+            />
           </div>
 
-          <div className={`form-group ${errors.year ? "has-error" : ""}`}>
-            <label htmlFor="year">Година *</label>
-            <select
-              id="year"
-              name="year"
-              value={formData.year}
+          <div className="ade-form-group">
+            <label>Бележки</label>
+            <textarea
+              name="notes"
+              className="ade-textarea"
+              value={formData.notes}
               onChange={handleChange}
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-            {errors.year && (
-              <span className="error-message">{errors.year}</span>
+              placeholder="Допълнителна информация..."
+            />
+          </div>
+        </div>
+
+        <div className="ade-card" style={{ height: "fit-content" }}>
+          <div className="ade-section-title">📅 Контекст</div>
+
+          <div className="ade-form-group">
+            <label>Сграда *</label>
+            <Select
+              options={buildingOptions}
+              isLoading={loadingBuildings}
+              onChange={(opt) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  building_id: opt?.value || "",
+                }));
+                if (errors.building_id)
+                  setErrors((prev) => ({ ...prev, building_id: null }));
+              }}
+              placeholder="Избери сграда..."
+              styles={selectStyles}
+              noOptionsMessage={() => "Няма намерени"}
+            />
+            {errors.building_id && (
+              <span className="error-msg">{errors.building_id}</span>
             )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="current_month">Сума (лв)</label>
-            <div className="input-with-icon">
-              <input
-                id="current_month"
-                type="number"
-                step="0.01"
-                name="current_month"
-                value={formData.current_month}
-                onChange={handleChange}
-                placeholder="0.00"
-              />
-              <span className="currency">лв.</span>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="paid">Статус на плащане</label>
-            <select
-              id="paid"
-              name="paid"
-              value={formData.paid}
-              onChange={handleChange}
-            >
-              <option value="не">Чака плащане</option>
-              <option value="да">Платено</option>
-            </select>
           </div>
 
           <div
-            className={`form-group ${errors.building_id ? "has-error" : ""}`}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1rem",
+              marginTop: "0.5rem",
+            }}
           >
-            <label htmlFor="building_id">Сграда *</label>
-            <AsyncSelect
-              className="custom-select"
-              classNamePrefix="custom"
-              cacheOptions
-              defaultOptions
-              loadOptions={loadBuildings}
-              onChange={(option) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  building_id: option?.value || "",
-                  building_label: option?.label || "",
-                }));
-                if (errors.building_id)
-                  setErrors((prev) => ({ ...prev, building_id: "" }));
-              }}
-              placeholder="Изберете сграда"
-              isClearable
-            />
-            {errors.building_id && (
-              <span className="error-message">{errors.building_id}</span>
-            )}
+            <div className="ade-form-group">
+              <label>Месец *</label>
+              <select
+                name="month"
+                className="ade-select"
+                value={formData.month}
+                onChange={handleChange}
+              >
+                <option value="">--</option>
+                {months.map((m, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              {errors.month && (
+                <span className="error-msg">{errors.month}</span>
+              )}
+            </div>
+
+            <div className="ade-form-group">
+              <label>Година *</label>
+              <select
+                name="year"
+                className="ade-select"
+                value={formData.year}
+                onChange={handleChange}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="form-group full-width">
-            <label htmlFor="notes">Допълнителни бележки</label>
-            <textarea
-              id="notes"
-              name="notes"
-              value={formData.notes}
+          <hr
+            style={{
+              margin: "1rem 0",
+              border: "0",
+              borderTop: "1px dashed var(--au-border)",
+            }}
+          />
+
+          <div className="ade-form-group">
+            <label>Статус на плащане</label>
+            <select
+              name="paid"
+              className="ade-select"
+              value={formData.paid}
               onChange={handleChange}
-              placeholder="Например: плащане за конкретен ремонт..."
-            />
+              style={{
+                fontWeight: "600",
+                color: formData.paid === "да" ? "#10b981" : "#ef4444",
+              }}
+            >
+              <option value="не">🔴 Неплатено</option>
+              <option value="да">🟢 Платено</option>
+            </select>
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="submit" className="primary-button" disabled={loading}>
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Запазване...
-              </>
-            ) : (
-              "Запази разход"
-            )}
-          </button>
+        <div className="ade-actions">
           <button
             type="button"
-            className="secondary-button"
-            onClick={() => navigate("/admin/expenses")}
+            className="ade-btn ade-btn-secondary"
+            onClick={goBack}
+            disabled={loading}
           >
             Отказ
           </button>
+          <button
+            type="button"
+            className="ade-btn ade-btn-primary"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? "Запазване..." : "Добави разход"}
+          </button>
         </div>
-      </form>
-
-      <CustomAlert
-        message={alertMessage}
-        type={alertType}
-        onClose={() => setAlertMessage("")}
-      />
+      </div>
     </div>
   );
 }

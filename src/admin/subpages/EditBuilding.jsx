@@ -3,11 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
+import { useTheme } from "../../components/ThemeContext";
 import "./styles/EditBuilding.css";
 
 function EditBuilding() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,10 +20,14 @@ function EditBuilding() {
     offices: "",
   });
 
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState("info");
+  const [alert, setAlert] = useState({
+    show: false,
+    message: "",
+    type: "info",
+  });
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchBuilding();
@@ -30,14 +36,17 @@ function EditBuilding() {
   const fetchBuilding = async () => {
     const { data, error } = await supabase
       .from("buildings")
-      .select("*")
+      .select("name, address, floors, apartments, garages, offices")
       .eq("id", id)
       .single();
 
     if (error) {
       console.error("Error loading building:", error);
-      setAlertType("error");
-      setAlertMessage("Грешка при зареждане на сградата! " + error.message);
+      setAlert({
+        show: true,
+        message: "Грешка при зареждане: " + error.message,
+        type: "error",
+      });
     } else if (data) {
       setFormData({
         name: data.name || "",
@@ -53,158 +62,209 @@ function EditBuilding() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    setSaving(true);
 
     const { name, address, floors, apartments, garages, offices } = formData;
 
-    const payload = {
+    const updates = {
       name,
       address,
-      floors: Number(floors) || 0,
-      apartments: Number(apartments) || 0,
-      garages: Number(garages) || 0,
-      offices: Number(offices) || 0,
+      floors: parseInt(floors) || 0,
+      apartments: parseInt(apartments) || 0,
+      garages: parseInt(garages) || 0,
+      offices: parseInt(offices) || 0,
     };
 
     const { error } = await supabase
       .from("buildings")
-      .update({
-        name,
-        address,
-        floors: parseInt(floors),
-        apartments: parseInt(apartments),
-        garages: garages ? parseInt(garages) : 0,
-        offices: offices ? parseInt(offices) : 0,
-      })
+      .update(updates)
       .eq("id", id);
 
     if (error) {
       console.error("Update error:", error);
-      setAlertType("error");
-      setAlertMessage("Грешка при редакция! " + error.message);
+      setAlert({
+        show: true,
+        message: "Грешка при редакция: " + error.message,
+        type: "error",
+      });
+      setSaving(false);
     } else {
-      setAlertType("success");
-      setAlertMessage("Сградата е успешно редактирана!");
-      setTimeout(() => navigate("/admin/buildings"), 2500);
+      setAlert({
+        show: true,
+        message: "✅ Сградата е обновена успешно!",
+        type: "success",
+      });
+      setTimeout(() => navigate("/admin/buildings"), 1500);
     }
   };
 
   const handleDeleteConfirmed = async () => {
+    setSaving(true);
     const { error } = await supabase.from("buildings").delete().eq("id", id);
 
     if (error) {
-      setAlertType("error");
-      setAlertMessage("Грешка при изтриване! " + error.message);
+      setAlert({
+        show: true,
+        message: "Грешка при изтриване: " + error.message,
+        type: "error",
+      });
+      setSaving(false);
     } else {
-      setAlertType("success");
-      setAlertMessage("Сградата е изтрита успешно!");
-      setTimeout(() => navigate("/admin/buildings"), 2000);
+      setAlert({
+        show: true,
+        message: "🗑️ Сградата е изтрита успешно!",
+        type: "success",
+      });
+      setTimeout(() => navigate("/admin/buildings"), 1500);
     }
-
     setShowConfirm(false);
   };
 
+  const goBack = () => navigate("/admin/buildings");
+
+  if (loading) {
+    return (
+      <div className={`edb-container ${isDarkMode ? "au-dark" : "au-light"}`}>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "4rem",
+            color: "var(--au-text-sec)",
+          }}
+        >
+          Зареждане на данни...
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="edit-building-container">
-      <h2>Редакция на сграда</h2>
-      <form onSubmit={handleUpdate} className="edit-building-form">
-        <label>
-          Име на сградата:
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-        </label>
+    <div className={`edb-container ${isDarkMode ? "au-dark" : "au-light"}`}>
+      <div className="edb-header">
+        <div>
+          <h1>Редакция на сграда</h1>
+          <p>Промяна на параметрите на етажната собственост</p>
+        </div>
+        <button className="edb-btn edb-btn-secondary" onClick={goBack}>
+          Назад
+        </button>
+      </div>
 
-        <label>
-          Адрес:
-          <input
-            type="text"
-            value={formData.address}
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.target.value })
-            }
-            required
-          />
-        </label>
+      <div className="edb-card">
+        <div className="edb-section-title">🏢 Основна информация</div>
 
-        <label>
-          Брой етажи:
-          <input
-            type="number"
-            value={formData.floors}
-            onChange={(e) =>
-              setFormData({ ...formData, floors: e.target.value })
-            }
-            required
-          />
-        </label>
+        <div className="edb-grid-row">
+          <div className="edb-form-group">
+            <label>Име на сградата</label>
+            <input
+              className="edb-input"
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="edb-form-group">
+            <label>Адрес</label>
+            <input
+              className="edb-input"
+              type="text"
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
+              required
+            />
+          </div>
+        </div>
 
-        <label>
-          Брой апартаменти:
-          <input
-            type="number"
-            value={formData.apartments}
-            onChange={(e) =>
-              setFormData({ ...formData, apartments: e.target.value })
-            }
-          />
-        </label>
+        <div className="edb-section-title" style={{ marginTop: "1rem" }}>
+          📊 Параметри
+        </div>
 
-        <label>
-          Брой гаражи:
-          <input
-            type="number"
-            value={formData.garages}
-            onChange={(e) =>
-              setFormData({ ...formData, garages: e.target.value })
-            }
-          />
-        </label>
+        <div className="edb-grid-row">
+          <div className="edb-form-group">
+            <label>Брой етажи</label>
+            <input
+              className="edb-input"
+              type="number"
+              value={formData.floors}
+              onChange={(e) =>
+                setFormData({ ...formData, floors: e.target.value })
+              }
+              required
+            />
+          </div>
+          <div className="edb-form-group">
+            <label>Брой апартаменти</label>
+            <input
+              className="edb-input"
+              type="number"
+              value={formData.apartments}
+              onChange={(e) =>
+                setFormData({ ...formData, apartments: e.target.value })
+              }
+            />
+          </div>
+        </div>
 
-        <label>
-          Брой офиси:
-          <input
-            type="number"
-            value={formData.offices}
-            onChange={(e) =>
-              setFormData({ ...formData, offices: e.target.value })
-            }
-          />
-        </label>
+        <div className="edb-grid-row">
+          <div className="edb-form-group">
+            <label>Брой гаражи</label>
+            <input
+              className="edb-input"
+              type="number"
+              value={formData.garages}
+              onChange={(e) =>
+                setFormData({ ...formData, garages: e.target.value })
+              }
+            />
+          </div>
+          <div className="edb-form-group">
+            <label>Брой офиси</label>
+            <input
+              className="edb-input"
+              type="number"
+              value={formData.offices}
+              onChange={(e) =>
+                setFormData({ ...formData, offices: e.target.value })
+              }
+            />
+          </div>
+        </div>
 
-        <div className="form-buttons">
-          <button type="submit" className="btn primary">
-            Запази
-          </button>
+        <div className="edb-actions">
           <button
             type="button"
-            className="btn secondary"
-            onClick={() => navigate(-1)}
-          >
-            Отказ
-          </button>
-          <button
-            type="button"
-            className="btn danger"
+            className="edb-btn edb-btn-danger"
             onClick={() => setShowConfirm(true)}
+            disabled={saving}
           >
-            Изтрий
+            🗑️ Изтрий сградата
+          </button>
+          <button
+            className="edb-btn edb-btn-primary"
+            onClick={handleUpdate}
+            disabled={saving}
+          >
+            {saving ? "Запазване..." : "Запази промените"}
           </button>
         </div>
-      </form>
+      </div>
 
       <CustomAlert
-        message={alertMessage}
-        type={alertType}
-        onClose={() => setAlertMessage("")}
+        message={alert.message}
+        type={alert.type}
+        visible={alert.show}
+        onClose={() => setAlert({ ...alert, show: false })}
       />
 
       {showConfirm && (
         <ConfirmModal
           title="Изтриване на сграда"
-          message="Наистина ли искате да изтриете тази сграда?"
+          message="Наистина ли искате да изтриете тази сграда и всички свързани с нея данни?"
           onConfirm={handleDeleteConfirmed}
           onCancel={() => setShowConfirm(false)}
         />

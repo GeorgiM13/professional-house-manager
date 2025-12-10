@@ -1,134 +1,190 @@
-.add-building-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
+.adb-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background-color: var(--au-bg-page, #f8fafc);
+  color: var(--au-text-main, #1e293b);
+  transition: background-color 0.3s, color 0.3s;
 }
 
-.add-building-form-header {
-    margin-bottom: 2rem;
-    text-align: center;
+.adb-container.au-dark {
+  --au-bg-page: #0f172a;
+  --au-bg-card: #1e293b;
+  --au-text-main: #f1f5f9;
+  --au-text-sec: #94a3b8;
+  --au-border: #334155;
+  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.add-building-form-header h2 {
-    font-size: 1.8rem;
-    color: #2d3748;
-    margin-bottom: 0.5rem;
+.adb-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.add-building-form-header p {
-    color: #718096;
-    font-size: 1rem;
+.adb-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--au-text-main);
+}
+.adb-header p {
+  color: var(--au-text-sec);
+  margin-top: 5px;
+  font-size: 0.95rem;
 }
 
-.add-building-form {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+.adb-card {
+  background: var(--au-bg-card, #ffffff);
+  border: 1px solid var(--au-border, #e2e8f0);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--au-shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.add-building-form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.adb-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--au-text-main);
+  border-bottom: 1px solid var(--au-border);
+  padding-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.add-building-form-group label {
-    font-weight: 500;
-    color: #4a5568;
-    font-size: 0.95rem;
+.adb-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 }
 
-.add-building-form-group input {
-    padding: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.2s;
+.adb-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.add-building-form-group input:focus {
-    border-color: #4299e1;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(66,153,225,0.2);
+.adb-form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--au-text-sec);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.has-error input {
-    border-color: #e53e3e;
+.adb-input {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid;
+  font-size: 1rem;
+  transition: all 0.2s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.has-error input:focus {
-    box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+.au-light .adb-input {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
 }
 
-.add-building-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #edf2f7;
-    grid-column: 1 / -1;
+.au-dark .adb-input {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
 }
 
-.primary-button {
-    background-color: #4299e1;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.adb-input:focus {
+  border-color: var(--au-primary, #3b82f6) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.primary-button:hover {
-    background-color: #3182ce;
+.error-msg {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
 }
 
-.secondary-button {
-    background-color: #edf2f7;
-    color: #2d3748;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
+.adb-actions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--au-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 
-.secondary-button:hover {
-    background-color: #e2e8f0;
+.adb-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
 }
 
-.succes-message {
-    grid-column: 1 / -1;
-    color: #38a169;
-    margin-top: 1rem;
-    font-weight: 500;
+.adb-btn:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
 }
 
+.adb-btn-primary {
+  background: var(--au-primary, #3b82f6);
+  color: white;
+  border-color: var(--au-primary, #3b82f6);
+}
+
+.adb-btn-secondary {
+  background-color: transparent;
+}
+
+.au-light .adb-btn-secondary {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+.au-light .adb-btn-secondary:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.au-dark .adb-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #475569;
+  color: #e2e8f0;
+}
+.au-dark .adb-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #94a3b8;
+  color: #ffffff;
+}
 @media (max-width: 768px) {
-    .add-building-container {
-        padding: 1rem;
-    }
-
-    .add-building-form {
-        grid-template-columns: 1fr;
-    }
-
-    .add-building-form-actions {
-        flex-direction: column-reverse;
-    }
-
-    .primary-button,
-    .secondary-button {
-        width: 100%;
-        justify-content: center;
-    }
+  .adb-container {
+    padding: 1rem;
+  }
+  .adb-grid-row {
+    grid-template-columns: 1fr;
+  }
+  .adb-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .adb-actions {
+    flex-direction: column-reverse;
+  }
+  .adb-btn {
+    width: 100%;
+  }
 }

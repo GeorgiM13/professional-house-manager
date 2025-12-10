@@ -7,31 +7,14 @@ import { useLocalUser } from "./hooks/UseLocalUser";
 import { useTheme } from "../components/ThemeContext";
 import "./styles/AdminReports.css";
 
-const CUSTOM_SELECT_STYLES = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: "var(--arep-bg-card)",
-    borderColor: state.isFocused ? "var(--arep-accent)" : "var(--arep-border)",
-    borderRadius: "8px",
-    color: "var(--arep-text-main)",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--arep-accent-light)" : "none",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    backgroundColor: "var(--arep-bg-card)",
-  }),
-  singleValue: (provided) => ({ ...provided, color: "var(--arep-text-main)" }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--arep-accent)"
-      : state.isFocused
-      ? "var(--arep-bg-page)"
-      : "transparent",
-    color: state.isSelected ? "white" : "var(--arep-text-main)",
-    cursor: "pointer",
-  }),
+const getStatusClass = (status) => {
+  if (!status) return "st-default";
+  const s = status.toLowerCase();
+  if (s.includes("ново") || s.includes("new")) return "rst-new";
+  if (s.includes("изпълнено") || s.includes("done")) return "rst-done";
+  if (s.includes("работ") || s.includes("progress")) return "rst-working";
+  if (s.includes("отхвърлено") || s.includes("reject")) return "rst-rejected";
+  return "rst-default";
 };
 
 function AdminReports() {
@@ -50,6 +33,59 @@ function AdminReports() {
 
   const pageSize = 20;
 
+  const customSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      backgroundColor: isDarkMode ? "#1e293b" : "#ffffff",
+      borderColor: state.isFocused
+        ? "#3b82f6"
+        : isDarkMode
+        ? "#334155"
+        : "#e2e8f0",
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+      borderRadius: "8px",
+      minHeight: "42px",
+      boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: isDarkMode ? "#1e293b" : "#ffffff",
+      zIndex: 9999,
+      border: isDarkMode ? "1px solid #334155" : "1px solid #e2e8f0",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+    }),
+    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#1e293b" }),
+    option: (base, state) => {
+      if (state.isSelected)
+        return {
+          ...base,
+          backgroundColor: "#3b82f6",
+          color: "white",
+          cursor: "pointer",
+        };
+      if (state.isFocused)
+        return {
+          ...base,
+          backgroundColor: isDarkMode ? "#334155" : "#eff6ff",
+          color: isDarkMode ? "#f1f5f9" : "#1e293b",
+          cursor: "pointer",
+        };
+      return {
+        ...base,
+        backgroundColor: "transparent",
+        color: isDarkMode ? "#f1f5f9" : "#1e293b",
+        cursor: "pointer",
+      };
+    },
+    placeholder: (base) => ({
+      ...base,
+      color: isDarkMode ? "#94a3b8" : "#a0aec0",
+    }),
+  };
+
   const buildingOptions = useMemo(
     () => [
       { value: "all", label: "🏢 Всички сгради" },
@@ -61,12 +97,9 @@ function AdminReports() {
     [buildings]
   );
 
-  const getSelectValue = (options, value) =>
-    options.find((o) => String(o.value) === String(value)) || options[0];
-
   useEffect(() => {
     async function fetchReports() {
-      if (!userId && !loadingBuildings) return;
+      if (loadingBuildings) return;
 
       setLoadingReports(true);
       try {
@@ -87,7 +120,7 @@ function AdminReports() {
           .range(from, to);
 
         if (!showPastReports) {
-          query = query.eq("status", "ново");
+          query = query.in("status", ["ново", "работи се"]);
         }
 
         if (selectedBuilding !== "all") {
@@ -121,7 +154,6 @@ function AdminReports() {
     pageSize,
     showPastReports,
     buildings,
-    userId,
     loadingBuildings,
   ]);
 
@@ -134,12 +166,13 @@ function AdminReports() {
   function formatDateTime(dateString) {
     if (!dateString) return "";
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
+    return date.toLocaleString("bg-BG", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   return (
@@ -153,10 +186,10 @@ function AdminReports() {
           <div style={{ width: "250px" }}>
             <Select
               options={buildingOptions}
-              value={getSelectValue(buildingOptions, selectedBuilding)}
+              value={buildingOptions.find((o) => o.value === selectedBuilding)}
               onChange={(opt) => setSelectedBuilding(opt ? opt.value : "all")}
-              styles={CUSTOM_SELECT_STYLES}
-              placeholder="Изберете сграда"
+              styles={customSelectStyles}
+              placeholder="Избери сграда..."
               isSearchable={true}
             />
           </div>
@@ -173,7 +206,7 @@ function AdminReports() {
               onChange={() => setShowPastReports(!showPastReports)}
             />
             <span className="arep-toggle-slider"></span>
-            <span className="arep-toggle-label">Показвай стари сигнали</span>
+            <span className="arep-toggle-label">Показвай приключени</span>
           </label>
         </div>
       </div>
@@ -191,9 +224,9 @@ function AdminReports() {
                 <th>Адрес</th>
                 <th>Състояние</th>
                 <th>Относно</th>
-                <th>Дата на обновяване</th>
-                <th>Дата на подаване</th>
-                <th>Подал сигнал</th>
+                <th>Обновено</th>
+                <th>Подадено</th>
+                <th>От кого</th>
               </tr>
             </thead>
             <tbody>
@@ -213,18 +246,14 @@ function AdminReports() {
                     <td className="arep-idx">
                       {(currentPage - 1) * pageSize + idx + 1}
                     </td>
-                    <td data-label="Адрес">
+                    <td data-label="Адрес" style={{ fontWeight: 500 }}>
                       {report.building?.name}, {report.building?.address}
                     </td>
                     <td data-label="Състояние">
                       <span
-                        className={`arep-badge ${
-                          report.status === "ново"
-                            ? "st-new"
-                            : report.status === "изпълнено"
-                            ? "st-done"
-                            : "st-default"
-                        }`}
+                        className={`arep-badge ${getStatusClass(
+                          report.status
+                        )}`}
                       >
                         {report.status}
                       </span>
@@ -235,7 +264,7 @@ function AdminReports() {
                     <td data-label="Обновено">
                       {formatDateTime(report.updated_at)}
                     </td>
-                    <td data-label="Създадено">
+                    <td data-label="Подадено">
                       {formatDateTime(report.created_at)}
                     </td>
                     <td data-label="Подал">

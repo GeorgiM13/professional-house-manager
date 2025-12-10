@@ -10,6 +10,43 @@ import { useLocalUser } from "../hooks/UseLocalUser";
 
 import "./styles/EditExpense.css";
 
+const MONTH_NAMES = {
+  1: "Януари",
+  2: "Февруари",
+  3: "Март",
+  4: "Април",
+  5: "Май",
+  6: "Юни",
+  7: "Юли",
+  8: "Август",
+  9: "Септември",
+  10: "Октомври",
+  11: "Ноември",
+  12: "Декември",
+};
+
+const EXPENSE_TYPES = [
+  { value: "electricity_lift", label: "⚡ Ток асансьор" },
+  { value: "fee_lift", label: "🛗 Сервиз асансьор" },
+  { value: "electricity_light", label: "💡 Ток осветление" },
+  { value: "cleaner", label: "🧹 Хигиенист" },
+  { value: "repair", label: "🛠️ Ремонт" },
+  { value: "manager", label: "👨‍💼 Домоуправител" },
+  { value: "water_building", label: "💧 Вода обща" },
+  { value: "lighting", label: "💡 Осветление (консумативи)" },
+  { value: "cleaning_supplies", label: "🧽 Материали почистване" },
+  { value: "fee_annual_review", label: "📋 Годишен преглед асансьор" },
+  { value: "internet_video", label: "📡 Интернет / Видео" },
+  { value: "access_control", label: "🔑 Контрол достъп" },
+  { value: "pest_control", label: "🕷️ Дезинсекция" },
+  { value: "other", label: "📦 Други" },
+];
+
+const PAID_OPTIONS = [
+  { value: "не", label: "🔴 Неплатено", color: "#ef4444" },
+  { value: "да", label: "🟢 Платено", color: "#10b981" },
+];
+
 function EditExpense() {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
@@ -35,23 +72,24 @@ function EditExpense() {
   const [errors, setErrors] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const months = [
-    "Януари",
-    "Февруари",
-    "Март",
-    "Април",
-    "Май",
-    "Юни",
-    "Юли",
-    "Август",
-    "Септември",
-    "Октомври",
-    "Ноември",
-    "Декември",
-  ];
-
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 6 }, (_, i) => currentYear + 1 - i);
+  const yearOptions = useMemo(
+    () =>
+      Array.from({ length: 6 }, (_, i) => currentYear + 1 - i).map((y) => ({
+        value: y,
+        label: `${y}`,
+      })),
+    [currentYear]
+  );
+
+  const monthOptions = useMemo(
+    () =>
+      Object.entries(MONTH_NAMES).map(([k, v]) => ({
+        value: parseInt(k),
+        label: v,
+      })),
+    []
+  );
 
   const buildingOptions = useMemo(() => {
     return buildings.map((b) => ({
@@ -59,6 +97,57 @@ function EditExpense() {
       label: `${b.name}, ${b.address}`,
     }));
   }, [buildings]);
+
+  const selectStyles = {
+    control: (base, state) => ({
+      ...base,
+      background: isDarkMode ? "#0f172a" : "#f8fafc",
+      borderColor: state.isFocused 
+        ? "#3b82f6"
+        : (isDarkMode ? "#334155" : "#cbd5e1"),
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+      minHeight: "42px",
+      borderRadius: "8px",
+      boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+    }),
+    menu: (base) => ({
+      ...base,
+      background: isDarkMode ? "#1e293b" : "white",
+      zIndex: 9999,
+      border: isDarkMode ? "1px solid #334155" : "1px solid #e2e8f0",
+    }),
+    option: (base, state) => {
+      if (state.isSelected) {
+        return {
+          ...base,
+          backgroundColor: "#3b82f6",
+          color: "white",
+          cursor: "pointer",
+        };
+      }
+      if (state.isFocused) {
+        return {
+          ...base,
+          backgroundColor: isDarkMode ? "#334155" : "#eff6ff",
+          color: isDarkMode ? "#f1f5f9" : "#1e293b",
+          cursor: "pointer",
+        };
+      }
+      return {
+        ...base,
+        backgroundColor: "transparent",
+        color: isDarkMode ? "#f1f5f9" : "#1e293b",
+        cursor: "pointer",
+      };
+    },
+    singleValue: (base, state) => ({
+      ...base,
+      color: state.selectProps.value?.color || (isDarkMode ? "#f1f5f9" : "#1e293b"),
+      fontWeight: state.selectProps.value?.color ? 600 : 400,
+    }),
+    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#1e293b" }),
+    placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
+  };
 
   useEffect(() => {
     async function fetchExpense() {
@@ -90,12 +179,10 @@ function EditExpense() {
         setFetching(false);
       }
     }
-
     fetchExpense();
   }, [id]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -167,43 +254,6 @@ function EditExpense() {
 
   const goBack = () => navigate("/admin/expenses");
 
-  const selectStyles = {
-    control: (base, state) => ({
-      ...base,
-      background: isDarkMode ? "#0f172a" : "#f8fafc",
-      borderColor: state.isFocused
-        ? "var(--au-primary)"
-        : isDarkMode
-        ? "#334155"
-        : "#cbd5e1",
-      color: isDarkMode ? "#f1f5f9" : "#1e293b",
-      minHeight: "42px",
-      borderRadius: "8px",
-    }),
-    menu: (base) => ({
-      ...base,
-      background: isDarkMode ? "#1e293b" : "white",
-      zIndex: 999,
-      border: "1px solid var(--au-border)",
-    }),
-    option: (base, state) => ({
-      ...base,
-      background: state.isFocused
-        ? isDarkMode
-          ? "#334155"
-          : "#eff6ff"
-        : "transparent",
-      color: isDarkMode ? "#f1f5f9" : "#334155",
-      cursor: "pointer",
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: isDarkMode ? "#f1f5f9" : "#334155",
-    }),
-    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#334155" }),
-    placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
-  };
-
   if (fetching)
     return (
       <div className={`ede-container ${isDarkMode ? "au-dark" : "au-light"}`}>
@@ -231,30 +281,14 @@ function EditExpense() {
 
           <div className="ede-form-group">
             <label>Вид разход *</label>
-            <select
-              name="type"
-              className="ede-select"
-              value={formData.type}
-              onChange={handleChange}
-            >
-              <option value="">-- Избери --</option>
-              <option value="electricity_lift">Ток асансьор</option>
-              <option value="fee_lift">Сервиз асансьор</option>
-              <option value="electricity_light">Ток осветление</option>
-              <option value="cleaner">Хигиенист</option>
-              <option value="repair">Ремонт</option>
-              <option value="manager">Домоуправител</option>
-              <option value="water_building">Вода обща</option>
-              <option value="lighting">Осветление (консумативи)</option>
-              <option value="cleaning_supplies">Материали почистване</option>
-              <option value="fee_annual_review">
-                Годишен преглед асансьор
-              </option>
-              <option value="internet_video">Интернет / Видео</option>
-              <option value="access_control">Контрол достъп</option>
-              <option value="pest_control">Дезинсекция</option>
-              <option value="other">Други</option>
-            </select>
+            <Select
+              options={EXPENSE_TYPES}
+              value={EXPENSE_TYPES.find((t) => t.value === formData.type)}
+              onChange={(opt) => handleChange("type", opt?.value)}
+              placeholder="Избери вид..."
+              styles={selectStyles}
+              isSearchable={false}
+            />
             {errors.type && <span className="error-msg">{errors.type}</span>}
           </div>
 
@@ -263,22 +297,19 @@ function EditExpense() {
             <input
               type="number"
               step="0.01"
-              name="current_month"
               className="ede-input"
               value={formData.current_month}
-              onChange={handleChange}
-              placeholder="0.00"
+              onChange={(e) => handleChange("current_month", e.target.value)}
             />
           </div>
 
           <div className="ede-form-group">
             <label>Бележки</label>
             <textarea
-              name="notes"
               className="ede-textarea"
               value={formData.notes}
-              onChange={handleChange}
-              placeholder="Допълнителна информация за разхода..."
+              onChange={(e) => handleChange("notes", e.target.value)}
+              placeholder="Допълнителна информация..."
             />
           </div>
         </div>
@@ -294,14 +325,7 @@ function EditExpense() {
               value={buildingOptions.find(
                 (op) => op.value === formData.building_id
               )}
-              onChange={(opt) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  building_id: opt?.value || "",
-                }));
-                if (errors.building_id)
-                  setErrors((prev) => ({ ...prev, building_id: null }));
-              }}
+              onChange={(opt) => handleChange("building_id", opt?.value)}
               placeholder="Избери сграда..."
               styles={selectStyles}
               noOptionsMessage={() => "Няма намерени"}
@@ -321,19 +345,14 @@ function EditExpense() {
           >
             <div className="ede-form-group">
               <label>Месец *</label>
-              <select
-                name="month"
-                className="ede-select"
-                value={formData.month}
-                onChange={handleChange}
-              >
-                <option value="">--</option>
-                {months.map((m, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <Select
+                options={monthOptions}
+                value={monthOptions.find((m) => m.value === formData.month)}
+                onChange={(opt) => handleChange("month", opt?.value)}
+                styles={selectStyles}
+                isSearchable={false}
+                menuPlacement="auto"
+              />
               {errors.month && (
                 <span className="error-msg">{errors.month}</span>
               )}
@@ -341,18 +360,14 @@ function EditExpense() {
 
             <div className="ede-form-group">
               <label>Година</label>
-              <select
-                name="year"
-                className="ede-select"
-                value={formData.year}
-                onChange={handleChange}
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+              <Select
+                options={yearOptions}
+                value={yearOptions.find((y) => y.value === formData.year)}
+                onChange={(opt) => handleChange("year", opt?.value)}
+                styles={selectStyles}
+                isSearchable={false}
+                menuPlacement="auto"
+              />
             </div>
           </div>
 
@@ -366,19 +381,13 @@ function EditExpense() {
 
           <div className="ede-form-group">
             <label>Статус на плащане</label>
-            <select
-              name="paid"
-              className="ede-select"
-              value={formData.paid}
-              onChange={handleChange}
-              style={{
-                fontWeight: "600",
-                color: formData.paid === "да" ? "#10b981" : "#ef4444",
-              }}
-            >
-              <option value="не">🔴 Неплатено</option>
-              <option value="да">🟢 Платено</option>
-            </select>
+            <Select
+              options={PAID_OPTIONS}
+              value={PAID_OPTIONS.find((p) => p.value === formData.paid)}
+              onChange={(opt) => handleChange("paid", opt?.value)}
+              styles={selectStyles}
+              isSearchable={false}
+            />
           </div>
         </div>
 

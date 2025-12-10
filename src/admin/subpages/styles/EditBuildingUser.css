@@ -156,6 +156,18 @@
   border-color: #ef4444;
 }
 
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  appearance: textfield;
+}
+
+
 @media (max-width: 768px) {
   .ebu-container {
     padding: 1rem;

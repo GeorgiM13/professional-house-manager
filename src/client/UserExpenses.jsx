@@ -349,7 +349,6 @@ function UserExpenses() {
       <ExpenseForecast buildingId={selectedBuilding} />
 
       <div className="building-stats-container">
-
         <div className={`b-stat-card total ${loadingStats ? "updating" : ""}`}>
           <div className="b-stat-icon-wrapper">📊</div>
           <div className="b-stat-content">

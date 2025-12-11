@@ -155,7 +155,7 @@ function UserReports() {
           ) : (
              buildings.length === 1 && (
                 <div className="urep-single-building">
-                   🏠 {buildings[0].name}
+                   🏢 {buildings[0].name}
                 </div>
              )
           )}

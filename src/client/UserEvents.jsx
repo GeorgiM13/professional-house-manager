@@ -297,7 +297,7 @@ export default function UserEvents() {
             </div>
           ) : (
             buildings.length === 1 && (
-              <div className="uev-single-building">🏠 {buildings[0].name}</div>
+              <div className="uev-single-building">🏢 {buildings[0].name}</div>
             )
           )}
         </div>

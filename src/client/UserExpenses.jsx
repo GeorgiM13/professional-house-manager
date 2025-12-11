@@ -4,7 +4,7 @@ import Select from "react-select";
 import { supabase } from "../supabaseClient";
 import { useUserBuildings } from "./hooks/useUserBuildings";
 import { useLocalUser } from "./hooks/useLocalUser";
-import BuildingSelector from "./components/BuildingSelector";
+import { useTheme } from "../components/ThemeContext";
 import ExpenseForecast from "../admin/ai/components/ExpenseForecast";
 import "./styles/UserExpenses.css";
 
@@ -21,9 +21,7 @@ const CountUp = ({ value, duration = 800, decimals = 2 }) => {
     const animate = (timestamp) => {
       if (!startTime.current) startTime.current = timestamp;
       const progress = Math.min((timestamp - startTime.current) / duration, 1);
-
       const easeProgress = 1 - Math.pow(1 - progress, 4);
-
       const current =
         startValue.current + (value - startValue.current) * easeProgress;
 
@@ -35,7 +33,6 @@ const CountUp = ({ value, duration = 800, decimals = 2 }) => {
         setDisplayValue(value);
       }
     };
-
     animationFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrame);
   }, [value, duration]);
@@ -67,9 +64,9 @@ const EXPENSE_TYPES = {
   manager: "Домоуправител",
   water_building: "Вода обща",
   lighting: "Осветление",
-  cleaning_supplies: "Консумативи за почистване",
+  cleaning_supplies: "Консумативи",
   fee_annual_review: "Годишен преглед асансьор",
-  internet_video: "Интернет/Видеонаблюдение",
+  internet_video: "Интернет/Видео",
   access_control: "Контрол на достъп",
   pest_control: "Дезинсекция",
   other: "Други",
@@ -78,38 +75,31 @@ const EXPENSE_TYPES = {
 const CUSTOM_SELECT_STYLES = {
   control: (provided, state) => ({
     ...provided,
-    backgroundColor: "white",
-    borderColor: state.isFocused ? "#3b82f6" : "#e2e8f0",
+    backgroundColor: "var(--uex-bg-card)",
+    borderColor: state.isFocused ? "var(--uex-accent)" : "var(--uex-border)",
     borderRadius: "8px",
-    boxShadow: state.isFocused
-      ? "0 0 0 3px rgba(59, 130, 246, 0.1)"
-      : "0 1px 2px rgba(0, 0, 0, 0.05)",
-    "&:hover": { borderColor: "#cbd5e0" },
-    minWidth: "160px",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-    fontWeight: "500",
-    color: "#4a5568",
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "#3b82f6"
-      : state.isFocused
-      ? "#eff6ff"
-      : "white",
-    color: state.isSelected ? "white" : "#4a5568",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-    padding: "8px 12px",
+    color: "var(--uex-text-main)",
+    boxShadow: state.isFocused ? "0 0 0 2px var(--uex-accent-light)" : "none",
+    minHeight: "42px",
   }),
   menu: (provided) => ({
     ...provided,
-    borderRadius: "8px",
     zIndex: 9999,
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+    backgroundColor: "var(--uex-bg-card)",
+    border: "1px solid var(--uex-border)",
   }),
-  indicatorSeparator: () => ({ display: "none" }),
+  singleValue: (provided) => ({ ...provided, color: "var(--uex-text-main)" }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected
+      ? "var(--uex-accent)"
+      : state.isFocused
+      ? "var(--uex-bg-page)"
+      : "transparent",
+    color: state.isSelected ? "white" : "var(--uex-text-main)",
+    cursor: "pointer",
+  }),
+  placeholder: (provided) => ({ ...provided, color: "var(--uex-text-sec)" }),
 };
 
 const getExpenseIcon = (type) => {
@@ -134,6 +124,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 function UserExpenses() {
   const navigate = useNavigate();
   const { userId } = useLocalUser();
+  const { isDarkMode } = useTheme();
   const { buildings, loading: buildingsLoading } = useUserBuildings(userId);
 
   const [expenses, setExpenses] = useState([]);
@@ -177,6 +168,23 @@ function UserExpenses() {
     ];
   }, []);
 
+  const buildingOptions = useMemo(
+    () => [
+      { value: "all", label: "🏢 Всички сгради" },
+      ...buildings.map((b) => ({
+        value: b.id,
+        label: `${b.name}, ${b.address}`,
+      })),
+    ],
+    [buildings]
+  );
+
+  useEffect(() => {
+    if (buildings.length === 1) {
+      setSelectedBuilding(buildings[0].id);
+    }
+  }, [buildings]);
+
   const buildBaseQuery = useCallback(
     (selectString, { count } = {}) => {
       let query = supabase.from("expenses").select(selectString, { count });
@@ -188,6 +196,8 @@ function UserExpenses() {
           "building_id",
           buildings.map((b) => b.id)
         );
+      } else {
+        return null;
       }
 
       if (filterYear !== "all") query = query.eq("year", filterYear);
@@ -200,7 +210,6 @@ function UserExpenses() {
 
   useEffect(() => {
     if (!userId || buildingsLoading) return;
-
     if (tableAbortController.current) tableAbortController.current.abort();
     tableAbortController.current = new AbortController();
 
@@ -208,12 +217,15 @@ function UserExpenses() {
       setLoadingExpenses(true);
       try {
         let query = buildBaseQuery(
-          `
-          id, type, month, year, current_month, paid, notes,
-          building:building_id(name,address)
-        `,
+          `id, type, month, year, current_month, paid, notes, building:building_id(name,address)`,
           { count: "exact" }
         );
+
+        if (!query) {
+          setExpenses([]);
+          setLoadingExpenses(false);
+          return;
+        }
 
         query = query
           .order("year", { ascending: false })
@@ -222,13 +234,12 @@ function UserExpenses() {
           .abortSignal(tableAbortController.current.signal);
 
         const { data, error, count } = await query;
-
         if (!error) {
           setExpenses(data || []);
           setTotalCount(count || 0);
-        } else if (error.code !== "20") {
-          console.error("Table fetch error:", error);
         }
+      } catch (err) {
+        if (err.name !== "AbortError") console.error(err);
       } finally {
         if (
           tableAbortController.current &&
@@ -238,7 +249,6 @@ function UserExpenses() {
         }
       }
     }
-
     fetchTableData();
   }, [
     selectedBuilding,
@@ -252,7 +262,6 @@ function UserExpenses() {
 
   useEffect(() => {
     if (!userId || buildingsLoading) return;
-
     if (statsAbortController.current) statsAbortController.current.abort();
     statsAbortController.current = new AbortController();
 
@@ -260,8 +269,9 @@ function UserExpenses() {
       setLoadingStats(true);
       try {
         let query = buildBaseQuery("current_month, type", { count: "exact" });
-        query = query.abortSignal(statsAbortController.current.signal);
+        if (!query) return;
 
+        query = query.abortSignal(statsAbortController.current.signal);
         const { data, error, count } = await query;
 
         if (!error) {
@@ -273,13 +283,11 @@ function UserExpenses() {
               (sum, item) => sum + Number(item.current_month || 0),
               0
             );
-
             const max = allData.reduce((prev, current) =>
               Number(prev.current_month) > Number(current.current_month)
                 ? prev
                 : current
             );
-
             setBuildingStats({
               total,
               count: count || allData.length,
@@ -287,6 +295,8 @@ function UserExpenses() {
             });
           }
         }
+      } catch (err) {
+        if (err.name !== "AbortError") console.error(err);
       } finally {
         if (
           statsAbortController.current &&
@@ -296,7 +306,6 @@ function UserExpenses() {
         }
       }
     }
-
     fetchStatsData();
   }, [
     selectedBuilding,
@@ -307,75 +316,80 @@ function UserExpenses() {
     buildBaseQuery,
   ]);
 
-  useEffect(() => {
-    if (buildings.length === 1 && selectedBuilding === "all") {
-      setSelectedBuilding(buildings[0].id);
-    }
-  }, [buildings]);
-
   const handleFilterChange = useCallback((setter, val) => {
     setter(val);
     setCurrentPage(1);
   }, []);
 
-  const getCurrentOption = (options, value) => {
-    return (
-      options.find((opt) => String(opt.value) === String(value)) || options[0]
-    );
-  };
-
+  const getCurrentOption = (options, value) =>
+    options.find((opt) => String(opt.value) === String(value)) || options[0];
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="expenses-page">
-      <div className="expenses-header">
-        <div className="expenses-left">
+    <div className={`uex-page ${isDarkMode ? "uex-dark" : "uex-light"}`}>
+      <div className="uex-header">
+        <div className="uex-header-left">
           <h1>Разходи</h1>
-          <div className="expenses-subheader">
-            <p>Преглед на вашите сметки и плащания</p>
-          </div>
+          <p className="uex-subtitle">Преглед на сметки и плащания</p>
         </div>
 
-        <div className="expenses-right">
-          <BuildingSelector
-            buildings={buildings}
-            value={selectedBuilding}
-            onChange={(val) => handleFilterChange(setSelectedBuilding, val)}
-            singleLabel="Избрана сграда"
-          />
+        <div className="uex-header-right">
+          {buildings.length > 1 ? (
+            <div style={{ width: "250px" }}>
+              <Select
+                options={buildingOptions}
+                value={getCurrentOption(buildingOptions, selectedBuilding)}
+                onChange={(opt) =>
+                  handleFilterChange(
+                    setSelectedBuilding,
+                    opt ? opt.value : "all"
+                  )
+                }
+                styles={CUSTOM_SELECT_STYLES}
+                placeholder="Изберете сграда"
+                isSearchable={false}
+              />
+            </div>
+          ) : (
+            buildings.length === 1 && (
+              <div className="uex-single-building">🏢 {buildings[0].name}</div>
+            )
+          )}
         </div>
       </div>
-
       <ExpenseForecast buildingId={selectedBuilding} />
-
-      <div className="building-stats-container">
-        <div className={`b-stat-card total ${loadingStats ? "updating" : ""}`}>
-          <div className="b-stat-icon-wrapper">📊</div>
-          <div className="b-stat-content">
-            <span className="b-stat-label">Общо разходи</span>
-            <span className="b-stat-value">
-              <CountUp value={buildingStats.total} decimals={2} />
+      <div className="uex-stats-grid">
+        <div
+          className={`uex-stat-card total ${loadingStats ? "updating" : ""}`}
+        >
+          <div className="uex-stat-icon">📊</div>
+          <div className="uex-stat-info">
+            <span className="uex-stat-label">Общо разходи</span>
+            <span className="uex-stat-value">
+              <CountUp value={buildingStats.total} decimals={2} />{" "}
               <small>лв.</small>
             </span>
           </div>
         </div>
 
-        <div className={`b-stat-card count ${loadingStats ? "updating" : ""}`}>
-          <div className="b-stat-icon-wrapper">🧾</div>
-          <div className="b-stat-content">
-            <span className="b-stat-label">Брой сметки</span>
-            <span className="b-stat-value">
-              <CountUp value={buildingStats.count} decimals={0} />
+        <div
+          className={`uex-stat-card count ${loadingStats ? "updating" : ""}`}
+        >
+          <div className="uex-stat-icon">🧾</div>
+          <div className="uex-stat-info">
+            <span className="uex-stat-label">Брой сметки</span>
+            <span className="uex-stat-value">
+              <CountUp value={buildingStats.count} decimals={0} />{" "}
               <small>бр.</small>
             </span>
           </div>
         </div>
 
-        <div className={`b-stat-card max ${loadingStats ? "updating" : ""}`}>
-          <div className="b-stat-icon-wrapper">🔥</div>
-          <div className="b-stat-content">
-            <span className="b-stat-label">Най-голям разход</span>
-            <span className="b-stat-value">
+        <div className={`uex-stat-card max ${loadingStats ? "updating" : ""}`}>
+          <div className="uex-stat-icon">🔥</div>
+          <div className="uex-stat-info">
+            <span className="uex-stat-label">Най-голям разход</span>
+            <span className="uex-stat-value">
               <CountUp
                 value={
                   buildingStats.maxExpense
@@ -386,7 +400,7 @@ function UserExpenses() {
               />
               <small>лв.</small>
             </span>
-            <span className="b-stat-subtext">
+            <span className="uex-stat-subtext">
               {buildingStats.maxExpense
                 ? EXPENSE_TYPES[buildingStats.maxExpense.type] ||
                   buildingStats.maxExpense.type
@@ -395,13 +409,10 @@ function UserExpenses() {
           </div>
         </div>
       </div>
-
-      <div className="table-toolbar">
-        <div className="toolbar-left">
-          <h3>История на плащанията</h3>
-        </div>
-        <div className="toolbar-right">
-          <div style={{ width: "180px" }}>
+      <div className="uex-toolbar">
+        <h3>История на плащанията</h3>
+        <div className="uex-filters-right">
+          <div style={{ width: "160px" }}>
             <Select
               options={yearOptions}
               value={getCurrentOption(yearOptions, filterYear)}
@@ -413,8 +424,7 @@ function UserExpenses() {
               placeholder="Година"
             />
           </div>
-
-          <div style={{ width: "180px" }}>
+          <div style={{ width: "160px" }}>
             <Select
               options={monthOptions}
               value={getCurrentOption(monthOptions, filterMonth)}
@@ -428,19 +438,18 @@ function UserExpenses() {
           </div>
         </div>
       </div>
-
       {loadingExpenses ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-          <span className="loading-spinner">↻</span> Зареждане на данни...
+        <div className="uex-loading">
+          <span className="uex-spinner">↻</span> Зареждане...
         </div>
       ) : (
         <>
-          <table className="expenses-table">
+          <table className="uex-table">
             <thead>
               <tr>
                 <th>№</th>
                 <th>Вид Разход</th>
-                <th>Сграда / Адрес</th>
+                <th>Сграда</th>
                 <th>Период</th>
                 <th>Статус</th>
                 <th>Бележка</th>
@@ -450,7 +459,7 @@ function UserExpenses() {
             <tbody>
               {expenses.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="no-expenses">
+                  <td colSpan="7" className="uex-no-data">
                     Няма намерени записи.
                   </td>
                 </tr>
@@ -467,39 +476,43 @@ function UserExpenses() {
                     <tr
                       key={exp.id}
                       onClick={() => navigate(`/client/expense/${exp.id}`)}
-                      style={{ cursor: "pointer" }}
+                      className="uex-row"
                     >
-                      <td style={{ color: "#999", fontSize: "0.85rem" }}>
+                      <td className="uex-idx">
                         {(currentPage - 1) * pageSize + idx + 1}
                       </td>
-                      <td data-label="Вид">
-                        <span className="expense-icon">
+
+                      <td data-label="Вид" className="uex-type-cell">
+                        <span className="uex-icon">
                           {getExpenseIcon(exp.type)}
                         </span>
                         {EXPENSE_TYPES[exp.type] || exp.type}
                       </td>
-                      <td data-label="Адрес" style={{ fontWeight: 500 }}>
-                        {exp.building?.name}, {exp.building?.address}
-                      </td>
+
+                      <td data-label="Сграда">{exp.building?.name}</td>
+
                       <td data-label="Период">
                         {MONTH_NAMES[exp.month]} {exp.year}
                       </td>
-                      <td data-label="Платено">
+
+                      <td data-label="Статус">
                         <span
                           className={
                             isPaid
-                              ? "status-badge-expenses status-paid-expenses"
-                              : "status-badge-expenses status-unpaid-expenses"
+                              ? "uex-badge uex-paid"
+                              : "uex-badge uex-unpaid"
                           }
                         >
                           {isPaid ? "Платено" : "Неплатено"}
                         </span>
                       </td>
+
                       <td
+                        data-label="Бележка"
                         style={{
-                          color: "#666",
-                          fontSize: "0.9rem",
+                          color: "var(--uex-text-sec)",
                           fontStyle: "italic",
+                          fontSize: "0.85rem",
                         }}
                       >
                         {exp.notes
@@ -508,7 +521,8 @@ function UserExpenses() {
                             : exp.notes
                           : "-"}
                       </td>
-                      <td data-label="Сума" className="amount-cell">
+
+                      <td data-label="Сума" className="uex-amount">
                         {Number(exp.current_month).toFixed(2)} лв.
                       </td>
                     </tr>
@@ -519,7 +533,7 @@ function UserExpenses() {
           </table>
 
           {totalCount > pageSize && (
-            <div className="pagination">
+            <div className="uex-pagination">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}

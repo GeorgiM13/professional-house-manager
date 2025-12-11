@@ -51,7 +51,7 @@ const UserFees = lazy(() => import("./client/UserFees"));
 const UserExpenses = lazy(() => import("./client/UserExpenses"));
 const UserBuildingCash = lazy(() => import("./client/UserBuildingCash"));
 
-const UserEventDetails = lazy(() => import("./client/subpages/EventDetails"));
+const UserEventDetails = lazy(() => import("./client/subpages/UserEventDetails"));
 const UserAddReport = lazy(() => import("./client/subpages/AddReport"));
 const UserReportDetails = lazy(() => import("./client/subpages/ReportDetails"));
 const UserExpensesDetails = lazy(() => import("./client/subpages/ExpensesDetails"));

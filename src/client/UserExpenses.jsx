@@ -444,7 +444,7 @@ function UserExpenses() {
         </div>
       ) : (
         <>
-          <table className="uex-table">
+          <table className="uex-table desktop-view">
             <thead>
               <tr>
                 <th>№</th>
@@ -531,6 +531,58 @@ function UserExpenses() {
               )}
             </tbody>
           </table>
+
+          <div className="uex-mobile-list mobile-view">
+            {expenses.length === 0 ? (
+              <div className="uex-no-data">Няма намерени записи.</div>
+            ) : (
+              expenses.map((exp) => {
+                const paidVal = `${exp.paid ?? ""}`.toLowerCase();
+                const isPaid =
+                  paidVal === "да" ||
+                  paidVal === "yes" ||
+                  paidVal === "true" ||
+                  exp.paid === true;
+
+                return (
+                  <div
+                    key={exp.id}
+                    className="uex-mobile-card"
+                    onClick={() => navigate(`/client/expense/${exp.id}`)}
+                  >
+                    <div className="uex-card-header">
+                      <div className="uex-card-type">
+                        <span className="uex-icon-large">
+                          {getExpenseIcon(exp.type)}
+                        </span>
+                        <span>{EXPENSE_TYPES[exp.type] || exp.type}</span>
+                      </div>
+                      <span
+                        className={`uex-badge small ${
+                          isPaid ? "uex-paid" : "uex-unpaid"
+                        }`}
+                      >
+                        {isPaid ? "Платено" : "Неплатено"}
+                      </span>
+                    </div>
+
+                    <div className="uex-card-address">
+                      📍 {exp.building?.name}
+                    </div>
+
+                    <div className="uex-card-footer">
+                      <span className="uex-card-date">
+                        {MONTH_NAMES[exp.month]} {exp.year}
+                      </span>
+                      <span className="uex-card-amount">
+                        {Number(exp.current_month).toFixed(2)} лв.
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
 
           {totalCount > pageSize && (
             <div className="uex-pagination">

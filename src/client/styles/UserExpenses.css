@@ -30,13 +30,25 @@
   --st-unpaid-text: #f87171;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
 .uex-page {
   padding: 2rem;
   background-color: var(--uex-bg-page);
   min-height: 100vh;
   font-family: "Inter", system-ui, sans-serif;
   color: var(--uex-text-main);
-  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .uex-header {
@@ -123,10 +135,12 @@
   align-items: center;
   justify-content: center;
   margin-right: 16px;
+  flex-shrink: 0;
 }
 .uex-stat-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 .uex-stat-label {
   font-size: 0.8rem;
@@ -223,10 +237,12 @@
 .uex-paid {
   background-color: var(--st-paid-bg);
   color: var(--st-paid-text);
+  border: 1px solid rgba(22, 101, 52, 0.3);
 }
 .uex-unpaid {
   background-color: var(--st-unpaid-bg);
   color: var(--st-unpaid-text);
+  border: 1px solid rgba(153, 27, 27, 0.3);
 }
 
 .uex-loading,
@@ -266,16 +282,29 @@
   cursor: not-allowed;
 }
 
+.mobile-view {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
+  .desktop-view {
+    display: none !important;
+  }
+  .mobile-view {
+    display: flex !important;
+  }
+
   .uex-page {
-    padding: 8px;
+    padding: 10px !important;
+    width: 100% !important;
+    overflow-x: hidden;
   }
 
   .uex-header {
     flex-direction: column;
-    gap: 10px;
-    padding: 12px;
     align-items: stretch;
+    gap: 15px;
+    padding: 15px;
   }
   .uex-header-right > div {
     width: 100% !important;
@@ -284,120 +313,122 @@
     text-align: center;
   }
 
+  .uex-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
   .uex-toolbar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 10px;
+    padding: 0;
   }
   .uex-filters-right {
     width: 100%;
     gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
   .uex-filters-right > div {
     width: 100% !important;
   }
 
-  .uex-table,
-  .uex-table tbody,
-  .uex-table tr {
+  .uex-mobile-list {
     display: flex;
     flex-direction: column;
+    gap: 12px;
     width: 100%;
   }
-  .uex-table {
-    background: transparent;
-    border: none;
-    gap: 8px;
-  }
-  .uex-table thead {
-    display: none;
-  }
 
-  .uex-row {
+  .uex-mobile-card {
     background: var(--uex-bg-card);
-    display: grid;
-    grid-template-columns: 40px 1fr auto;
-    grid-template-rows: auto auto auto;
-    gap: 2px 12px;
-    padding: 12px;
-    border-radius: 10px;
-    box-shadow: var(--uex-shadow);
-    align-items: center;
     border: 1px solid var(--uex-border);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
   }
 
-  .uex-idx {
-    display: none;
+  .uex-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2px;
+    gap: 10px;
   }
 
-  td[data-label="Вид"] {
-    grid-column: 1 / 3;
-    grid-row: 1 / 2;
-    font-weight: 700;
-    color: var(--uex-text-main);
-    font-size: 1rem;
+  .uex-card-type {
     display: flex;
     align-items: center;
-    padding: 0;
-    border: none;
+    gap: 10px;
+    font-size: 1rem;
+    color: var(--uex-text-main);
+    font-weight: 700;
+    flex: 1;
+    min-width: 0;
   }
-  .uex-icon {
-    font-size: 1.4rem;
-    margin-right: 12px;
-    width: 40px;
-    height: 40px;
+
+  .uex-icon-large {
+    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
     background: var(--uex-bg-page);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 8px;
+    flex-shrink: 0;
+    border: 1px solid var(--uex-border);
   }
 
-  td[data-label="Сума"] {
-    grid-column: 3 / 4;
-    grid-row: 1 / 2;
-    text-align: right;
-    font-weight: 800;
-    font-size: 1.1rem;
-    color: var(--uex-text-main);
-    padding: 0;
-    border: none;
+  .uex-card-type span:last-child {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
   }
 
-  td[data-label="Сграда"] {
-    grid-column: 2 / 3;
-    grid-row: 2 / 3;
-    font-size: 0.8rem;
+  .uex-badge.small {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    min-width: auto;
+    height: auto;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .uex-card-address {
+    font-size: 0.85rem;
     color: var(--uex-text-sec);
-    padding: 0;
-    border: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: -5px;
+    padding-left: 46px;
+    margin-top: -6px;
   }
 
-  td[data-label="Бележка"] {
-    display: none;
-  }
-
-  td[data-label="Период"] {
-    grid-column: 3 / 4;
-    grid-row: 2 / 3;
-    font-size: 0.8rem;
-    text-align: right;
-    color: var(--uex-text-sec);
-    padding: 0;
-    border: none;
-  }
-
-  td[data-label="Статус"] {
-    grid-column: 3 / 4;
-    grid-row: 3 / 4;
+  .uex-card-footer {
     display: flex;
-    justify-content: flex-end;
-    padding: 0;
-    border: none;
-    margin-top: 8px;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 10px;
+    border-top: 1px dashed var(--uex-border);
+    margin-top: 6px;
+  }
+  .uex-card-date {
+    font-size: 0.85rem;
+    color: var(--uex-text-sec);
+    font-weight: 500;
+  }
+  .uex-card-amount {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--uex-text-main);
   }
 }

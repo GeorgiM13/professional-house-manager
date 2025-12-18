@@ -19,7 +19,7 @@ const STATUS_OPTIONS = [
   { value: "изпълнено", label: "🟢 Изпълнено", color: "#22c55e" },
 ];
 
-function AddEventPage() {
+function AddEvent() {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -66,7 +66,16 @@ function AddEventPage() {
     }));
   }, [users]);
 
+  const getSelectValue = (options, value) => {
+    return options.find((option) => option.value === value) || null;
+  };
+
   const selectStyles = {
+    container: (base) => ({
+      ...base,
+      width: "100%",
+    }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
     control: (base, state) => ({
       ...base,
       background: isDarkMode ? "#0f172a" : "#f8fafc",
@@ -210,11 +219,13 @@ function AddEventPage() {
             <label>Сграда *</label>
             <Select
               options={buildingOptions}
+              value={getSelectValue(buildingOptions, newEvent.building_id)}
               isLoading={loadingBuildings}
               onChange={(opt) => handleChange("building_id", opt?.value)}
               placeholder="Избери сграда..."
               styles={selectStyles}
               noOptionsMessage={() => "Няма намерени"}
+              menuPortalTarget={document.body}
             />
           </div>
 
@@ -222,7 +233,7 @@ function AddEventPage() {
             <label>Статус</label>
             <Select
               options={STATUS_OPTIONS}
-              defaultValue={STATUS_OPTIONS[0]}
+              value={getSelectValue(STATUS_OPTIONS, newEvent.status)}
               onChange={(opt) => handleChange("status", opt?.value)}
               styles={selectStyles}
               isSearchable={false}
@@ -243,9 +254,11 @@ function AddEventPage() {
                 dateFormat="dd MMMM yyyy, HH:mm"
                 placeholderText="Изберете дата и час..."
                 className="adev-input date-input-field"
+                wrapperClassName="w-full-datepicker"
                 locale="bg"
                 autoComplete="off"
                 isClearable
+                onFocus={(e) => e.target.blur()}
               />
             </div>
           </div>
@@ -254,6 +267,7 @@ function AddEventPage() {
             <label>Възложено на</label>
             <Select
               options={assignedOptions}
+              value={getSelectValue(assignedOptions, newEvent.assigned_to)}
               onChange={(opt) => handleChange("assigned_to", opt?.value)}
               placeholder="Избери служител..."
               styles={selectStyles}
@@ -261,26 +275,26 @@ function AddEventPage() {
             />
           </div>
         </div>
+      </div>
 
-        <div className="adev-actions">
-          <button
-            className="adev-btn adev-btn-secondary"
-            onClick={goBack}
-            disabled={loading}
-          >
-            Отказ
-          </button>
-          <button
-            className="adev-btn adev-btn-primary"
-            onClick={handleCreateEvent}
-            disabled={loading}
-          >
-            {loading ? "Запазване..." : "Създай събитие"}
-          </button>
-        </div>
+      <div className="adev-actions">
+        <button
+          className="adev-btn adev-btn-secondary"
+          onClick={goBack}
+          disabled={loading}
+        >
+          Отказ
+        </button>
+        <button
+          className="adev-btn adev-btn-primary"
+          onClick={handleCreateEvent}
+          disabled={loading}
+        >
+          {loading ? "Запазване..." : "Създай събитие"}
+        </button>
       </div>
     </div>
   );
 }
 
-export default AddEventPage;
+export default AddEvent;

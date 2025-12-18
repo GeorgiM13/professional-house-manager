@@ -25,7 +25,7 @@ export default function UserLayout() {
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   useEffect(() => {
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 1024) {
       document.body.style.overflow = sidebarOpen ? 'hidden' : 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };

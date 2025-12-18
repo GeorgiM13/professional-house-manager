@@ -11,7 +11,8 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
   --radius: 12px;
 
-  min-height: 100vh;
+  min-height: 100%; 
+  width: 100%;
   padding: 2rem;
   background-color: var(--bg-page);
   color: var(--text-main);
@@ -20,6 +21,7 @@
   align-items: flex-start;
   transition: all 0.3s ease;
   font-family: system-ui, -apple-system, sans-serif;
+  box-sizing: border-box;
 }
 
 .ep-wrapper.au-dark {
@@ -94,6 +96,8 @@
 }
 
 .ep-input {
+  width: 100%;
+  box-sizing: border-box;
   padding: 0.75rem;
   border-radius: 8px;
   border: 1px solid var(--input-border);
@@ -192,7 +196,7 @@
   color: var(--text-main);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
   .ep-wrapper {
     padding: 1rem;
   }
@@ -225,6 +229,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100%;
+  min-height: 300px;
   color: #64748b;
+  width: 100%;
 }
+.ep-spinner {
+    margin-right: 8px;
+    display: inline-block;
+    animation: spin 1s infinite linear;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }

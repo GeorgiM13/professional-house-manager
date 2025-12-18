@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 import { useTheme } from "./components/ThemeContext";
@@ -8,10 +8,15 @@ import "./styles/EditProfile.css";
 function EditProfile() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
+  
+  // Използваме useRef, за да сме сигурни, че компонентът е "жив",
+  // когато обновяваме state-а (предпазва от грешки при бързо излизане)
+  const mountedRef = useRef(true);
 
   const [loading, setLoading] = useState(true);
   const [authId, setAuthId] = useState(null);
 
+  // Данни
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -25,36 +30,44 @@ function EditProfile() {
   const [messageType, setMessageType] = useState("");
 
   useEffect(() => {
+    mountedRef.current = true;
+
     async function getUserData() {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-      if (authError || !user) {
-        navigate("/login");
-        return;
+        if (authError || !user) {
+          if (mountedRef.current) navigate("/login");
+          return;
+        }
+
+        if (mountedRef.current) {
+          setAuthId(user.id);
+          setEmail(user.email);
+        }
+
+        const { data: profileData, error: dbError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (!dbError && profileData && mountedRef.current) {
+          setFirstName(profileData.first_name || "");
+          setLastName(profileData.last_name || "");
+          setUsername(profileData.username || "");
+          setPhone(profileData.phone || "");
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      } finally {
+        if (mountedRef.current) setLoading(false);
       }
-
-      setAuthId(user.id);
-      setEmail(user.email);
-
-      const { data: profileData, error: dbError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
-
-      if (!dbError && profileData) {
-        setFirstName(profileData.first_name || "");
-        setLastName(profileData.last_name || "");
-        setUsername(profileData.username || "");
-        setPhone(profileData.phone || "");
-      }
-      setLoading(false);
     }
 
     getUserData();
+
+    return () => { mountedRef.current = false; };
   }, [navigate]);
 
   const handleSubmit = async (e) => {
@@ -92,13 +105,8 @@ function EditProfile() {
           body: { userId: authId, newEmail: email }
         });
 
-        if (funcError) {
-            console.error("Edge function error:", funcError);
-            throw new Error("Грешка при смяна на имейла.");
-        }
-        
-        if (data && data.error) {
-            throw new Error(data.error);
+        if (funcError || (data && data.error)) {
+            throw new Error(funcError?.message || data.error || "Грешка при смяна на имейла.");
         }
       }
 
@@ -109,24 +117,34 @@ function EditProfile() {
 
       if (dbError) throw dbError;
 
-      setMessage("✅ Данните (вкл. имейла) са обновени веднага!");
+      setMessage("✅ Данните са обновени успешно!");
       setMessageType("success");
+      
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const updatedUser = { ...storedUser, ...profileUpdates, first_name: firstName, last_name: lastName };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      window.dispatchEvent(new Event("storage"));
 
       setPassword("");
       setConfirmPassword("");
 
-      setTimeout(() => navigate(-1), 1500);
+      setTimeout(() => {
+          if(mountedRef.current) navigate(-1);
+      }, 1500);
 
     } catch (error) {
       console.error("Грешка:", error);
       setMessage(`⚠️ Грешка: ${error.message}`);
       setMessageType("error");
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   };
 
-  if (loading && !authId) return <div className="ep-loading">Зареждане...</div>;
+  // ВАЖНО: Показваме зареждане винаги, когато loading е true.
+  // Това оправя "мигването" и изчезването.
+  if (loading) return <div className="ep-loading"><span className="ep-spinner">↻</span> Зареждане...</div>;
 
   return (
     <div className={`ep-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
@@ -142,7 +160,7 @@ function EditProfile() {
             <input
               className="ep-input readonly"
               type="text"
-              value={`${firstName} ${lastName}`}
+              value={`${firstName} ${lastName}`.trim()}
               readOnly
               disabled
             />

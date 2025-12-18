@@ -219,7 +219,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .urep-page {
     padding: 10px;
     width: 100%;
@@ -250,31 +250,23 @@
     text-align: center;
   }
 
-  .urep-table,
-  .urep-table tr,
-  .urep-table td {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
+  .urep-table {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
   }
+
   .urep-table thead {
     display: none;
   }
 
   .urep-table tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 15px;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .urep-table {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    gap: 10px;
-    display: flex;
-    flex-direction: column;
   }
 
   .urep-row {
@@ -293,14 +285,19 @@
       "desc desc";
     column-gap: 12px;
     row-gap: 8px;
-    align-items: center;
+    align-items: start;
+    
+    height: 100%;
+    box-sizing: border-box;
   }
 
   .urep-table td {
     border: none;
     padding: 0;
     width: auto;
+    display: block;
   }
+
   .urep-idx,
   td[data-label="Обновен"] {
     display: none !important;
@@ -313,12 +310,33 @@
     color: var(--urep-text-main);
     line-height: 1.2;
     text-align: left;
-
+    
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
     max-width: 100%;
+  }
+
+  td[data-label="Сграда"] {
+    grid-area: building;
+    font-size: 0.85rem;
+    color: var(--urep-text-sec);
+    text-align: left;
+    
+    display: block; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    
+    padding-left: 0 !important;
+    margin-top: 2px;
+  }
+  
+  td[data-label="Сграда"]::before {
+    content: none !important; 
+    display: none;
   }
 
   td[data-label="Създаден"] {
@@ -328,23 +346,6 @@
     font-size: 0.75rem;
     color: var(--urep-text-sec);
     white-space: nowrap;
-  }
-
-  td[data-label="Сграда"] {
-    grid-area: building;
-    font-size: 0.85rem;
-    color: var(--urep-text-sec);
-    display: flex;
-    align-items: center;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-  td[data-label="Сграда"]::before {
-    content: "🏢";
-    margin-right: 6px;
   }
 
   td[data-label="Статус"] {
@@ -360,9 +361,9 @@
   td[data-label="Описание"] {
     grid-area: desc;
     width: 100% !important;
-    margin-top: 8px;
+    margin-top: 10px;
     padding-top: 10px !important;
-    border-top: 1px solid var(--urep-border) !important;
+    border-top: 1px dashed var(--urep-border) !important;
 
     font-size: 0.9rem;
     color: var(--urep-text-sec);
@@ -373,5 +374,11 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     white-space: normal;
+  }
+}
+
+@media (max-width: 600px) {
+  .urep-table tbody {
+      grid-template-columns: 1fr;
   }
 }

@@ -356,7 +356,7 @@
   display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .client-sidebar {
     transform: translateX(-100%);
     box-shadow: none;
@@ -368,6 +368,7 @@
 
   .client-main-wrapper {
     margin-left: 0;
+    width: 100%;
   }
 
   .client-menu-toggle {

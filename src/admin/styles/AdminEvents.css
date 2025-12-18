@@ -37,6 +37,9 @@
   font-family: "Inter", system-ui, sans-serif;
   color: var(--ae-text-main);
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100vw; 
+  overflow-x: hidden;
 }
 
 .adev-header {
@@ -112,15 +115,10 @@
   border: 1px solid var(--ae-border);
   border-left-width: 4px;
 }
-.adev-stat-card.blue {
-  border-left-color: #3b82f6;
-}
-.adev-stat-card.purple {
-  border-left-color: #8b5cf6;
-}
-.adev-stat-card.green {
-  border-left-color: #10b981;
-}
+.adev-stat-card.blue { border-left-color: #3b82f6; }
+.adev-stat-card.purple { border-left-color: #8b5cf6; }
+.adev-stat-card.green { border-left-color: #10b981; }
+
 .adev-stat-icon {
   width: 48px;
   height: 48px;
@@ -195,13 +193,8 @@
   font-size: 1.2rem;
 }
 
-.date-mobile {
-  display: none;
-}
-.date-desktop {
-  display: inline-block;
-  white-space: nowrap;
-}
+.date-mobile { display: none; }
+.date-desktop { display: inline-block; white-space: nowrap; }
 
 .adev-badge {
   padding: 4px 10px;
@@ -212,18 +205,9 @@
   letter-spacing: 0.05em;
   display: inline-block;
 }
-.st-new {
-  background-color: var(--st-new-bg);
-  color: var(--st-new-text);
-}
-.st-done {
-  background-color: var(--st-done-bg);
-  color: var(--st-done-text);
-}
-.st-default {
-  background-color: var(--st-def-bg);
-  color: var(--st-def-text);
-}
+.st-new { background-color: var(--st-new-bg); color: var(--st-new-text); }
+.st-done { background-color: var(--st-done-bg); color: var(--st-done-text); }
+.st-default { background-color: var(--st-def-bg); color: var(--st-def-text); }
 
 .adev-actions {
   display: flex;
@@ -248,29 +232,16 @@
   padding: 0;
   line-height: 0;
 }
-
 .action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+.action-btn.docx { color: #3b82f6; }
+.action-btn.docx:hover { background-color: #eff6ff; border-color: #3b82f6; }
+.action-btn.status { color: #10b981; }
+.action-btn.status:hover { background-color: #ecfdf5; border-color: #10b981; }
 
-.action-btn.docx {
-  color: #3b82f6;
-}
-.action-btn.docx:hover {
-  background-color: #eff6ff;
-  border-color: #3b82f6;
-}
-
-.action-btn.status {
-  color: #10b981;
-}
-.action-btn.status:hover {
-  background-color: #ecfdf5;
-  border-color: #10b981;
-}
-.adev-no-data,
-.adev-loading {
+.adev-no-data, .adev-loading {
   text-align: center;
   padding: 40px;
   color: var(--ae-text-sec);
@@ -280,11 +251,7 @@
   animation: spin 1s infinite linear;
   margin-right: 10px;
 }
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
 .adev-pagination {
   display: flex;
@@ -322,47 +289,78 @@
   font-size: 0.9rem;
   white-space: nowrap;
 }
-
 .adev-today-toggle:hover {
   background-color: var(--ae-bg-page);
   border-color: var(--ae-text-sec);
 }
-
 .adev-today-toggle.active {
   background-color: var(--ae-accent);
   color: white;
   border-color: var(--ae-accent);
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
+.adev-today-toggle.active:hover { opacity: 0.9; }
 
-.adev-today-toggle.active:hover {
-  opacity: 0.9;
-}
 @media (max-width: 768px) {
   .adev-page {
-    padding: 8px;
+    padding: 10px;
     width: 100%;
+    max-width: 100vw;
     overflow-x: hidden;
     box-sizing: border-box;
   }
 
-  .adev-header,
-  .adev-toolbar {
+  .adev-header, .adev-toolbar {
     flex-direction: column;
-    gap: 8px;
-    padding: 10px;
+    gap: 12px;
+    padding: 12px;
     width: 100%;
     box-sizing: border-box;
   }
+  
   .adev-header-left,
   .adev-header-right,
-  .adev-add-btn,
-  .adev-filters-right {
+  .adev-add-btn {
     width: 100% !important;
   }
-  .adev-header-right > div,
-  .adev-filters-right > div {
+
+  .adev-header-right {
+    flex-wrap: wrap; 
+  }
+
+  .adev-header-right > div{
     width: 100% !important;
+  }
+
+  .adev-header-right > div:first-child {
+    width: 100% !important;
+  }
+  
+  .adev-header-right {
+    flex-wrap: wrap;
+  }
+
+  .adev-filters-right {
+    display: flex;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 8px;
+    width: 100% !important;
+  }
+
+  .adev-today-toggle {
+    flex: 0 0 auto;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    height: 38px;
+    margin: 0;
+  }
+
+  .adev-filters-right > div {
+    width: auto !important;
+    flex: 1;
+    min-width: 0;
   }
 
   .adev-stats-grid {
@@ -389,149 +387,111 @@
   }
 
   .adev-table {
-    background: transparent;
-    border: none;
     display: flex;
     flex-direction: column;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     width: 100%;
-    gap: 6px;
   }
-  .adev-table thead {
-    display: none;
-  }
-  .adev-table tbody {
-    display: contents;
-  }
+  .adev-table thead { display: none; }
+  .adev-table tbody { display: contents; }
 
   .adev-row {
     background: var(--ae-bg-card);
     display: grid;
-    grid-template-columns: 1fr auto 32px;
+    grid-template-columns: 1fr auto auto;
     grid-template-areas:
       "subject date date"
       "building status actions";
-    column-gap: 4px;
-    row-gap: 0px;
-    padding: 6px 10px;
-    border-radius: 8px;
+    column-gap: 8px;
+    row-gap: 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
     box-shadow: var(--ae-shadow);
     border: 1px solid var(--ae-border);
-    width: 100%;
-    box-sizing: border-box;
     margin: 0;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .adev-table td {
+    height: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    display: block;
   }
 
   .adev-idx,
+  .adev-table td:first-child,
   td[data-label="Възложено"] {
-    display: none;
-  }
-
-  .date-desktop {
-    display: none;
-  }
-  .date-mobile {
-    display: block;
-    text-align: right;
-    line-height: 1;
-  }
-  .dm-date {
-    font-weight: 700;
-    font-size: 0.75rem;
-    color: var(--ae-text-main);
-  }
-  .dm-time {
-    font-size: 0.6rem;
-    color: var(--ae-text-sec);
-    margin-top: 1px;
+    display: none !important;
   }
 
   .adev-subject {
     grid-area: subject;
     font-weight: 600;
-    border: none;
-    padding: 0;
+    font-size: 0.95rem;
+    line-height: 1.3;
     display: flex;
     align-items: flex-start;
-    white-space: normal;
-    word-break: break-word;
-    line-height: 1.1;
-    font-size: 0.85rem;
     color: var(--ae-text-main);
-    align-self: start;
-    padding-top: 2px;
-    margin-bottom: 2px;
-    max-width: 350px;
+    word-break: break-word; 
+    min-width: 0; 
   }
   .adev-subject .adev-icon {
+    font-size: 1.1rem;
+    margin-right: 8px;
+    margin-top: 1px;
     flex-shrink: 0;
-    margin-right: 4px;
-    font-size: 0.9rem;
-    margin-top: 0;
   }
 
   td[data-label="Дата"] {
     grid-area: date;
-    border: none;
-    padding: 0;
     justify-self: end;
     align-self: start;
-    padding-top: 2px;
   }
+  .date-desktop { display: none; }
+  .date-mobile { display: block; text-align: right; }
+  .dm-date { font-weight: 700; font-size: 0.8rem; }
+  .dm-time { font-size: 0.7rem; color: var(--ae-text-sec); margin-top: 2px; }
 
   td[data-label="Сграда"] {
     grid-area: building;
-    border: none;
-    padding: 0;
-    padding-left: 20px;
-    font-size: 0.7rem;
+    padding-left: 28px !important;
+    font-size: 0.75rem;
     color: var(--ae-text-sec);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0;
+    max-width: 150px;
   }
 
   td[data-label="Статус"] {
     grid-area: status;
-    border: none;
-    padding: 0;
-    text-align: right;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-right: 12px;
+    justify-self: end;
+    margin-right: 8px;
   }
   .adev-badge {
-    font-size: 0.6rem;
-    padding: 1px 5px;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    height: auto;
   }
 
   .adev-actions {
     grid-area: actions;
-    border: none;
-    padding: 0;
-    margin: 0;
+    justify-self: end;
     display: flex;
-    justify-content: flex-end;
-    width: 1%;
-  white-space: nowrap;
+    gap: 5px;
+    width: auto;
   }
-
-  .action-btn.docx {
-    display: none;
-  }
-
+  .action-btn.docx { display: none; }
   .action-btn.status {
-    width: 28px;
-    height: 28px;
-    margin: 0;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
     font-size: 1rem;
-    background-color: var(--ae-bg-page);
-  }
-  .adev-today-toggle {
-    width: 100%;
-    margin-bottom: 5px;
+    border-radius: 6px;
   }
 }

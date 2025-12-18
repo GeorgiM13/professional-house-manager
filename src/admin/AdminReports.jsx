@@ -246,9 +246,11 @@ function AdminReports() {
                     <td className="arep-idx">
                       {(currentPage - 1) * pageSize + idx + 1}
                     </td>
-                    <td data-label="Адрес" style={{ fontWeight: 500 }}>
-                      {report.building?.name}, {report.building?.address}
+
+                    <td data-label="Адрес" className="arep-address">
+                      {report.building?.name}
                     </td>
+
                     <td data-label="Състояние">
                       <span
                         className={`arep-badge ${getStatusClass(
@@ -258,19 +260,23 @@ function AdminReports() {
                         {report.status}
                       </span>
                     </td>
+
                     <td data-label="Относно" className="arep-subject">
                       {report.subject}
                     </td>
+
                     <td data-label="Обновено">
                       {formatDateTime(report.updated_at)}
                     </td>
+
                     <td data-label="Подадено">
                       {formatDateTime(report.created_at)}
                     </td>
+
                     <td data-label="Подал">
                       {report.submitted_by
                         ? `${report.submitted_by.first_name} ${report.submitted_by.last_name}`
-                        : "-"}
+                        : "Анонимен"}
                     </td>
                   </tr>
                 ))

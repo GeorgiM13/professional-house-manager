@@ -7,7 +7,6 @@
   --urep-accent: #2563eb;
   --urep-accent-light: rgba(37, 99, 235, 0.2);
   --urep-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-
   --st-new-bg: #dbeafe;
   --st-new-text: #1e40af;
   --st-done-bg: #dcfce7;
@@ -29,7 +28,6 @@
   --urep-accent: #60a5fa;
   --urep-accent-light: rgba(96, 165, 250, 0.2);
   --urep-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-
   --st-new-bg: rgba(30, 64, 175, 0.2);
   --st-new-text: #60a5fa;
   --st-done-bg: rgba(22, 101, 52, 0.2);
@@ -49,6 +47,9 @@
   font-family: "Inter", system-ui, sans-serif;
   color: var(--urep-text-main);
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .urep-header {
@@ -71,7 +72,6 @@
   color: var(--urep-text-sec);
   font-size: 0.9rem;
 }
-
 .urep-header-right {
   display: flex;
   align-items: center;
@@ -87,6 +87,7 @@
   font-weight: 600;
   transition: opacity 0.2s, transform 0.2s;
   white-space: nowrap;
+  display: inline-block;
 }
 .urep-add-btn:hover {
   opacity: 0.9;
@@ -146,23 +147,6 @@
   text-overflow: ellipsis;
 }
 
-.urep-no-data,
-.urep-loading {
-  text-align: center;
-  padding: 40px;
-  color: var(--urep-text-sec);
-}
-.urep-spinner {
-  display: inline-block;
-  animation: spin 1s infinite linear;
-  margin-right: 10px;
-}
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 .urep-badge {
   padding: 4px 10px;
   border-radius: 999px;
@@ -218,123 +202,176 @@
   cursor: not-allowed;
 }
 
+.urep-no-data,
+.urep-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--urep-text-sec);
+}
+.urep-spinner {
+  display: inline-block;
+  animation: spin 1s infinite linear;
+  margin-right: 10px;
+}
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 768px) {
   .urep-page {
-    padding: 8px;
+    padding: 10px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   .urep-header {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     padding: 12px;
     align-items: stretch;
   }
   .urep-header-left {
-    text-align: center;
     margin-bottom: 5px;
+    text-align: left;
   }
   .urep-header-right {
     flex-direction: column;
     width: 100%;
     gap: 10px;
   }
-
-  .urep-add-btn {
-    width: 100%;
-    text-align: center;
-    padding: 12px;
-  }
-  .urep-header-right > div {
-    width: 100% !important;
-  }
+  .urep-add-btn,
+  .urep-header-right > div,
   .urep-single-building {
-    width: 100%;
+    width: 100% !important;
     text-align: center;
-    box-sizing: border-box;
   }
 
   .urep-table,
-  .urep-table tbody,
-  .urep-table tr {
-    display: flex;
-    flex-direction: column;
+  .urep-table tr,
+  .urep-table td {
+    display: block;
     width: 100%;
-  }
-  .urep-table {
-    background: transparent;
-    border: none;
-    gap: 8px;
+    box-sizing: border-box;
   }
   .urep-table thead {
     display: none;
   }
 
+  .urep-table tbody {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .urep-table {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+
   .urep-row {
-    background: var(--urep-bg-card);
-    display: grid;
+    background-color: var(--urep-bg-card);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--urep-border);
+    padding: 16px;
+    margin-bottom: 0;
+
+    display: grid !important;
     grid-template-columns: 1fr auto;
     grid-template-areas:
-      "status date"
-      "subject subject"
-      "building building"
+      "subject date"
+      "building status"
       "desc desc";
-    gap: 6px;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid var(--urep-border);
-    box-shadow: var(--urep-shadow);
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
   }
 
-  .urep-idx {
-    display: none;
-  }
-
-  td[data-label="Статус"] {
-    grid-area: status;
+  .urep-table td {
     border: none;
     padding: 0;
-    align-self: center;
+    width: auto;
+  }
+  .urep-idx,
+  td[data-label="Обновен"] {
+    display: none !important;
+  }
+
+  td[data-label="Относно"] {
+    grid-area: subject;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--urep-text-main);
+    line-height: 1.2;
+    text-align: left;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    max-width: 100%;
   }
 
   td[data-label="Създаден"] {
     grid-area: date;
     justify-self: end;
-    border: none;
-    padding: 0;
+    text-align: right;
     font-size: 0.75rem;
     color: var(--urep-text-sec);
-    align-self: center;
-  }
-
-  td[data-label="Относно"] {
-    grid-area: subject;
-    font-weight: 600;
-    font-size: 1rem;
-    border: none;
-    padding: 4px 0;
-    color: var(--urep-text-main);
+    white-space: nowrap;
   }
 
   td[data-label="Сграда"] {
     grid-area: building;
-    border: none;
-    padding: 0;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--urep-text-sec);
+    display: flex;
+    align-items: center;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  td[data-label="Сграда"]::before {
+    content: "🏢";
+    margin-right: 6px;
+  }
+
+  td[data-label="Статус"] {
+    grid-area: status;
+    justify-self: end;
+    text-align: right;
+  }
+  .urep-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
   }
 
   td[data-label="Описание"] {
     grid-area: desc;
-    border: none;
-    padding: 0;
-    margin-top: 5px;
-    font-size: 0.85rem;
-    color: var(--urep-text-sec);
-    white-space: normal;
-    max-width: 100%;
-  }
+    width: 100% !important;
+    margin-top: 8px;
+    padding-top: 10px !important;
+    border-top: 1px solid var(--urep-border) !important;
 
-  td[data-label="Обновен"] {
-    display: none;
+    font-size: 0.9rem;
+    color: var(--urep-text-sec);
+    line-height: 1.5;
+    text-align: left;
+
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
   }
 }

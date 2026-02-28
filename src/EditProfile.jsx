@@ -8,15 +8,11 @@ import "./styles/EditProfile.css";
 function EditProfile() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  
-  // Използваме useRef, за да сме сигурни, че компонентът е "жив",
-  // когато обновяваме state-а (предпазва от грешки при бързо излизане)
   const mountedRef = useRef(true);
 
   const [loading, setLoading] = useState(true);
   const [authId, setAuthId] = useState(null);
 
-  // Данни
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -34,7 +30,10 @@ function EditProfile() {
 
     async function getUserData() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
         if (authError || !user) {
           if (mountedRef.current) navigate("/login");
@@ -67,7 +66,9 @@ function EditProfile() {
 
     getUserData();
 
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, [navigate]);
 
   const handleSubmit = async (e) => {
@@ -86,13 +87,15 @@ function EditProfile() {
       const profileUpdates = {
         username,
         phone,
-        email
+        email,
       };
 
       if (password) {
-        const { error: passError } = await supabase.auth.updateUser({ password });
+        const { error: passError } = await supabase.auth.updateUser({
+          password,
+        });
         if (passError) throw passError;
-        
+
         const hashedPassword = await bcrypt.hash(password, 10);
         profileUpdates.password_hash = hashedPassword;
       }
@@ -101,12 +104,17 @@ function EditProfile() {
       const currentEmail = currentUser.data.user?.email;
 
       if (email && email !== currentEmail) {
-        const { data, error: funcError } = await supabase.functions.invoke('update-email', {
-          body: { userId: authId, newEmail: email }
-        });
+        const { data, error: funcError } = await supabase.functions.invoke(
+          "update-email",
+          {
+            body: { userId: authId, newEmail: email },
+          },
+        );
 
         if (funcError || (data && data.error)) {
-            throw new Error(funcError?.message || data.error || "Грешка при смяна на имейла.");
+          throw new Error(
+            funcError?.message || data.error || "Грешка при смяна на имейла.",
+          );
         }
       }
 
@@ -119,20 +127,24 @@ function EditProfile() {
 
       setMessage("✅ Данните са обновени успешно!");
       setMessageType("success");
-      
+
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      const updatedUser = { ...storedUser, ...profileUpdates, first_name: firstName, last_name: lastName };
+      const updatedUser = {
+        ...storedUser,
+        ...profileUpdates,
+        first_name: firstName,
+        last_name: lastName,
+      };
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      
+
       window.dispatchEvent(new Event("storage"));
 
       setPassword("");
       setConfirmPassword("");
 
       setTimeout(() => {
-          if(mountedRef.current) navigate(-1);
+        if (mountedRef.current) navigate(-1);
       }, 1500);
-
     } catch (error) {
       console.error("Грешка:", error);
       setMessage(`⚠️ Грешка: ${error.message}`);
@@ -142,9 +154,12 @@ function EditProfile() {
     }
   };
 
-  // ВАЖНО: Показваме зареждане винаги, когато loading е true.
-  // Това оправя "мигването" и изчезването.
-  if (loading) return <div className="ep-loading"><span className="ep-spinner">↻</span> Зареждане...</div>;
+  if (loading)
+    return (
+      <div className="ep-loading">
+        <span className="ep-spinner">↻</span> Зареждане...
+      </div>
+    );
 
   return (
     <div className={`ep-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>

@@ -12,6 +12,7 @@
   --st-done-text: #166534;
   --st-def-bg: #f1f5f9;
   --st-def-text: #475569;
+  --ae-hover: #f1f5f9;
 }
 
 .adev-dark {
@@ -28,6 +29,12 @@
   --st-done-text: #4ade80;
   --st-def-bg: rgba(71, 85, 105, 0.2);
   --st-def-text: #94a3b8;
+  --ae-hover: #334155;
+}
+
+.adev-page,
+.adev-page * {
+  box-sizing: border-box !important;
 }
 
 .adev-page {
@@ -36,7 +43,7 @@
   min-height: 100vh;
   font-family: "Inter", system-ui, sans-serif;
   color: var(--ae-text-main);
-  box-sizing: border-box;
+  width: 100%;
 }
 
 .adev-header {
@@ -156,14 +163,13 @@
   width: 100%;
   background: var(--ae-bg-card);
   border-radius: 12px;
-  border-collapse: separate;
-  border-spacing: 0;
   box-shadow: var(--ae-shadow);
-  overflow: hidden;
   border: 1px solid var(--ae-border);
+  border-collapse: collapse;
 }
+
 .adev-table th {
-  padding: 16px;
+  padding: 0 16px;
   text-align: left;
   background-color: var(--ae-bg-page);
   color: var(--ae-text-sec);
@@ -171,30 +177,47 @@
   text-transform: uppercase;
   font-size: 0.8rem;
   border-bottom: 1px solid var(--ae-border);
-}
-.adev-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--ae-border);
+  height: 50px;
   vertical-align: middle;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  height: 60px;
-  max-width: 250px;
 }
+
 .adev-row {
   cursor: pointer;
   transition: background 0.2s;
+  height: 60px !important;
+  border-bottom: 1px solid var(--ae-border);
 }
 .adev-row:hover {
-  background-color: var(--ae-bg-page);
+  background-color: var(--ae-hover);
+}
+
+.adev-table td {
+  height: 60px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  border-bottom: none;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.adev-subject,
+.adev-actions {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+.adev-actions {
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .adev-icon {
   margin-right: 10px;
   font-size: 1.2rem;
+  display: flex;
+  align-items: center;
 }
-
 .date-mobile {
   display: none;
 }
@@ -211,6 +234,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: inline-block;
+  line-height: 1;
 }
 .st-new {
   background-color: var(--st-new-bg);
@@ -225,35 +249,25 @@
   color: var(--st-def-text);
 }
 
-.adev-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-}
-
 .action-btn {
   background: white;
   border: 1px solid var(--ae-border);
   border-radius: 8px;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   transition: all 0.2s;
   color: var(--ae-text-main);
-  padding: 0;
-  line-height: 0;
+  margin: 0 !important;
 }
-
 .action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-
 .action-btn.docx {
   color: #3b82f6;
 }
@@ -261,7 +275,6 @@
   background-color: #eff6ff;
   border-color: #3b82f6;
 }
-
 .action-btn.status {
   color: #10b981;
 }
@@ -269,6 +282,7 @@
   background-color: #ecfdf5;
   border-color: #10b981;
 }
+
 .adev-no-data,
 .adev-loading {
   text-align: center;
@@ -322,70 +336,46 @@
   font-size: 0.9rem;
   white-space: nowrap;
 }
-
 .adev-today-toggle:hover {
   background-color: var(--ae-bg-page);
   border-color: var(--ae-text-sec);
 }
-
 .adev-today-toggle.active {
   background-color: var(--ae-accent);
   color: white;
   border-color: var(--ae-accent);
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
-
 .adev-today-toggle.active:hover {
   opacity: 0.9;
 }
+
 @media (max-width: 768px) {
   .adev-page {
     padding: 8px;
-    width: 100%;
     overflow-x: hidden;
-    box-sizing: border-box;
   }
-
   .adev-header,
   .adev-toolbar {
     flex-direction: column;
     gap: 8px;
     padding: 10px;
-    width: 100%;
-    box-sizing: border-box;
   }
   .adev-header-left,
   .adev-header-right,
   .adev-add-btn,
-  .adev-filters-right {
-    width: 100% !important;
-  }
+  .adev-filters-right,
   .adev-header-right > div,
   .adev-filters-right > div {
     width: 100% !important;
   }
-
   .adev-stats-grid {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: 100%;
   }
   .adev-stat-card {
-    width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
     padding: 12px;
-  }
-  .adev-stat-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .adev-stat-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
   }
 
   .adev-table {
@@ -393,7 +383,6 @@
     border: none;
     display: flex;
     flex-direction: column;
-    width: 100%;
     gap: 6px;
   }
   .adev-table thead {
@@ -407,26 +396,24 @@
     background: var(--ae-bg-card);
     display: grid;
     grid-template-columns: 1fr auto 32px;
-    grid-template-areas:
-      "subject date date"
-      "building status actions";
+    grid-template-areas: "subject date date" "building status actions";
     column-gap: 4px;
     row-gap: 0px;
-    padding: 6px 10px;
+    padding: 6px 10px !important;
     border-radius: 8px;
     box-shadow: var(--ae-shadow);
     border: 1px solid var(--ae-border);
-    width: 100%;
-    box-sizing: border-box;
     margin: 0;
     align-items: center;
+
+    height: auto !important;
+    max-height: none !important;
   }
 
   .adev-idx,
   td[data-label="Възложено"] {
     display: none;
   }
-
   .date-desktop {
     display: none;
   }
@@ -446,22 +433,30 @@
     margin-top: 1px;
   }
 
+  .adev-table td {
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    border: none;
+    display: block;
+  }
+
   .adev-subject {
     grid-area: subject;
     font-weight: 600;
     border: none;
-    padding: 0;
-    display: flex;
-    align-items: flex-start;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
     white-space: normal;
     word-break: break-word;
     line-height: 1.1;
     font-size: 0.85rem;
     color: var(--ae-text-main);
     align-self: start;
-    padding-top: 2px;
+    padding-top: 2px !important;
     margin-bottom: 2px;
-    max-width: 350px;
+    max-width: 100%;
   }
   .adev-subject .adev-icon {
     flex-shrink: 0;
@@ -472,18 +467,13 @@
 
   td[data-label="Дата"] {
     grid-area: date;
-    border: none;
-    padding: 0;
     justify-self: end;
     align-self: start;
-    padding-top: 2px;
+    padding-top: 2px !important;
   }
-
   td[data-label="Сграда"] {
     grid-area: building;
-    border: none;
-    padding: 0;
-    padding-left: 20px;
+    padding-left: 20px !important;
     font-size: 0.7rem;
     color: var(--ae-text-sec);
     white-space: nowrap;
@@ -491,13 +481,10 @@
     text-overflow: ellipsis;
     min-width: 0;
   }
-
   td[data-label="Статус"] {
     grid-area: status;
-    border: none;
-    padding: 0;
     text-align: right;
-    display: flex;
+    display: flex !important;
     justify-content: flex-end;
     align-items: center;
     margin-right: 12px;
@@ -509,26 +496,19 @@
 
   .adev-actions {
     grid-area: actions;
-    border: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
+    display: flex !important;
     justify-content: flex-end;
-    width: 1%;
-  white-space: nowrap;
+    width: auto;
+    height: auto !important;
   }
-
   .action-btn.docx {
     display: none;
   }
-
   .action-btn.status {
     width: 28px;
     height: 28px;
     margin: 0;
-    border-radius: 6px;
     font-size: 1rem;
-    background-color: var(--ae-bg-page);
   }
   .adev-today-toggle {
     width: 100%;

@@ -8,6 +8,27 @@ import { useTheme } from "../../components/ThemeContext";
 import { useUserBuildings } from "../hooks/UseUserBuildings";
 import { useLocalUser } from "../hooks/UseLocalUser";
 
+import {
+  Zap,
+  ArrowUpDown,
+  Lightbulb,
+  Sparkles,
+  Wrench,
+  UserCog,
+  Droplet,
+  Package,
+  ClipboardCheck,
+  Wifi,
+  KeyRound,
+  Bug,
+  XCircle,
+  CheckCircle2,
+  FileText,
+  CalendarDays,
+  Building,
+  Trash2,
+} from "lucide-react";
+
 import "./styles/EditExpense.css";
 
 const MONTH_NAMES = {
@@ -26,26 +47,83 @@ const MONTH_NAMES = {
 };
 
 const EXPENSE_TYPES = [
-  { value: "electricity_lift", label: "⚡ Ток асансьор" },
-  { value: "fee_lift", label: "🛗 Сервиз асансьор" },
-  { value: "electricity_light", label: "💡 Ток осветление" },
-  { value: "cleaner", label: "🧹 Хигиенист" },
-  { value: "repair", label: "🛠️ Ремонт" },
-  { value: "manager", label: "👨‍💼 Домоуправител" },
-  { value: "water_building", label: "💧 Вода обща" },
-  { value: "lighting", label: "💡 Осветление (консумативи)" },
-  { value: "cleaning_supplies", label: "🧽 Материали почистване" },
-  { value: "fee_annual_review", label: "📋 Годишен преглед асансьор" },
-  { value: "internet_video", label: "📡 Интернет / Видео" },
-  { value: "access_control", label: "🔑 Контрол достъп" },
-  { value: "pest_control", label: "🕷️ Дезинсекция" },
-  { value: "other", label: "📦 Други" },
+  { value: "electricity_lift", label: "Ток асансьор", iconName: "zap" },
+  { value: "fee_lift", label: "Сервиз асансьор", iconName: "arrow-up-down" },
+  {
+    value: "electricity_light",
+    label: "Ток осветление",
+    iconName: "lightbulb",
+  },
+  { value: "cleaner", label: "Хигиенист", iconName: "sparkles" },
+  { value: "repair", label: "Ремонт", iconName: "wrench" },
+  { value: "manager", label: "Домоуправител", iconName: "user-cog" },
+  { value: "water_building", label: "Вода обща", iconName: "droplet" },
+  {
+    value: "lighting",
+    label: "Осветление (консумативи)",
+    iconName: "lightbulb",
+  },
+  {
+    value: "cleaning_supplies",
+    label: "Материали почистване",
+    iconName: "package",
+  },
+  {
+    value: "fee_annual_review",
+    label: "Годишен преглед асансьор",
+    iconName: "clipboard-check",
+  },
+  { value: "internet_video", label: "Интернет / Видео", iconName: "wifi" },
+  { value: "access_control", label: "Контрол достъп", iconName: "key-round" },
+  { value: "pest_control", label: "Дезинсекция", iconName: "bug" },
+  { value: "other", label: "Други", iconName: "package" },
 ];
 
 const PAID_OPTIONS = [
-  { value: "не", label: "🔴 Неплатено", color: "#ef4444" },
-  { value: "да", label: "🟢 Платено", color: "#10b981" },
+  { value: "не", label: "Неплатено", color: "#ef4444", iconName: "x-circle" },
+  { value: "да", label: "Платено", color: "#10b981", iconName: "check-circle" },
 ];
+
+const IconMap = {
+  zap: Zap,
+  "arrow-up-down": ArrowUpDown,
+  lightbulb: Lightbulb,
+  sparkles: Sparkles,
+  wrench: Wrench,
+  "user-cog": UserCog,
+  droplet: Droplet,
+  package: Package,
+  "clipboard-check": ClipboardCheck,
+  wifi: Wifi,
+  "key-round": KeyRound,
+  bug: Bug,
+  "x-circle": XCircle,
+  "check-circle": CheckCircle2,
+  calendar: CalendarDays,
+  building: Building,
+};
+
+const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
+  const IconComponent = IconMap[iconName];
+  const shouldShowIcon =
+    IconComponent &&
+    (context === "value" ||
+      (iconName !== "calendar" && iconName !== "building"));
+
+  return (
+    <div className="ede-select-item">
+      {shouldShowIcon && (
+        <IconComponent
+          size={16}
+          strokeWidth={2.5}
+          className="ede-select-icon"
+          style={{ color: color || "inherit" }}
+        />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+};
 
 function EditExpense() {
   const { isDarkMode } = useTheme();
@@ -54,7 +132,7 @@ function EditExpense() {
 
   const { user: currentUser } = useLocalUser();
   const { buildings, loading: loadingBuildings } = useUserBuildings(
-    currentUser?.id
+    currentUser?.id,
   );
 
   const [formData, setFormData] = useState({
@@ -78,8 +156,9 @@ function EditExpense() {
       Array.from({ length: 6 }, (_, i) => currentYear + 1 - i).map((y) => ({
         value: y,
         label: `${y}`,
+        iconName: "calendar",
       })),
-    [currentYear]
+    [currentYear],
   );
 
   const monthOptions = useMemo(
@@ -87,14 +166,16 @@ function EditExpense() {
       Object.entries(MONTH_NAMES).map(([k, v]) => ({
         value: parseInt(k),
         label: v,
+        iconName: "calendar",
       })),
-    []
+    [],
   );
 
   const buildingOptions = useMemo(() => {
     return buildings.map((b) => ({
       value: b.id,
       label: `${b.name}, ${b.address}`,
+      iconName: "building",
     }));
   }, [buildings]);
 
@@ -102,9 +183,11 @@ function EditExpense() {
     control: (base, state) => ({
       ...base,
       background: isDarkMode ? "#0f172a" : "#f8fafc",
-      borderColor: state.isFocused 
+      borderColor: state.isFocused
         ? "#3b82f6"
-        : (isDarkMode ? "#334155" : "#cbd5e1"),
+        : isDarkMode
+          ? "#334155"
+          : "#cbd5e1",
       color: isDarkMode ? "#f1f5f9" : "#1e293b",
       minHeight: "42px",
       borderRadius: "8px",
@@ -142,7 +225,8 @@ function EditExpense() {
     },
     singleValue: (base, state) => ({
       ...base,
-      color: state.selectProps.value?.color || (isDarkMode ? "#f1f5f9" : "#1e293b"),
+      color:
+        state.selectProps.value?.color || (isDarkMode ? "#f1f5f9" : "#1e293b"),
       fontWeight: state.selectProps.value?.color ? 600 : 400,
     }),
     input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#1e293b" }),
@@ -277,7 +361,14 @@ function EditExpense() {
 
       <div className="ede-grid">
         <div className="ede-card">
-          <div className="ede-section-title">📄 Основна информация</div>
+          <div className="ede-section-title">
+            <FileText
+              size={20}
+              strokeWidth={2.5}
+              className="ede-section-icon"
+            />
+            Основна информация
+          </div>
 
           <div className="ede-form-group">
             <label>Вид разход *</label>
@@ -285,9 +376,19 @@ function EditExpense() {
               options={EXPENSE_TYPES}
               value={EXPENSE_TYPES.find((t) => t.value === formData.type)}
               onChange={(opt) => handleChange("type", opt?.value)}
-              placeholder="Избери вид..."
+              placeholder={
+                <div className="ede-select-item">
+                  <FileText
+                    size={16}
+                    strokeWidth={2.5}
+                    className="ede-select-icon"
+                  />
+                  <span>Избери вид...</span>
+                </div>
+              }
               styles={selectStyles}
               isSearchable={false}
+              formatOptionLabel={customFormatOptionLabel}
             />
             {errors.type && <span className="error-msg">{errors.type}</span>}
           </div>
@@ -315,7 +416,14 @@ function EditExpense() {
         </div>
 
         <div className="ede-card" style={{ height: "fit-content" }}>
-          <div className="ede-section-title">📅 Контекст</div>
+          <div className="ede-section-title">
+            <CalendarDays
+              size={20}
+              strokeWidth={2.5}
+              className="ede-section-icon"
+            />
+            Контекст
+          </div>
 
           <div className="ede-form-group">
             <label>Сграда *</label>
@@ -323,26 +431,29 @@ function EditExpense() {
               options={buildingOptions}
               isLoading={loadingBuildings}
               value={buildingOptions.find(
-                (op) => op.value === formData.building_id
+                (op) => op.value === formData.building_id,
               )}
               onChange={(opt) => handleChange("building_id", opt?.value)}
-              placeholder="Избери сграда..."
+              placeholder={
+                <div className="ede-select-item">
+                  <Building
+                    size={16}
+                    strokeWidth={2.5}
+                    className="ede-select-icon"
+                  />
+                  <span>Избери сграда...</span>
+                </div>
+              }
               styles={selectStyles}
               noOptionsMessage={() => "Няма намерени"}
+              formatOptionLabel={customFormatOptionLabel}
             />
             {errors.building_id && (
               <span className="error-msg">{errors.building_id}</span>
             )}
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-              marginTop: "0.5rem",
-            }}
-          >
+          <div className="ede-dates-grid">
             <div className="ede-form-group">
               <label>Месец *</label>
               <Select
@@ -351,7 +462,18 @@ function EditExpense() {
                 onChange={(opt) => handleChange("month", opt?.value)}
                 styles={selectStyles}
                 isSearchable={false}
+                placeholder={
+                  <div className="ede-select-item">
+                    <CalendarDays
+                      size={16}
+                      strokeWidth={2.5}
+                      className="ede-select-icon"
+                    />
+                    <span>--</span>
+                  </div>
+                }
                 menuPlacement="auto"
+                formatOptionLabel={customFormatOptionLabel}
               />
               {errors.month && (
                 <span className="error-msg">{errors.month}</span>
@@ -367,17 +489,12 @@ function EditExpense() {
                 styles={selectStyles}
                 isSearchable={false}
                 menuPlacement="auto"
+                formatOptionLabel={customFormatOptionLabel}
               />
             </div>
           </div>
 
-          <hr
-            style={{
-              margin: "1rem 0",
-              border: "0",
-              borderTop: "1px dashed var(--au-border)",
-            }}
-          />
+          <hr className="ede-divider" />
 
           <div className="ede-form-group">
             <label>Статус на плащане</label>
@@ -387,6 +504,7 @@ function EditExpense() {
               onChange={(opt) => handleChange("paid", opt?.value)}
               styles={selectStyles}
               isSearchable={false}
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
         </div>
@@ -394,12 +512,11 @@ function EditExpense() {
         <div className="ede-actions">
           <button
             type="button"
-            className="ede-btn ede-btn-danger"
+            className="ede-btn ede-btn-danger ede-btn-delete"
             onClick={() => setShowConfirm(true)}
             disabled={loading}
-            style={{ marginRight: "auto" }}
           >
-            🗑️ Изтрий
+            <Trash2 size={18} strokeWidth={2.5} /> Изтрий
           </button>
           <button
             type="button"

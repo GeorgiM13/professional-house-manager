@@ -6,7 +6,9 @@
   box-sizing: border-box;
   background-color: var(--au-bg-page, #f8fafc);
   color: var(--au-text-main, #1e293b);
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .ede-container.au-dark {
@@ -189,15 +191,50 @@
   color: #ffffff;
 }
 
-
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-input[type=number] {
+input[type="number"] {
   appearance: textfield;
+}
+
+.ede-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ede-select-icon {
+  flex-shrink: 0;
+}
+
+.ede-section-icon {
+  margin-right: 8px;
+  color: var(--au-text-sec);
+}
+
+.ede-dates-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.ede-divider {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px dashed var(--au-border);
+}
+
+.ede-btn-delete {
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 @media (max-width: 768px) {
@@ -217,5 +254,8 @@ input[type=number] {
   }
   .ede-btn {
     width: 100%;
+  }
+  .ede-btn-delete {
+    margin-right: 0;
   }
 }

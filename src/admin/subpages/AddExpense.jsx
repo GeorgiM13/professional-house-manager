@@ -7,6 +7,26 @@ import { useTheme } from "../../components/ThemeContext";
 import { useUserBuildings } from "../hooks/UseUserBuildings";
 import { useLocalUser } from "../hooks/UseLocalUser";
 
+import {
+  Zap,
+  ArrowUpDown,
+  Lightbulb,
+  Sparkles,
+  Wrench,
+  UserCog,
+  Droplet,
+  Package,
+  ClipboardCheck,
+  Wifi,
+  KeyRound,
+  Bug,
+  XCircle,
+  CheckCircle2,
+  FileText,
+  CalendarDays,
+  Building,
+} from "lucide-react";
+
 import "./styles/AddExpense.css";
 
 const MONTH_NAMES = {
@@ -25,34 +45,90 @@ const MONTH_NAMES = {
 };
 
 const EXPENSE_TYPES = [
-  { value: "electricity_lift", label: "⚡ Ток асансьор" },
-  { value: "fee_lift", label: "🛗 Сервиз асансьор" },
-  { value: "electricity_light", label: "💡 Ток осветление" },
-  { value: "cleaner", label: "🧹 Хигиенист" },
-  { value: "repair", label: "🛠️ Ремонт" },
-  { value: "manager", label: "👨‍💼 Домоуправител" },
-  { value: "water_building", label: "💧 Вода обща" },
-  { value: "lighting", label: "💡 Осветление (консумативи)" },
-  { value: "cleaning_supplies", label: "🧽 Материали почистване" },
-  { value: "fee_annual_review", label: "📋 Годишен преглед асансьор" },
-  { value: "internet_video", label: "📡 Интернет / Видео" },
-  { value: "access_control", label: "🔑 Контрол достъп" },
-  { value: "pest_control", label: "🕷️ Дезинсекция" },
-  { value: "other", label: "📦 Други" },
+  { value: "electricity_lift", label: "Ток асансьор", iconName: "zap" },
+  { value: "fee_lift", label: "Сервиз асансьор", iconName: "arrow-up-down" },
+  {
+    value: "electricity_light",
+    label: "Ток осветление",
+    iconName: "lightbulb",
+  },
+  { value: "cleaner", label: "Хигиенист", iconName: "sparkles" },
+  { value: "repair", label: "Ремонт", iconName: "wrench" },
+  { value: "manager", label: "Домоуправител", iconName: "user-cog" },
+  { value: "water_building", label: "Вода обща", iconName: "droplet" },
+  {
+    value: "lighting",
+    label: "Осветление (консумативи)",
+    iconName: "lightbulb",
+  },
+  {
+    value: "cleaning_supplies",
+    label: "Материали почистване",
+    iconName: "package",
+  },
+  {
+    value: "fee_annual_review",
+    label: "Годишен преглед асансьор",
+    iconName: "clipboard-check",
+  },
+  { value: "internet_video", label: "Интернет / Видео", iconName: "wifi" },
+  { value: "access_control", label: "Контрол достъп", iconName: "key-round" },
+  { value: "pest_control", label: "Дезинсекция", iconName: "bug" },
+  { value: "other", label: "Други", iconName: "package" },
 ];
 
 const PAID_OPTIONS = [
-  { value: "не", label: "🔴 Неплатено", color: "#ef4444" },
-  { value: "да", label: "🟢 Платено", color: "#10b981" },
+  { value: "не", label: "Неплатено", color: "#ef4444", iconName: "x-circle" },
+  { value: "да", label: "Платено", color: "#10b981", iconName: "check-circle" },
 ];
 
+const IconMap = {
+  zap: Zap,
+  "arrow-up-down": ArrowUpDown,
+  lightbulb: Lightbulb,
+  sparkles: Sparkles,
+  wrench: Wrench,
+  "user-cog": UserCog,
+  droplet: Droplet,
+  package: Package,
+  "clipboard-check": ClipboardCheck,
+  wifi: Wifi,
+  "key-round": KeyRound,
+  bug: Bug,
+  "x-circle": XCircle,
+  "check-circle": CheckCircle2,
+  calendar: CalendarDays,
+  building: Building,
+};
+
+const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
+  const IconComponent = IconMap[iconName];
+  const shouldShowIcon =
+    IconComponent &&
+    (context === "value" ||
+      (iconName !== "calendar" && iconName !== "building"));
+
+  return (
+    <div className="ade-select-item">
+      {shouldShowIcon && (
+        <IconComponent
+          size={16}
+          strokeWidth={2.5}
+          className="ade-select-icon"
+          style={{ color: color || "inherit" }}
+        />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+};
 function AddExpense() {
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
 
   const { user: currentUser } = useLocalUser();
   const { buildings, loading: loadingBuildings } = useUserBuildings(
-    currentUser?.id
+    currentUser?.id,
   );
 
   const [formData, setFormData] = useState({
@@ -74,8 +150,9 @@ function AddExpense() {
       Array.from({ length: 6 }, (_, i) => currentYear + 1 - i).map((y) => ({
         value: y,
         label: `${y}`,
+        iconName: "calendar",
       })),
-    [currentYear]
+    [currentYear],
   );
 
   const monthOptions = useMemo(
@@ -83,14 +160,16 @@ function AddExpense() {
       Object.entries(MONTH_NAMES).map(([k, v]) => ({
         value: parseInt(k),
         label: v,
+        iconName: "calendar",
       })),
-    []
+    [],
   );
 
   const buildingOptions = useMemo(() => {
     return buildings.map((b) => ({
       value: b.id,
       label: `${b.name}, ${b.address}`,
+      iconName: "building",
     }));
   }, [buildings]);
 
@@ -101,8 +180,8 @@ function AddExpense() {
       borderColor: state.isFocused
         ? "#3b82f6"
         : isDarkMode
-        ? "#334155"
-        : "#cbd5e1",
+          ? "#334155"
+          : "#cbd5e1",
       color: isDarkMode ? "#f1f5f9" : "#1e293b",
       minHeight: "42px",
       borderRadius: "8px",
@@ -216,16 +295,36 @@ function AddExpense() {
 
       <div className="ade-grid">
         <div className="ade-card">
-          <div className="ade-section-title">📄 Основна информация</div>
+          <div className="ade-section-title">
+            <FileText
+              size={20}
+              strokeWidth={2.5}
+              className="ade-section-icon"
+            />
+            Основна информация
+          </div>
 
           <div className="ade-form-group">
             <label>Вид разход *</label>
             <Select
               options={EXPENSE_TYPES}
               onChange={(opt) => handleChange("type", opt?.value)}
-              placeholder="Избери вид..."
+              placeholder={
+                <div
+                  className="ade-select-item"
+                  style={{ color: "var(--au-text-sec)" }}
+                >
+                  <FileText
+                    size={16}
+                    strokeWidth={2.5}
+                    className="ade-select-icon"
+                  />
+                  <span>Избери вид...</span>
+                </div>
+              }
               styles={selectStyles}
               isSearchable={false}
+              formatOptionLabel={customFormatOptionLabel}
             />
             {errors.type && <span className="error-msg">{errors.type}</span>}
           </div>
@@ -255,7 +354,14 @@ function AddExpense() {
         </div>
 
         <div className="ade-card" style={{ height: "fit-content" }}>
-          <div className="ade-section-title">📅 Контекст</div>
+          <div className="ade-section-title">
+            <CalendarDays
+              size={20}
+              strokeWidth={2.5}
+              className="ade-section-icon"
+            />
+            Контекст
+          </div>
 
           <div className="ade-form-group">
             <label>Сграда *</label>
@@ -263,23 +369,29 @@ function AddExpense() {
               options={buildingOptions}
               isLoading={loadingBuildings}
               onChange={(opt) => handleChange("building_id", opt?.value)}
-              placeholder="Избери сграда..."
+              placeholder={
+                <div
+                  className="ade-select-item"
+                  style={{ color: "var(--au-text-sec)" }}
+                >
+                  <Building
+                    size={16}
+                    strokeWidth={2.5}
+                    className="ade-select-icon"
+                  />
+                  <span>Избери сграда...</span>
+                </div>
+              }
               styles={selectStyles}
               noOptionsMessage={() => "Няма намерени"}
+              formatOptionLabel={customFormatOptionLabel}
             />
             {errors.building_id && (
               <span className="error-msg">{errors.building_id}</span>
             )}
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-              marginTop: "0.5rem",
-            }}
-          >
+          <div className="ade-dates-grid">
             <div className="ade-form-group">
               <label>Месец *</label>
               <Select
@@ -287,8 +399,21 @@ function AddExpense() {
                 onChange={(opt) => handleChange("month", opt?.value)}
                 styles={selectStyles}
                 isSearchable={false}
-                placeholder="--"
+                placeholder={
+                  <div
+                    className="ade-select-item"
+                    style={{ color: "var(--au-text-sec)" }}
+                  >
+                    <CalendarDays
+                      size={16}
+                      strokeWidth={2.5}
+                      className="ade-select-icon"
+                    />
+                    <span>--</span>
+                  </div>
+                }
                 menuPlacement="auto"
+                formatOptionLabel={customFormatOptionLabel}
               />
               {errors.month && (
                 <span className="error-msg">{errors.month}</span>
@@ -304,17 +429,12 @@ function AddExpense() {
                 styles={selectStyles}
                 isSearchable={false}
                 menuPlacement="auto"
+                formatOptionLabel={customFormatOptionLabel}
               />
             </div>
           </div>
 
-          <hr
-            style={{
-              margin: "1rem 0",
-              border: "0",
-              borderTop: "1px dashed var(--au-border)",
-            }}
-          />
+          <hr className="ade-divider" />
 
           <div className="ade-form-group">
             <label>Статус на плащане</label>
@@ -324,6 +444,7 @@ function AddExpense() {
               onChange={(opt) => handleChange("paid", opt?.value)}
               styles={selectStyles}
               isSearchable={false}
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
         </div>

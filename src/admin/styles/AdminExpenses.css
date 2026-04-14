@@ -27,10 +27,11 @@
 }
 
 * {
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
@@ -73,11 +74,21 @@ html, body {
   align-items: center;
 }
 
+.admin-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .admin-header-select {
-    width: 250px;
+  width: 250px;
 }
 .admin-select-wrapper {
-    width: 180px;
+  width: 180px;
+}
+.admin-select-icon {
+  flex-shrink: 0;
+  color: var(--ae-text-sec);
 }
 
 .admin-add-expense-btn {
@@ -88,7 +99,9 @@ html, body {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition:
+    background 0.2s,
+    transform 0.1s;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
 }
@@ -112,22 +125,39 @@ html, body {
   box-shadow: var(--ae-shadow);
   border: 1px solid var(--ae-border);
 }
-.admin-stat-card.total { border-left: 4px solid #3b82f6; }
-.admin-stat-card.count { border-left: 4px solid #8b5cf6; }
-.admin-stat-card.max { border-left: 4px solid #f97316; }
+.admin-stat-card.total {
+  border-left: 4px solid #3b82f6;
+}
+.admin-stat-card.count {
+  border-left: 4px solid #8b5cf6;
+}
+.admin-stat-card.max {
+  border-left: 4px solid #f97316;
+}
 
 .admin-stat-icon {
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background-color: var(--ae-bg-page);
-  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 16px;
   flex-shrink: 0;
 }
+.admin-stat-card.total .admin-stat-icon {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.15);
+}
+.admin-stat-card.count .admin-stat-icon {
+  color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.15);
+}
+.admin-stat-card.max .admin-stat-icon {
+  color: #f97316;
+  background-color: rgba(249, 115, 22, 0.15);
+}
+
 .admin-stat-content {
   display: flex;
   flex-direction: column;
@@ -189,6 +219,25 @@ html, body {
 }
 .admin-expenses-table tr:hover {
   background-color: var(--ae-hover);
+}
+
+.admin-clickable-row {
+  cursor: pointer;
+}
+
+.admin-table-index {
+  color: var(--ae-text-sec);
+  font-size: 0.85rem;
+}
+
+.admin-table-address {
+  font-weight: 500;
+}
+
+.admin-table-notes {
+  color: var(--ae-text-sec);
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 .admin-status-badge {
@@ -258,24 +307,44 @@ html, body {
   color: var(--ae-text-main);
   font-size: 1.05rem;
 }
+
 .admin-expense-icon {
-  margin-right: 10px;
-  font-size: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #8b61c2;
+  background-color: rgba(139, 97, 194, 0.15);
+  width: 36px;
+  height: 36px;
+  border-radius: 50px;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
+
+.admin-loading-container {
+  text-align: center;
+  padding: 40px;
+  color: var(--ae-text-sec);
+}
+
 .loading-spinner {
   display: inline-block;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .admin-no-expenses {
-    text-align: center;
-    padding: 40px;
-    color: var(--ae-text-sec);
-    font-style: italic;
+  text-align: center;
+  padding: 40px;
+  color: var(--ae-text-sec);
+  font-style: italic;
 }
 
 .mobile-view {
@@ -303,7 +372,7 @@ html, body {
     padding: 15px;
     width: 100%;
   }
-  
+
   .admin-expenses-right {
     flex-direction: column;
     width: 100%;
@@ -311,12 +380,12 @@ html, body {
   }
 
   .admin-header-select {
-      width: 100% !important;
+    width: 100% !important;
   }
   .admin-custom-select {
     width: 100% !important;
   }
-  
+
   .admin-add-expense-btn {
     width: 100%;
   }
@@ -335,10 +404,10 @@ html, body {
     width: 100%;
     gap: 10px;
     display: grid;
-    grid-template-columns: 1fr 1fr; 
+    grid-template-columns: 1fr 1fr;
   }
   .admin-select-wrapper {
-      width: 100% !important;
+    width: 100% !important;
   }
 
   .admin-mobile-list {
@@ -358,7 +427,7 @@ html, body {
     flex-direction: column;
     gap: 8px;
     width: 100%;
-    max-width: 100%; 
+    max-width: 100%;
     box-sizing: border-box;
   }
 
@@ -378,20 +447,10 @@ html, body {
     color: var(--ae-text-main);
     font-weight: 700;
     flex: 1;
-    min-width: 0; 
+    min-width: 0;
   }
 
   .admin-card-type .admin-expense-icon {
-    font-size: 1.2rem;
-    width: 36px;
-    height: 36px;
-    background: var(--ae-bg-page);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    flex-shrink: 0; 
-    border: 1px solid var(--ae-border);
     margin: 0;
   }
 
@@ -413,13 +472,20 @@ html, body {
   }
 
   .admin-card-address {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 0.85rem;
     color: var(--ae-text-sec);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-left: 46px; 
+    padding-left: 46px;
     margin-top: -6px;
+  }
+
+  .admin-card-pin {
+    flex-shrink: 0;
   }
 
   .admin-card-footer {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
+import { Building, CalendarDays, User, CalendarPlus } from "lucide-react";
 import "./styles/EventDetails.css";
 
 function EventDetails() {
@@ -26,7 +27,7 @@ function EventDetails() {
             assigned_user:assigned_to(first_name,last_name),
             building_id,
             building:building_id(name,address)
-          `
+          `,
         )
         .eq("id", id)
         .single();
@@ -60,97 +61,110 @@ function EventDetails() {
     return "status-default";
   };
 
-  if (loading) return (
+  if (loading)
+    return (
       <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-          <div className="evd-loading">
-            <div className="spinner"></div>
-            <p>Зареждане на детайли...</p>
-          </div>
+        <div className="evd-loading">
+          <div className="spinner"></div>
+          <p>Зареждане на детайли...</p>
+        </div>
       </div>
-  );
+    );
 
-  if (!event) return (
+  if (!event)
+    return (
       <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-          <div className="evd-error">Събитието не е намерено.</div>
+        <div className="evd-error">Събитието не е намерено.</div>
       </div>
-  );
+    );
 
   const statusClass = getStatusClass(event.status);
 
   return (
     <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-      
       <div className="evd-page-header">
-        <button className="evd-back-link" onClick={() => navigate("/admin/adminevents")}>
+        <button
+          className="evd-back-link"
+          onClick={() => navigate("/admin/adminevents")}
+        >
           ← Назад към списъка
         </button>
         <div className={`evd-status-pill ${statusClass}`}>
-            {event.status || "Няма статус"}
+          {event.status || "Няма статус"}
         </div>
       </div>
 
       <div className="evd-main-card fade-in">
-        
         <div className="evd-card-header">
-            <div className="evd-location-badge">
-                <span className="icon">🏢</span>
-                <div>
-                    <h3>{event.building?.name || "Неизвестна сграда"}</h3>
-                    <small>{event.building?.address || "Няма адрес"}</small>
-                </div>
+          <div className="evd-location-badge">
+            <span className="icon">
+              <Building size={28} strokeWidth={2.5} />
+            </span>
+            <div>
+              <h3>{event.building?.name || "Неизвестна сграда"}</h3>
+              <small>{event.building?.address || "Няма адрес"}</small>
             </div>
-            <div className="evd-dates">
-                <div className="date-item">
-                    <span>📅 Краен срок:</span>
-                    <strong>{formatDateTime(event.completion_date)}</strong>
-                </div>
+          </div>
+          <div className="evd-dates">
+            <div className="date-item">
+              <span className="evd-date-label">
+                <CalendarDays size={16} strokeWidth={2.5} /> Краен срок:
+              </span>
+              <strong>{formatDateTime(event.completion_date)}</strong>
             </div>
+          </div>
         </div>
 
         <div className="evd-divider"></div>
 
         <div className="evd-body">
-            <h1 className="evd-title">{event.subject}</h1>
-            
-            <div className="evd-description-container">
-                <span className="evd-section-label">Описание на задачата</span>
-                <div className="evd-description-content">
-                    {event.description || <em className="text-muted">Няма въведено описание.</em>}
-                </div>
+          <h1 className="evd-title">{event.subject}</h1>
+
+          <div className="evd-description-container">
+            <span className="evd-section-label">Описание на задачата</span>
+            <div className="evd-description-content">
+              {event.description || (
+                <em className="text-muted">Няма въведено описание.</em>
+              )}
+            </div>
+          </div>
+
+          <div className="evd-meta-grid">
+            <div className="meta-box">
+              <span className="meta-icon">
+                <User size={24} strokeWidth={2.5} />
+              </span>
+              <div className="meta-info">
+                <span className="meta-label">Възложено на</span>
+                <span className="meta-value">
+                  {event.assigned_user
+                    ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
+                    : "Не е назначено"}
+                </span>
+              </div>
             </div>
 
-            <div className="evd-meta-grid">
-                <div className="meta-box">
-                    <span className="meta-icon">👤</span>
-                    <div className="meta-info">
-                        <span className="meta-label">Възложено на</span>
-                        <span className="meta-value">
-                            {event.assigned_user
-                                ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
-                                : "Не е назначено"}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="meta-box">
-                    <span className="meta-icon">📝</span>
-                    <div className="meta-info">
-                        <span className="meta-label">Създадено на</span>
-                        <span className="meta-value">
-                            {formatDateTime(event.created_at)}
-                        </span>
-                    </div>
-                </div>
+            <div className="meta-box">
+              <span className="meta-icon">
+                <CalendarPlus size={24} strokeWidth={2.5} />
+              </span>
+              <div className="meta-info">
+                <span className="meta-label">Създадено на</span>
+                <span className="meta-value">
+                  {formatDateTime(event.created_at)}
+                </span>
+              </div>
             </div>
+          </div>
         </div>
 
         <div className="evd-footer">
-            <button 
-                className="evd-btn evd-btn-primary" 
-                onClick={() => navigate(`/admin/editevent/${event.id}`)}
-            >
-                Редактирай събитието
-            </button>
+          <button
+            className="evd-btn evd-btn-primary"
+            onClick={() => navigate(`/admin/editevent/${event.id}`)}
+          >
+            Редактирай събитието
+          </button>
         </div>
       </div>
     </div>

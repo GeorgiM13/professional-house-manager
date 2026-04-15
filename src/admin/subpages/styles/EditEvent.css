@@ -66,6 +66,22 @@
   gap: 0.5rem;
 }
 
+.edv-section-icon {
+  color: var(--au-primary, #3b82f6);
+  flex-shrink: 0;
+}
+
+.edv-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edv-select-icon {
+  flex-shrink: 0;
+  color: var(--au-text-sec);
+}
+
 .edv-form-group {
   display: flex;
   flex-direction: column;
@@ -214,7 +230,10 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--au-text-sec);
   pointer-events: none;
 }
 .date-input-field {

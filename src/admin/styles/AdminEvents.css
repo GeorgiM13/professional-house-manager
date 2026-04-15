@@ -131,13 +131,12 @@
 .adev-stat-icon {
   width: 48px;
   height: 48px;
-  background-color: var(--ae-bg-page);
-  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 50px;
   margin-right: 16px;
+  flex-shrink: 0;
 }
 .adev-stat-info {
   display: flex;
@@ -213,10 +212,39 @@
 }
 
 .adev-icon {
-  margin-right: 10px;
-  font-size: 1.2rem;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.icon-purple {
+  color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.15);
+}
+
+.icon-green {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+.icon-orange {
+  color: #f97316;
+  background-color: rgba(249, 115, 22, 0.15);
+}
+
+.icon-cyan {
+  color: #06b6d4;
+  background-color: rgba(6, 182, 212, 0.15);
+}
+
+.icon-blue {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.15);
 }
 .date-mobile {
   display: none;
@@ -350,6 +378,60 @@
   opacity: 0.9;
 }
 
+.adev-filter-building {
+  width: 250px;
+}
+
+.adev-filter-date {
+  width: 160px;
+}
+
+.dm-time-desktop {
+  color: var(--ae-text-sec);
+  margin-left: 4px;
+}
+
+.adev-th-actions {
+  text-align: right;
+}
+
+.hidden-badge {
+  display: none !important;
+}
+
+.adev-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adev-select-icon {
+  flex-shrink: 0;
+  color: var(--ae-text-sec);
+}
+
+.adev-today-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.adev-spinner-icon {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.adev-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--ae-text-sec);
+  font-size: 1.1rem;
+}
+
 @media (max-width: 768px) {
   .adev-page {
     padding: 8px;
@@ -460,9 +542,10 @@
   }
   .adev-subject .adev-icon {
     flex-shrink: 0;
-    margin-right: 4px;
-    font-size: 0.9rem;
+    margin-right: 10px;
     margin-top: 0;
+    width: 36px;
+    height: 36px;
   }
 
   td[data-label="Дата"] {

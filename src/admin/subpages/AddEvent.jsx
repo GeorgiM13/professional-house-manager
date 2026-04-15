@@ -10,14 +10,57 @@ import { useTheme } from "../../components/ThemeContext";
 import { useUserBuildings } from "../hooks/UseUserBuildings";
 import { useLocalUser } from "../hooks/UseLocalUser";
 
+import {
+  FileText,
+  Settings,
+  Building,
+  CalendarDays,
+  User,
+  Circle,
+  CheckCircle2,
+} from "lucide-react";
+
 import "./styles/AddEvent.css";
 
 registerLocale("bg", bg);
 
 const STATUS_OPTIONS = [
-  { value: "ново", label: "🔵 Ново", color: "#3b82f6" },
-  { value: "изпълнено", label: "🟢 Изпълнено", color: "#22c55e" },
+  { value: "ново", label: "Ново", color: "#3b82f6", iconName: "circle" },
+  {
+    value: "изпълнено",
+    label: "Изпълнено",
+    color: "#22c55e",
+    iconName: "check-circle",
+  },
 ];
+
+const IconMap = {
+  circle: Circle,
+  "check-circle": CheckCircle2,
+  building: Building,
+  user: User,
+};
+
+const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
+  const IconComponent = IconMap[iconName];
+  const shouldShowIcon =
+    IconComponent &&
+    (context === "value" || (iconName !== "building" && iconName !== "user"));
+
+  return (
+    <div className="adev-select-item">
+      {shouldShowIcon && (
+        <IconComponent
+          size={16}
+          strokeWidth={2.5}
+          className="adev-select-icon"
+          style={{ color: color || "inherit" }}
+        />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+};
 
 function AddEvent() {
   const { isDarkMode } = useTheme();
@@ -25,7 +68,7 @@ function AddEvent() {
 
   const { user: currentUser } = useLocalUser();
   const { buildings, loading: loadingBuildings } = useUserBuildings(
-    currentUser?.id
+    currentUser?.id,
   );
 
   const [users, setUsers] = useState([]);
@@ -56,6 +99,7 @@ function AddEvent() {
     return buildings.map((b) => ({
       value: b.id,
       label: `${b.name}, ${b.address}`,
+      iconName: "building",
     }));
   }, [buildings]);
 
@@ -63,6 +107,7 @@ function AddEvent() {
     return users.map((u) => ({
       value: u.id,
       label: `${u.first_name} ${u.last_name}`,
+      iconName: "user",
     }));
   }, [users]);
 
@@ -82,8 +127,8 @@ function AddEvent() {
       borderColor: state.isFocused
         ? "var(--au-primary)"
         : isDarkMode
-        ? "#334155"
-        : "#cbd5e1",
+          ? "#334155"
+          : "#cbd5e1",
       color: isDarkMode ? "#f1f5f9" : "#1e293b",
       minHeight: "42px",
       borderRadius: "8px",
@@ -117,9 +162,11 @@ function AddEvent() {
         cursor: "pointer",
       };
     },
-    singleValue: (base) => ({
+    singleValue: (base, state) => ({
       ...base,
-      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+      color:
+        state.selectProps.value?.color || (isDarkMode ? "#f1f5f9" : "#1e293b"),
+      fontWeight: state.selectProps.value?.color ? 600 : 400,
     }),
     input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#1e293b" }),
     placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
@@ -189,7 +236,14 @@ function AddEvent() {
 
       <div className="adev-grid">
         <div className="adev-card">
-          <div className="adev-section-title">📝 Описание на задачата</div>
+          <div className="adev-section-title">
+            <FileText
+              size={20}
+              strokeWidth={2.5}
+              className="adev-section-icon"
+            />
+            Описание на задачата
+          </div>
 
           <div className="adev-form-group">
             <label>Относно *</label>
@@ -213,7 +267,14 @@ function AddEvent() {
         </div>
 
         <div className="adev-card" style={{ height: "fit-content" }}>
-          <div className="adev-section-title">⚙️ Детайли за изпълнение</div>
+          <div className="adev-section-title">
+            <Settings
+              size={20}
+              strokeWidth={2.5}
+              className="adev-section-icon"
+            />
+            Детайли за изпълнение
+          </div>
 
           <div className="adev-form-group">
             <label>Сграда *</label>
@@ -222,10 +283,19 @@ function AddEvent() {
               value={getSelectValue(buildingOptions, newEvent.building_id)}
               isLoading={loadingBuildings}
               onChange={(opt) => handleChange("building_id", opt?.value)}
-              placeholder="Избери сграда..."
+              placeholder={
+                <div className="adev-select-item">
+                  <Building
+                    size={16}
+                    strokeWidth={2.5}
+                    className="adev-select-icon"
+                  />
+                  <span>Избери сграда...</span>
+                </div>
+              }
               styles={selectStyles}
               noOptionsMessage={() => "Няма намерени"}
-              menuPortalTarget={document.body}
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
 
@@ -237,13 +307,16 @@ function AddEvent() {
               onChange={(opt) => handleChange("status", opt?.value)}
               styles={selectStyles}
               isSearchable={false}
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
 
           <div className="adev-form-group" style={{ marginTop: "1rem" }}>
             <label>Дата и час на изпълнение</label>
             <div className="custom-datepicker-wrapper">
-              <span className="calendar-icon">📅</span>
+              <span className="calendar-icon">
+                <CalendarDays size={18} strokeWidth={2.5} />
+              </span>
               <DatePicker
                 selected={newEvent.completion_date}
                 onChange={(date) => handleChange("completion_date", date)}
@@ -269,9 +342,19 @@ function AddEvent() {
               options={assignedOptions}
               value={getSelectValue(assignedOptions, newEvent.assigned_to)}
               onChange={(opt) => handleChange("assigned_to", opt?.value)}
-              placeholder="Избери служител..."
+              placeholder={
+                <div className="adev-select-item">
+                  <User
+                    size={16}
+                    strokeWidth={2.5}
+                    className="adev-select-icon"
+                  />
+                  <span>Избери служител...</span>
+                </div>
+              }
               styles={selectStyles}
               isSearchable={false}
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
         </div>

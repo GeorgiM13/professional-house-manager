@@ -8,6 +8,19 @@ import { useTheme } from "../components/ThemeContext";
 import { generateDOCX } from "./utils/eventNotices";
 import "./styles/AdminEvents.css";
 
+import {
+  CalendarDays,
+  Building,
+  Megaphone,
+  CircleDollarSign,
+  Wrench,
+  Sparkles,
+  FileText,
+  CheckCircle2,
+  Circle,
+  Loader2,
+} from "lucide-react";
+
 const CountUp = ({ value, duration = 800, decimals = 0 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   useEffect(() => {
@@ -47,20 +60,39 @@ const MONTH_NAMES = {
   12: "Декември",
 };
 const CURRENT_YEAR = new Date().getFullYear();
+
 const YEAR_OPTIONS = [
-  { value: "all", label: "📅 Всички години" },
+  { value: "all", label: "Всички години", iconType: "calendar" },
   ...Array.from({ length: 5 }, (_, i) => ({
     value: CURRENT_YEAR - i,
     label: `${CURRENT_YEAR - i} година`,
   })),
 ];
+
 const MONTH_OPTIONS = [
-  { value: "all", label: "📅 Всички месеци" },
+  { value: "all", label: "Всички месеци", iconType: "calendar" },
   ...Object.entries(MONTH_NAMES).map(([key, name]) => ({
     value: key,
     label: name,
   })),
 ];
+
+const customFormatOptionLabel = ({ label, iconType }, { context }) => {
+  let Icon = null;
+  if (iconType === "calendar") Icon = CalendarDays;
+  if (iconType === "building") Icon = Building;
+
+  const shouldShowIcon = Icon && context === "value";
+
+  return (
+    <div className="adev-select-item">
+      {shouldShowIcon && (
+        <Icon size={16} strokeWidth={2.5} className="adev-select-icon" />
+      )}
+      <span>{label}</span>
+    </div>
+  );
+};
 
 const CUSTOM_SELECT_STYLES = {
   control: (provided, state) => ({
@@ -68,13 +100,15 @@ const CUSTOM_SELECT_STYLES = {
     backgroundColor: "var(--ae-bg-card)",
     borderColor: state.isFocused ? "var(--ae-accent)" : "var(--ae-border)",
     borderRadius: "8px",
+    minHeight: "42px",
     color: "var(--ae-text-main)",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--ae-accent-light)" : "none",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
   }),
   menu: (provided) => ({
     ...provided,
     zIndex: 9999,
     backgroundColor: "var(--ae-bg-card)",
+    border: "1px solid var(--ae-border)",
   }),
   singleValue: (provided) => ({ ...provided, color: "var(--ae-text-main)" }),
   option: (provided, state) => ({
@@ -82,21 +116,49 @@ const CUSTOM_SELECT_STYLES = {
     backgroundColor: state.isSelected
       ? "var(--ae-accent)"
       : state.isFocused
-      ? "var(--ae-bg-page)"
-      : "transparent",
+        ? "var(--ae-hover)"
+        : "transparent",
     color: state.isSelected ? "white" : "var(--ae-text-main)",
     cursor: "pointer",
   }),
 };
 
-const getEventIcon = (subject, status) => {
+const getEventIconData = (subject, status) => {
   const sub = subject?.toLowerCase() || "";
-  if (sub.includes("събрание")) return "📢";
-  if (sub.includes("каса") || sub.includes("такси") || sub.includes("плащане"))
-    return "💰";
-  if (sub.includes("ремонт")) return "🛠️";
-  if (sub.includes("почистване")) return "🧹";
-  return "📅";
+
+  if (sub.includes("събрание")) {
+    return {
+      icon: <Megaphone size={18} strokeWidth={2.5} />,
+      colorClass: "icon-purple",
+    };
+  }
+  if (
+    sub.includes("каса") ||
+    sub.includes("такси") ||
+    sub.includes("плащане")
+  ) {
+    return {
+      icon: <CircleDollarSign size={18} strokeWidth={2.5} />,
+      colorClass: "icon-green",
+    };
+  }
+  if (sub.includes("ремонт")) {
+    return {
+      icon: <Wrench size={18} strokeWidth={2.5} />,
+      colorClass: "icon-orange",
+    };
+  }
+  if (sub.includes("почистване")) {
+    return {
+      icon: <Sparkles size={18} strokeWidth={2.5} />,
+      colorClass: "icon-cyan",
+    };
+  }
+
+  return {
+    icon: <CalendarDays size={18} strokeWidth={2.5} />,
+    colorClass: "icon-blue",
+  };
 };
 
 export default function AdminEvents() {
@@ -119,13 +181,13 @@ export default function AdminEvents() {
 
   const buildingOptions = useMemo(
     () => [
-      { value: "all", label: "🏢 Всички сгради" },
+      { value: "all", label: "Всички сгради", iconType: "building" },
       ...buildings.map((b) => ({
         value: b.id,
         label: `${b.name}, ${b.address}`,
       })),
     ],
-    [buildings]
+    [buildings],
   );
 
   useEffect(() => {
@@ -136,7 +198,7 @@ export default function AdminEvents() {
         let query = supabase
           .from("events")
           .select(
-            `id, status, subject, completion_date, created_at, building_id, building:building_id(name, address), assigned_user:assigned_to(first_name, last_name)`
+            `id, status, subject, completion_date, created_at, building_id, building:building_id(name, address), assigned_user:assigned_to(first_name, last_name)`,
           )
           .order("completion_date", { ascending: false });
 
@@ -145,7 +207,7 @@ export default function AdminEvents() {
         else if (buildings.length > 0)
           query = query.in(
             "building_id",
-            buildings.map((b) => b.id)
+            buildings.map((b) => b.id),
           );
 
         const { data, error } = await query;
@@ -155,32 +217,32 @@ export default function AdminEvents() {
         let tableData = [...allData];
 
         if (filterToday) {
-            const todayStr = new Date().toDateString();
-            
-            tableData = tableData.filter((e) => {
-               const d = new Date(e.completion_date || e.created_at);
-               return d.toDateString() === todayStr;
-            });
-  
+          const todayStr = new Date().toDateString();
+
+          tableData = tableData.filter((e) => {
+            const d = new Date(e.completion_date || e.created_at);
+            return d.toDateString() === todayStr;
+          });
         } else {
-            if (filterYear !== "all") {
+          if (filterYear !== "all") {
             tableData = tableData.filter(
-                (e) =>
+              (e) =>
                 new Date(e.completion_date || e.created_at).getFullYear() ===
-                Number(filterYear)
+                Number(filterYear),
             );
-            }
-            if (filterMonth !== "all") {
+          }
+          if (filterMonth !== "all") {
             tableData = tableData.filter(
-                (e) =>
+              (e) =>
                 new Date(e.completion_date || e.created_at).getMonth() + 1 ===
-                Number(filterMonth)
+                Number(filterMonth),
             );
-            }
+          }
         }
 
         let statsData = [];
-        const isFilterActive = filterToday || filterYear !== "all" || filterMonth !== "all";
+        const isFilterActive =
+          filterToday || filterYear !== "all" || filterMonth !== "all";
         if (isFilterActive) {
           statsData = tableData;
         } else {
@@ -216,7 +278,7 @@ export default function AdminEvents() {
   const calculateStats = (data) => {
     const total = data.length;
     const meetings = data.filter((e) =>
-      e.subject?.toLowerCase().includes("събрание")
+      e.subject?.toLowerCase().includes("събрание"),
     ).length;
     const fees = data.filter((e) => {
       const sub = e.subject?.toLowerCase() || "";
@@ -243,10 +305,8 @@ export default function AdminEvents() {
     return (
       <>
         <span className="date-desktop">
-          {day}.{month}.{yearFull} г.{" "}
-          <span style={{ color: "var(--ae-text-sec)", marginLeft: "4px" }}>
-            {time}
-          </span>
+          {day}.{month}.{yearFull} г.
+          <span className="dm-time-desktop">{time}</span>
         </span>
 
         <div className="date-mobile">
@@ -261,7 +321,7 @@ export default function AdminEvents() {
 
   const paginatedEvents = events.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
   const totalPages = Math.ceil(events.length / pageSize);
   const getSelectValue = (options, value) =>
@@ -273,8 +333,8 @@ export default function AdminEvents() {
 
     setEvents((prev) =>
       prev.map((ev) =>
-        ev.id === eventId ? { ...ev, status: targetStatus } : ev
-      )
+        ev.id === eventId ? { ...ev, status: targetStatus } : ev,
+      ),
     );
 
     try {
@@ -290,8 +350,8 @@ export default function AdminEvents() {
 
       setEvents((prev) =>
         prev.map((ev) =>
-          ev.id === eventId ? { ...ev, status: currentStatus } : ev
-        )
+          ev.id === eventId ? { ...ev, status: currentStatus } : ev,
+        ),
       );
     }
   };
@@ -310,7 +370,7 @@ export default function AdminEvents() {
           <p className="adev-subtitle">Управление на задачи и събрания</p>
         </div>
         <div className="adev-header-right">
-          <div style={{ width: "250px" }}>
+          <div className="adev-filter-building">
             <Select
               options={buildingOptions}
               value={getSelectValue(buildingOptions, selectedBuilding)}
@@ -318,6 +378,7 @@ export default function AdminEvents() {
               styles={CUSTOM_SELECT_STYLES}
               placeholder="Изберете сграда"
               isSearchable={true}
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
           <button
@@ -331,7 +392,9 @@ export default function AdminEvents() {
 
       <div className="adev-stats-grid">
         <div className="adev-stat-card blue">
-          <div className="adev-stat-icon">📅</div>
+          <div className="adev-stat-icon icon-blue">
+            <CalendarDays size={24} strokeWidth={2.5} />
+          </div>
           <div className="adev-stat-info">
             <span className="adev-stat-label">
               {filterYear === "all" && filterMonth === "all"
@@ -344,7 +407,9 @@ export default function AdminEvents() {
           </div>
         </div>
         <div className="adev-stat-card purple">
-          <div className="adev-stat-icon">📢</div>
+          <div className="adev-stat-icon icon-purple">
+            <Megaphone size={24} strokeWidth={2.5} />
+          </div>
           <div className="adev-stat-info">
             <span className="adev-stat-label">Събрания</span>
             <span className="adev-stat-value">
@@ -353,7 +418,9 @@ export default function AdminEvents() {
           </div>
         </div>
         <div className="adev-stat-card green">
-          <div className="adev-stat-icon">💰</div>
+          <div className="adev-stat-icon icon-green">
+            <CircleDollarSign size={24} strokeWidth={2.5} />
+          </div>
           <div className="adev-stat-info">
             <span className="adev-stat-label">Събиране на такси</span>
             <span className="adev-stat-value">
@@ -366,14 +433,19 @@ export default function AdminEvents() {
       <div className="adev-toolbar">
         <h3>Списък събития</h3>
         <div className="adev-filters-right">
-            <button 
-            className={`adev-today-toggle ${filterToday ? 'active' : ''}`}
+          <button
+            className={`adev-today-toggle ${filterToday ? "active" : ""}`}
             onClick={() => setFilterToday(!filterToday)}
             title="Покажи събития само за днес"
           >
-            {filterToday ? "✅ Днес" : "📅 Днес"}
+            {filterToday ? (
+              <CheckCircle2 size={16} strokeWidth={2.5} />
+            ) : (
+              <CalendarDays size={16} strokeWidth={2.5} />
+            )}
+            Днес
           </button>
-          <div style={{ width: "160px" }}>
+          <div className="adev-filter-date">
             <Select
               options={YEAR_OPTIONS}
               value={getSelectValue(YEAR_OPTIONS, filterYear)}
@@ -381,9 +453,10 @@ export default function AdminEvents() {
               styles={CUSTOM_SELECT_STYLES}
               isSearchable={false}
               placeholder="Година"
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
-          <div style={{ width: "160px" }}>
+          <div className="adev-filter-date">
             <Select
               options={MONTH_OPTIONS}
               value={getSelectValue(MONTH_OPTIONS, filterMonth)}
@@ -391,6 +464,7 @@ export default function AdminEvents() {
               styles={CUSTOM_SELECT_STYLES}
               isSearchable={false}
               placeholder="Месец"
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
         </div>
@@ -398,7 +472,8 @@ export default function AdminEvents() {
 
       {loadingEvents ? (
         <div className="adev-loading">
-          <span className="adev-spinner">↻</span> Зареждане...
+          <Loader2 size={24} strokeWidth={2.5} className="adev-spinner-icon" />{" "}
+          Зареждане...
         </div>
       ) : (
         <>
@@ -411,7 +486,7 @@ export default function AdminEvents() {
                 <th>Дата на изпълнение</th>
                 <th>Статус</th>
                 <th>Възложено на</th>
-                <th style={{ textAlign: "right" }}>Действия</th>
+                <th className="adev-th-actions">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -429,7 +504,10 @@ export default function AdminEvents() {
                     statusClass = "st-new";
                   else if (s.includes("изпълнено") || s.includes("done"))
                     statusClass = "st-done";
-
+                  const eventIconData = getEventIconData(
+                    event.subject,
+                    event.status,
+                  );
                   return (
                     <tr
                       key={event.id}
@@ -441,10 +519,12 @@ export default function AdminEvents() {
                       </td>
 
                       <td data-label="Тема" className="adev-subject">
-                        <span className="adev-icon">
-                          {getEventIcon(event.subject, event.status)}
+                        <span
+                          className={`adev-icon ${eventIconData.colorClass}`}
+                        >
+                          {eventIconData.icon}
                         </span>
-                        {event.subject}
+                        <span>{event.subject}</span>
                       </td>
 
                       <td data-label="Сграда">{event.building?.name}</td>
@@ -471,8 +551,7 @@ export default function AdminEvents() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <span
-                          className={`mobile-status-badge ${statusClass}`}
-                          style={{ display: "none" }}
+                          className={`mobile-status-badge ${statusClass} hidden-badge`}
                         >
                           {event.status}
                         </span>
@@ -485,7 +564,7 @@ export default function AdminEvents() {
                             handleGenerateDocx(event);
                           }}
                         >
-                          📄
+                          <FileText size={18} strokeWidth={2.5} />
                         </button>
 
                         <button
@@ -498,7 +577,11 @@ export default function AdminEvents() {
                             toggleStatus(event.id, event.status);
                           }}
                         >
-                          {s === "изпълнено" ? "✅" : "⬜"}
+                          {s === "изпълнено" ? (
+                            <CheckCircle2 size={18} strokeWidth={2.5} />
+                          ) : (
+                            <Circle size={18} strokeWidth={2.5} />
+                          )}
                         </button>
                       </td>
                     </tr>

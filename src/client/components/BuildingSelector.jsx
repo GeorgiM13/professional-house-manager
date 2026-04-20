@@ -1,7 +1,6 @@
 import React from 'react';
 import Select, { components } from 'react-select';
 
-// --- 1. SVG Икона за сграда ---
 const BuildingIcon = () => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -27,7 +26,6 @@ const BuildingIcon = () => (
   </svg>
 );
 
-// --- 2. Custom SingleValue ---
 const SingleValue = (props) => (
   <components.SingleValue {...props}>
     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -37,7 +35,6 @@ const SingleValue = (props) => (
   </components.SingleValue>
 );
 
-// --- 3. СТИЛОВЕ ---
 const customStyles = {
   control: (provided, state) => ({
     ...provided,
@@ -101,8 +98,6 @@ const customStyles = {
 
 const BuildingSelector = ({ buildings, value, onChange, singleLabel }) => {
   
-  // --- ЛОГИКА ЗА ЕДНА СГРАДА ---
-  // Ако потребителят има само една сграда (или 0), не показваме Select, а статичен Badge
   if (buildings.length === 1) {
     const b = buildings[0];
     return (
@@ -119,12 +114,11 @@ const BuildingSelector = ({ buildings, value, onChange, singleLabel }) => {
           Вашата сграда
         </span>
         
-        {/* Статичен контейнер, който прилича на селектора, но не се клика */}
         <div style={{
             backgroundColor: '#f1f5f9',
             border: '2px solid transparent',
             borderRadius: '10px',
-            padding: '12px 16px', // Малко по-плътно, защото няма стрелка
+            padding: '12px 16px',
             minWidth: '300px',
             maxWidth: '450px',
             display: 'flex',
@@ -132,7 +126,7 @@ const BuildingSelector = ({ buildings, value, onChange, singleLabel }) => {
             color: '#0f172a',
             fontWeight: '700',
             fontSize: '1rem',
-            cursor: 'default' // Курсорът не е pointer
+            cursor: 'default'
         }}>
            <BuildingIcon />
            <span>{b.name}, {b.address}</span>
@@ -141,7 +135,6 @@ const BuildingSelector = ({ buildings, value, onChange, singleLabel }) => {
     );
   }
 
-  // --- ЛОГИКА ЗА ПОВЕЧЕ ОТ ЕДНА СГРАДА (Стандартен Select) ---
   
   const options = buildings.map(b => ({
     value: b.id,

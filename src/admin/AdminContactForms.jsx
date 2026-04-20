@@ -3,6 +3,17 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { supabase } from "../supabaseClient";
 import { useTheme } from "../components/ThemeContext";
+import {
+  Calendar,
+  Mail,
+  TrendingUp,
+  User,
+  Phone,
+  Eye,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import "./styles/AdminContactForms.css";
 
 const CountUp = ({ value, duration = 800, decimals = 0 }) => {
@@ -30,10 +41,10 @@ const CountUp = ({ value, duration = 800, decimals = 0 }) => {
 };
 
 const PERIOD_OPTIONS = [
-  { value: "all", label: "📅 Всички периоди" },
-  { value: "today", label: "📅 Днес" },
-  { value: "week", label: "📅 Тази седмица" },
-  { value: "month", label: "📅 Този месец" },
+  { value: "all", label: "Всички периоди", icon: Calendar },
+  { value: "today", label: "Днес", icon: Calendar },
+  { value: "week", label: "Тази седмица", icon: Calendar },
+  { value: "month", label: "Този месец", icon: Calendar },
 ];
 
 const CUSTOM_SELECT_STYLES = {
@@ -56,12 +67,19 @@ const CUSTOM_SELECT_STYLES = {
     backgroundColor: state.isSelected
       ? "var(--acf-accent)"
       : state.isFocused
-      ? "var(--acf-bg-page)"
-      : "transparent",
+        ? "var(--acf-bg-page)"
+        : "transparent",
     color: state.isSelected ? "white" : "var(--acf-text-main)",
     cursor: "pointer",
   }),
 };
+
+const customFormatOptionLabel = ({ label, icon: Icon }) => (
+  <div className="select-option-container">
+    {Icon && <Icon size={18} strokeWidth={2.5} className="select-icon" />}
+    <span>{label}</span>
+  </div>
+);
 
 export default function AdminContactForms() {
   const navigate = useNavigate();
@@ -110,10 +128,10 @@ export default function AdminContactForms() {
 
     const total = data.length;
     const todayCount = data.filter(
-      (m) => new Date(m.created_at).toDateString() === todayStr
+      (m) => new Date(m.created_at).toDateString() === todayStr,
     ).length;
     const weekCount = data.filter(
-      (m) => new Date(m.created_at) >= startOfWeek
+      (m) => new Date(m.created_at) >= startOfWeek,
     ).length;
 
     setStats({ total, today: todayCount, week: weekCount });
@@ -126,7 +144,7 @@ export default function AdminContactForms() {
 
     if (filterPeriod === "today") {
       data = data.filter(
-        (m) => new Date(m.created_at).toDateString() === todayStr
+        (m) => new Date(m.created_at).toDateString() === todayStr,
       );
     } else if (filterPeriod === "week") {
       const startOfWeek = new Date(now);
@@ -149,7 +167,7 @@ export default function AdminContactForms() {
 
   const paginatedMessages = filteredMessages.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
   const totalPages = Math.ceil(filteredMessages.length / pageSize);
 
@@ -173,9 +191,7 @@ export default function AdminContactForms() {
       <>
         <span className="date-desktop">
           {day}.{month}.{yearFull} г.{" "}
-          <span style={{ color: "var(--acf-text-sec)", marginLeft: "4px" }}>
-            {time}
-          </span>
+          <span className="acf-date-time">{time}</span>
         </span>
 
         <div className="date-mobile">
@@ -200,7 +216,9 @@ export default function AdminContactForms() {
 
       <div className="acf-stats-grid">
         <div className="acf-stat-card blue">
-          <div className="acf-stat-icon">📨</div>
+          <div className="acf-stat-icon">
+            <Mail size={24} strokeWidth={2.5} className="acf-stat-svg" />
+          </div>
           <div className="acf-stat-info">
             <span className="acf-stat-label">Общо съобщения</span>
             <span className="acf-stat-value">
@@ -209,7 +227,9 @@ export default function AdminContactForms() {
           </div>
         </div>
         <div className="acf-stat-card purple">
-          <div className="acf-stat-icon">📅</div>
+          <div className="acf-stat-icon">
+            <Calendar size={24} strokeWidth={2.5} className="acf-stat-svg" />
+          </div>
           <div className="acf-stat-info">
             <span className="acf-stat-label">Днес</span>
             <span className="acf-stat-value">
@@ -218,7 +238,9 @@ export default function AdminContactForms() {
           </div>
         </div>
         <div className="acf-stat-card green">
-          <div className="acf-stat-icon">📈</div>
+          <div className="acf-stat-icon">
+            <TrendingUp size={24} strokeWidth={2.5} className="acf-stat-svg" />
+          </div>
           <div className="acf-stat-info">
             <span className="acf-stat-label">Тази седмица</span>
             <span className="acf-stat-value">
@@ -231,12 +253,13 @@ export default function AdminContactForms() {
       <div className="acf-toolbar">
         <h3>Списък съобщения</h3>
         <div className="acf-filters-right">
-          <div style={{ width: "220px" }}>
+          <div className="acf-filter-wrapper">
             <Select
               options={PERIOD_OPTIONS}
               value={getSelectValue(PERIOD_OPTIONS, filterPeriod)}
               onChange={(opt) => setFilterPeriod(opt.value)}
               styles={CUSTOM_SELECT_STYLES}
+              formatOptionLabel={customFormatOptionLabel}
               isSearchable={false}
               placeholder="Период"
             />
@@ -246,7 +269,8 @@ export default function AdminContactForms() {
 
       {loading ? (
         <div className="acf-loading">
-          <span className="acf-spinner">↻</span> Зареждане...
+          <Loader2 size={24} strokeWidth={2.5} className="acf-spinner-icon" />
+          <span>Зареждане...</span>
         </div>
       ) : (
         <>
@@ -258,7 +282,6 @@ export default function AdminContactForms() {
                 <th>Контакти</th>
                 <th>Съобщение</th>
                 <th>Дата</th>
-                <th style={{ textAlign: "right" }}>Действие</th>
               </tr>
             </thead>
             <tbody>
@@ -280,13 +303,27 @@ export default function AdminContactForms() {
                     </td>
 
                     <td data-label="Подател" className="acf-sender">
-                      <span className="acf-icon">👤</span>
+                      <User size={16} strokeWidth={2.5} className="acf-icon" />
                       {msg.first_name} {msg.last_name}
                     </td>
 
                     <td data-label="Контакти" className="acf-contacts">
-                      <div className="contact-row">✉️ {msg.email}</div>
-                      <div className="contact-row">📞 {msg.phone}</div>
+                      <div className="contact-row">
+                        <Mail
+                          size={14}
+                          strokeWidth={2.5}
+                          className="acf-icon-sm"
+                        />
+                        {msg.email}
+                      </div>
+                      <div className="contact-row">
+                        <Phone
+                          size={14}
+                          strokeWidth={2.5}
+                          className="acf-icon-sm"
+                        />
+                        {msg.phone}
+                      </div>
                     </td>
 
                     <td data-label="Съобщение" className="acf-message-cell">
@@ -294,19 +331,6 @@ export default function AdminContactForms() {
                     </td>
 
                     <td data-label="Дата">{formatDate(msg.created_at)}</td>
-
-                    <td data-label="Действие" className="acf-actions">
-                      <button
-                        className="action-btn view"
-                        title="Преглед"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/admin/message/${msg.id}`);
-                        }}
-                      >
-                        👁️
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}
@@ -316,19 +340,23 @@ export default function AdminContactForms() {
           {totalPages > 1 && (
             <div className="acf-pagination">
               <button
+                className="acf-pagination-btn"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
               >
-                ⬅ Предишна
+                <ChevronLeft size={18} strokeWidth={2.5} />
+                Предишна
               </button>
-              <span>
+              <span className="acf-pagination-info">
                 Страница {currentPage} от {totalPages}
               </span>
               <button
+                className="acf-pagination-btn"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
               >
-                Следваща ➡
+                Следваща
+                <ChevronRight size={18} strokeWidth={2.5} />
               </button>
             </div>
           )}

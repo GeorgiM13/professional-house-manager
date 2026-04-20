@@ -4,6 +4,14 @@ import { supabase } from "../../supabaseClient";
 import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useTheme } from "../../components/ThemeContext";
+import {
+  Building,
+  Settings,
+  Trash2,
+  Save,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import "./styles/EditBuilding.css";
 
 function EditBuilding() {
@@ -91,7 +99,7 @@ function EditBuilding() {
     } else {
       setAlert({
         show: true,
-        message: "✅ Сградата е обновена успешно!",
+        message: "Сградата е обновена успешно!",
         type: "success",
       });
       setTimeout(() => navigate("/admin/buildings"), 1500);
@@ -112,7 +120,7 @@ function EditBuilding() {
     } else {
       setAlert({
         show: true,
-        message: "🗑️ Сградата е изтрита успешно!",
+        message: "Сградата е изтрита успешно!",
         type: "success",
       });
       setTimeout(() => navigate("/admin/buildings"), 1500);
@@ -125,14 +133,9 @@ function EditBuilding() {
   if (loading) {
     return (
       <div className={`edb-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "4rem",
-            color: "var(--au-text-sec)",
-          }}
-        >
-          Зареждане на данни...
+        <div className="edb-loading-state">
+          <Loader2 className="edb-spin" size={32} strokeWidth={2.5} />
+          <span>Зареждане на данни...</span>
         </div>
       </div>
     );
@@ -146,12 +149,16 @@ function EditBuilding() {
           <p>Промяна на параметрите на етажната собственост</p>
         </div>
         <button className="edb-btn edb-btn-secondary" onClick={goBack}>
+          <ArrowLeft size={18} strokeWidth={2.5} />
           Назад
         </button>
       </div>
 
       <div className="edb-card">
-        <div className="edb-section-title">🏢 Основна информация</div>
+        <div className="edb-section-title">
+          <Building className="edb-icon-blue" size={20} strokeWidth={2.5} />
+          <span>Основна информация</span>
+        </div>
 
         <div className="edb-grid-row">
           <div className="edb-form-group">
@@ -180,8 +187,9 @@ function EditBuilding() {
           </div>
         </div>
 
-        <div className="edb-section-title" style={{ marginTop: "1rem" }}>
-          📊 Параметри
+        <div className="edb-section-title edb-mt-2">
+          <Settings className="edb-icon-purple" size={20} strokeWidth={2.5} />
+          <span>Параметри</span>
         </div>
 
         <div className="edb-grid-row">
@@ -242,13 +250,19 @@ function EditBuilding() {
             onClick={() => setShowConfirm(true)}
             disabled={saving}
           >
-            🗑️ Изтрий сградата
+            <Trash2 size={18} strokeWidth={2.5} />
+            Изтрий сградата
           </button>
           <button
             className="edb-btn edb-btn-primary"
             onClick={handleUpdate}
             disabled={saving}
           >
+            {saving ? (
+              <Loader2 className="edb-spin" size={18} strokeWidth={2.5} />
+            ) : (
+              <Save size={18} strokeWidth={2.5} />
+            )}
             {saving ? "Запазване..." : "Запази промените"}
           </button>
         </div>

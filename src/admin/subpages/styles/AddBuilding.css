@@ -7,7 +7,9 @@
   min-height: 100vh;
   background-color: var(--au-bg-page, #f8fafc);
   color: var(--au-text-main, #1e293b);
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
 .adb-container.au-dark {
@@ -61,6 +63,14 @@
   gap: 0.5rem;
 }
 
+.adb-mt {
+  margin-top: 1rem;
+}
+
+.adb-section-title .section-icon {
+  color: var(--au-primary, #3b82f6);
+}
+
 .adb-grid-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -79,6 +89,13 @@
   color: var(--au-text-sec);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adb-form-group label svg {
+  color: var(--au-primary, #3b82f6);
 }
 
 .adb-input {
@@ -131,6 +148,10 @@
   cursor: pointer;
   border: 1px solid transparent;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .adb-btn:hover {
@@ -169,6 +190,7 @@
   border-color: #94a3b8;
   color: #ffffff;
 }
+
 @media (max-width: 768px) {
   .adb-container {
     padding: 1rem;

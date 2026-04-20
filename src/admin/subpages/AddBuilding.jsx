@@ -3,6 +3,17 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
+import {
+  Building2,
+  MapPin,
+  Hash,
+  Home,
+  Car,
+  Briefcase,
+  Save,
+  ArrowLeft,
+  Sliders,
+} from "lucide-react";
 import "./styles/AddBuilding.css";
 
 function AddBuilding() {
@@ -88,16 +99,23 @@ function AddBuilding() {
           <p>Въведете данни за новата етажна собственост</p>
         </div>
         <button className="adb-btn adb-btn-secondary" onClick={goBack}>
+          <ArrowLeft size={18} strokeWidth={2.5} />
           Назад
         </button>
       </div>
 
       <div className="adb-card">
-        <div className="adb-section-title">🏢 Основна информация</div>
+        <div className="adb-section-title">
+          <Building2 className="section-icon" size={20} strokeWidth={2.5} />
+          Основна информация
+        </div>
 
         <div className="adb-grid-row">
           <div className="adb-form-group">
-            <label>Име на сградата *</label>
+            <label>
+              <Building2 size={16} strokeWidth={2.5} />
+              Име на сградата *
+            </label>
             <input
               name="name"
               className="adb-input"
@@ -108,7 +126,10 @@ function AddBuilding() {
             {errors.name && <span className="error-msg">{errors.name}</span>}
           </div>
           <div className="adb-form-group">
-            <label>Адрес *</label>
+            <label>
+              <MapPin size={16} strokeWidth={2.5} />
+              Адрес *
+            </label>
             <input
               name="address"
               className="adb-input"
@@ -122,13 +143,17 @@ function AddBuilding() {
           </div>
         </div>
 
-        <div className="adb-section-title" style={{ marginTop: "1rem" }}>
-          📊 Параметри
+        <div className="adb-section-title adb-mt">
+          <Sliders className="section-icon" size={20} strokeWidth={2.5} />
+          Параметри
         </div>
 
         <div className="adb-grid-row">
           <div className="adb-form-group">
-            <label>Брой етажи *</label>
+            <label>
+              <Hash size={16} strokeWidth={2.5} />
+              Брой етажи *
+            </label>
             <input
               name="floors"
               className="adb-input"
@@ -142,7 +167,10 @@ function AddBuilding() {
             )}
           </div>
           <div className="adb-form-group">
-            <label>Брой апартаменти</label>
+            <label>
+              <Home size={16} strokeWidth={2.5} />
+              Брой апартаменти
+            </label>
             <input
               name="apartments"
               className="adb-input"
@@ -156,7 +184,10 @@ function AddBuilding() {
 
         <div className="adb-grid-row">
           <div className="adb-form-group">
-            <label>Брой гаражи</label>
+            <label>
+              <Car size={16} strokeWidth={2.5} />
+              Брой гаражи
+            </label>
             <input
               name="garages"
               className="adb-input"
@@ -167,7 +198,10 @@ function AddBuilding() {
             />
           </div>
           <div className="adb-form-group">
-            <label>Брой офиси</label>
+            <label>
+              <Briefcase size={16} strokeWidth={2.5} />
+              Брой офиси
+            </label>
             <input
               name="offices"
               className="adb-input"
@@ -194,6 +228,7 @@ function AddBuilding() {
             onClick={handleSubmit}
             disabled={loading}
           >
+            <Save size={18} strokeWidth={2.5} />
             {loading ? "Запазване..." : "Добави сградата"}
           </button>
         </div>

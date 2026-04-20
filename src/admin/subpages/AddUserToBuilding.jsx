@@ -7,6 +7,7 @@ import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import { useUserBuildings } from "../hooks/UseUserBuildings";
 import { useLocalUser } from "../hooks/UseLocalUser";
+import { Home, CarFront, Briefcase } from "lucide-react";
 
 import "./styles/AddUserToBuilding.css";
 
@@ -30,7 +31,7 @@ function AddUserToBuilding() {
   const { user: currentUser } = useLocalUser();
 
   const { buildings, loading: loadingBuildings } = useUserBuildings(
-    currentUser?.id
+    currentUser?.id,
   );
 
   const [selectedUser, setSelectedUser] = useState(null);
@@ -61,7 +62,7 @@ function AddUserToBuilding() {
       .from("users")
       .select("id, first_name, second_name, last_name, email")
       .or(
-        `first_name.ilike.%${inputValue}%,last_name.ilike.%${inputValue}%,email.ilike.%${inputValue}%`
+        `first_name.ilike.%${inputValue}%,last_name.ilike.%${inputValue}%,email.ilike.%${inputValue}%`,
       )
       .limit(20);
 
@@ -213,7 +214,7 @@ function AddUserToBuilding() {
             }`}
             onClick={() => setSelectedType("apartment")}
           >
-            🏠 Апартамент
+            <Home size={18} strokeWidth={2.5} /> Апартамент
           </button>
           <button
             type="button"
@@ -222,7 +223,7 @@ function AddUserToBuilding() {
             }`}
             onClick={() => setSelectedType("garage")}
           >
-            🚗 Гараж
+            <CarFront size={18} strokeWidth={2.5} /> Гараж
           </button>
           <button
             type="button"
@@ -231,7 +232,7 @@ function AddUserToBuilding() {
             }`}
             onClick={() => setSelectedType("office")}
           >
-            💼 Офис
+            <Briefcase size={18} strokeWidth={2.5} /> Офис
           </button>
         </div>
 

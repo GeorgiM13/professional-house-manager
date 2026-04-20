@@ -5,7 +5,7 @@ import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useTheme } from "../../components/ThemeContext";
 import {
-  Building,
+  Building2,
   Settings,
   Trash2,
   Save,
@@ -156,7 +156,7 @@ function EditBuilding() {
 
       <div className="edb-card">
         <div className="edb-section-title">
-          <Building className="edb-icon-blue" size={20} strokeWidth={2.5} />
+          <Building2 className="edb-icon-blue" size={20} strokeWidth={2.5} />
           <span>Основна информация</span>
         </div>
 

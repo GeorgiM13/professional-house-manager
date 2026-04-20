@@ -5,7 +5,25 @@ import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import { useUserBuildings } from "../hooks/UseUserBuildings";
 import { useLocalUser } from "../hooks/UseLocalUser";
-import "./styles/Users.css";
+import {
+  Plus,
+  Search,
+  Building2,
+  Users,
+  DoorOpen,
+  Loader2,
+  Home,
+  Briefcase,
+  CarFront,
+  Store,
+  Package,
+  Phone,
+  User,
+  ChevronLeft,
+  ChevronRight,
+  Pointer,
+} from "lucide-react";
+import "./styles/BuildingUsers.css";
 
 const CountUp = ({ value, duration = 800 }) => {
   const [displayValue, setDisplayValue] = useState(0);
@@ -49,7 +67,7 @@ function BuildingUsers() {
     const total = filteredUnits.length;
     const residents = filteredUnits.reduce(
       (acc, curr) => acc + (curr.residents || 0),
-      0
+      0,
     );
     const empty = filteredUnits.filter((u) => !u.user_id).length;
     return { total, residents, empty };
@@ -100,8 +118,8 @@ function BuildingUsers() {
           (u) =>
             u.first_name?.toLowerCase().includes(lower) ||
             u.last_name?.toLowerCase().includes(lower) ||
-            u.number?.toString().includes(lower)
-        )
+            u.number?.toString().includes(lower),
+        ),
       );
     }
   }, [localSearch, units]);
@@ -136,7 +154,7 @@ function BuildingUsers() {
   const totalPages = Math.ceil(filteredUnits.length / PAGE_SIZE);
   const currentData = filteredUnits.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    currentPage * PAGE_SIZE,
   );
 
   const handlePageChange = (newPage) => {
@@ -157,131 +175,126 @@ function BuildingUsers() {
     label: `${b.name}, ${b.address}`,
   }));
 
-  const selectStyles = useMemo(
-    () => ({
-      control: (base, state) => ({
-        ...base,
-        backgroundColor: isDarkMode ? "#1e293b" : "white",
-        borderColor: state.isFocused
-          ? "#3b82f6"
-          : isDarkMode
-          ? "#334155"
-          : "#e2e8f0",
-        color: isDarkMode ? "#f1f5f9" : "#4a5568",
-        borderRadius: "8px",
-        minHeight: "42px",
-      }),
-      menu: (base) => ({
-        ...base,
-        backgroundColor: isDarkMode ? "#1e293b" : "white",
-        zIndex: 9999,
-      }),
-      option: (base, state) => ({
-        ...base,
-        backgroundColor: state.isSelected
-          ? "#3b82f6"
-          : state.isFocused
-          ? isDarkMode
-            ? "#334155"
-            : "#eff6ff"
-          : "transparent",
-        color: state.isSelected ? "white" : isDarkMode ? "#f1f5f9" : "#4a5568",
-        cursor: "pointer",
-      }),
-      singleValue: (base) => ({
-        ...base,
-        color: isDarkMode ? "#f1f5f9" : "#4a5568",
-      }),
-      input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#4a5568" }),
-    }),
-    [isDarkMode]
-  );
-
   const getBadgeClass = (type) => {
     switch (type) {
       case "apartment":
-        return "au-badge-apartment";
+        return "bu-badge-apartment";
       case "office":
-        return "au-badge-office";
+        return "bu-badge-office";
       case "garage":
-        return "au-badge-garage";
+        return "bu-badge-garage";
       case "retail":
-        return "au-badge-retail";
+        return "bu-badge-retail";
       default:
-        return "au-badge-garage";
+        return "bu-badge-garage";
     }
   };
 
   const getTypeIcon = (type) => {
-    const icons = { apartment: "🏠", office: "💼", garage: "🚗", retail: "🏪" };
-    return icons[type] || "📦";
+    switch (type) {
+      case "apartment":
+        return <Home size={14} strokeWidth={2.5} />;
+      case "office":
+        return <Briefcase size={14} strokeWidth={2.5} />;
+      case "garage":
+        return <CarFront size={14} strokeWidth={2.5} />;
+      case "retail":
+        return <Store size={14} strokeWidth={2.5} />;
+      default:
+        return <Package size={14} strokeWidth={2.5} />;
+    }
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type) {
+      case "apartment":
+        return "Апартамент";
+      case "office":
+        return "Офис";
+      case "garage":
+        return "Гараж";
+      case "retail":
+        return "Търговски обект";
+      default:
+        return type;
+    }
   };
 
   return (
-    <div className={`au-page ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="au-header">
-        <div className="au-header-left">
+    <div className={`bu-page ${isDarkMode ? "au-dark" : "au-light"}`}>
+      <div className="bu-header">
+        <div className="bu-header-left">
           <h1>Управление на Сгради</h1>
           <p>Списък на обекти, живущи и статистика по сгради</p>
         </div>
-        <div className="au-header-right">
+        <div className="bu-header-right">
           <button
-            className="au-btn-primary"
+            className="bu-btn-primary"
             onClick={() => navigate("/admin/add-user-to-building")}
           >
-            + Добави към сграда
+            <Plus size={18} strokeWidth={2.5} /> Добави към сграда
           </button>
         </div>
       </div>
 
-      <div className="au-toolbar">
-        <div style={{ width: "300px", maxWidth: "100%" }}>
+      <div className="bu-toolbar">
+        <div className="bu-select-wrapper">
           <Select
+            className="bu-react-select-container"
+            classNamePrefix="bu-react-select"
             options={buildingOptions}
             value={selectedBuilding}
             onChange={handleBuildingChange}
-            placeholder="🏢 Изберете сграда..."
-            styles={selectStyles}
+            placeholder="Изберете сграда..."
           />
         </div>
+
         {selectedBuilding && (
-          <input
-            type="text"
-            className="au-search-input"
-            style={{ flex: 1 }}
-            placeholder="🔍 Търси ап. № или име в тази сграда..."
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-          />
+          <div className="bu-search-wrapper">
+            <Search size={18} strokeWidth={2.5} className="bu-search-icon" />
+            <input
+              type="text"
+              className="bu-search-input"
+              placeholder="Търси ап. № или име в тази сграда..."
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+            />
+          </div>
         )}
       </div>
 
       {selectedBuilding ? (
         <>
-          <div className="au-stats-container">
-            <div className="au-stat-card blue">
-              <div className="au-stat-icon">🏢</div>
-              <div className="au-stat-content">
-                <span className="au-stat-label">Общо обекти</span>
-                <span className="au-stat-value">
+          <div className="bu-stats-container">
+            <div className="bu-stat-card blue">
+              <div className="bu-stat-icon">
+                <Building2 size={24} strokeWidth={2.5} />
+              </div>
+              <div className="bu-stat-content">
+                <span className="bu-stat-label">Общо обекти</span>
+                <span className="bu-stat-value">
                   <CountUp value={stats.total} />
                 </span>
               </div>
             </div>
-            <div className="au-stat-card purple">
-              <div className="au-stat-icon">👥</div>
-              <div className="au-stat-content">
-                <span className="au-stat-label">Живущи</span>
-                <span className="au-stat-value">
+            <div className="bu-stat-card purple">
+              <div className="bu-stat-icon">
+                <Users size={24} strokeWidth={2.5} />
+              </div>
+              <div className="bu-stat-content">
+                <span className="bu-stat-label">Живущи</span>
+                <span className="bu-stat-value">
                   <CountUp value={stats.residents} />
                 </span>
               </div>
             </div>
-            <div className="au-stat-card orange">
-              <div className="au-stat-icon">🚫</div>
-              <div className="au-stat-content">
-                <span className="au-stat-label">Свободни / Без собственик</span>
-                <span className="au-stat-value">
+            <div className="bu-stat-card orange">
+              <div className="bu-stat-icon">
+                <DoorOpen size={24} strokeWidth={2.5} />
+              </div>
+              <div className="bu-stat-content">
+                <span className="bu-stat-label">Свободни / Без собственик</span>
+                <span className="bu-stat-value">
                   <CountUp value={stats.empty} />
                 </span>
               </div>
@@ -289,18 +302,17 @@ function BuildingUsers() {
           </div>
 
           {loading ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "40px",
-                color: "var(--au-text-sec)",
-              }}
-            >
-              <span className="loading-spinner">↻</span> Зареждане на обекти...
+            <div className="bu-loading-state">
+              <Loader2
+                size={24}
+                strokeWidth={2.5}
+                className="bu-loading-spinner"
+              />{" "}
+              Зареждане на обекти...
             </div>
           ) : (
             <>
-              <table className="au-table desktop-view">
+              <table className="bu-table desktop-view">
                 <thead>
                   <tr>
                     <th>Обект</th>
@@ -308,18 +320,18 @@ function BuildingUsers() {
                     <th>Номер</th>
                     <th>Собственик</th>
                     <th>Площ</th>
-                    <th style={{ textAlign: "right" }}>Живущи</th>
+                    <th className="bu-text-right">Живущи</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: "center" }}>
+                      <td colSpan="6" className="bu-table-empty">
                         Няма намерени резултати.
                       </td>
                     </tr>
                   ) : (
-                    currentData.map((u, i) => (
+                    currentData.map((u) => (
                       <tr
                         key={`${u.type}-${u.id}`}
                         onClick={() =>
@@ -337,48 +349,34 @@ function BuildingUsers() {
                         }
                       >
                         <td>
-                          <span className={`au-badge ${getBadgeClass(u.type)}`}>
-                            {getTypeIcon(u.type)}{" "}
-                            {u.type === "apartment" ? "Апартамент" : u.type}
+                          <span className={`bu-badge ${getBadgeClass(u.type)}`}>
+                            {getTypeIcon(u.type)}
+                            {getTypeLabel(u.type)}
                           </span>
                         </td>
                         <td>{u.floor}</td>
-                        <td style={{ fontWeight: 700 }}>{u.number}</td>
+                        <td className="bu-font-bold">{u.number}</td>
                         <td>
                           {u.first_name ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                              }}
-                            >
-                              <span style={{ fontWeight: 500 }}>
+                            <div className="bu-owner-cell">
+                              <span className="bu-owner-name">
                                 {u.first_name} {u.last_name}
                               </span>
                               {u.phone && (
-                                <span
-                                  style={{
-                                    fontSize: "0.8em",
-                                    color: "var(--au-text-sec)",
-                                  }}
-                                >
-                                  📞 {u.phone}
+                                <span className="bu-owner-phone">
+                                  <Phone size={14} strokeWidth={2.5} />
+                                  {u.phone}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span
-                              style={{
-                                color: "var(--au-text-sec)",
-                                fontStyle: "italic",
-                              }}
-                            >
+                            <span className="bu-empty-state-text">
                               - Свободен -
                             </span>
                           )}
                         </td>
                         <td>{u.area} m²</td>
-                        <td style={{ textAlign: "right", fontWeight: 700 }}>
+                        <td className="bu-text-right bu-font-bold">
                           {u.residents}
                         </td>
                       </tr>
@@ -387,22 +385,14 @@ function BuildingUsers() {
                 </tbody>
               </table>
 
-              <div className="au-mobile-list mobile-view">
+              <div className="bu-mobile-list mobile-view">
                 {currentData.length === 0 ? (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      padding: "2rem",
-                      color: "var(--au-text-sec)",
-                    }}
-                  >
-                    Няма намерени резултати.
-                  </div>
+                  <div className="bu-table-empty">Няма намерени резултати.</div>
                 ) : (
-                  currentData.map((u, i) => (
+                  currentData.map((u) => (
                     <div
                       key={`${u.type}-${u.id}`}
-                      className="au-mobile-card"
+                      className="bu-mobile-card"
                       onClick={() =>
                         navigate(`/admin/edit-user/${u.user_id}`, {
                           state: {
@@ -417,44 +407,33 @@ function BuildingUsers() {
                         })
                       }
                     >
-                      <div className="au-card-header">
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <span style={{ fontSize: "1.2rem" }}>
+                      <div className="bu-card-header">
+                        <div className="bu-card-header-left">
+                          <span className="bu-card-icon-large">
                             {getTypeIcon(u.type)}
                           </span>
-                          <span className="au-card-title">№ {u.number}</span>
+                          <span className="bu-card-title">№ {u.number}</span>
                         </div>
-                        <span
-                          style={{
-                            fontSize: "0.9rem",
-                            color: "var(--au-text-sec)",
-                          }}
-                        >
-                          Ет. {u.floor}
-                        </span>
+                        <span className="bu-card-floor">Ет. {u.floor}</span>
                       </div>
-                      <div
-                        className="au-card-subtitle"
-                        style={{ marginTop: "5px" }}
-                      >
+
+                      <div className="bu-card-subtitle">
                         {u.first_name ? (
                           <>
-                            👤 {u.first_name} {u.last_name}
+                            <User size={16} strokeWidth={2.5} />
+                            <span>
+                              {u.first_name} {u.last_name}
+                            </span>
                           </>
                         ) : (
-                          <span style={{ fontStyle: "italic" }}>
+                          <span className="bu-empty-state-text">
                             Няма собственик
                           </span>
                         )}
                       </div>
-                      <div className="au-card-footer">
-                        <span style={{ fontWeight: 600 }}>
+
+                      <div className="bu-card-footer">
+                        <span className="bu-font-bold">
                           {u.residents} живущи
                         </span>
                         <span>{u.area} m²</span>
@@ -465,12 +444,12 @@ function BuildingUsers() {
               </div>
 
               {totalPages > 1 && (
-                <div className="au-pagination">
+                <div className="bu-pagination">
                   <button
                     disabled={currentPage === 1}
                     onClick={() => handlePageChange(currentPage - 1)}
                   >
-                    ⬅ Предишна
+                    <ChevronLeft size={16} strokeWidth={2.5} /> Предишна
                   </button>
                   <span>
                     Страница {currentPage} от {totalPages}
@@ -479,7 +458,7 @@ function BuildingUsers() {
                     disabled={currentPage === totalPages}
                     onClick={() => handlePageChange(currentPage + 1)}
                   >
-                    Следваща ➡
+                    Следваща <ChevronRight size={16} strokeWidth={2.5} />
                   </button>
                 </div>
               )}
@@ -487,16 +466,16 @@ function BuildingUsers() {
           )}
         </>
       ) : (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "4rem",
-            color: "var(--au-text-sec)",
-            fontStyle: "italic",
-          }}
-        >
-          👆 Изберете сграда от менюто, за да видите списък с обекти и
-          статистика.
+        <div className="bu-no-building-selected">
+          <Pointer
+            size={32}
+            strokeWidth={2.5}
+            className="bu-no-building-icon"
+          />
+          <p>
+            Изберете сграда от менюто, за да видите списък с обекти и
+            статистика.
+          </p>
         </div>
       )}
     </div>

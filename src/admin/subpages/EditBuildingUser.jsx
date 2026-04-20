@@ -5,6 +5,7 @@ import { supabase } from "../../supabaseClient";
 import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
 import { useTheme } from "../../components/ThemeContext";
+import { FileText, Building2, Trash2 } from "lucide-react";
 import "./styles/EditBuildingUser.css";
 
 const TABLE_MAP = {
@@ -13,11 +14,12 @@ const TABLE_MAP = {
   garage: "garages",
   retail: "retails",
 };
+
 const TYPE_LABELS = {
   apartment: "Апартамент",
   office: "Офис",
   garage: "Гараж",
-  retail: "Ритейл",
+  retail: "Търговски обект",
 };
 
 function EditBuildingUser() {
@@ -85,7 +87,7 @@ function EditBuildingUser() {
         let query = supabase
           .from(tableName)
           .select(
-            `*, buildings(name, address), users(id, first_name, last_name, email)`
+            `*, buildings(name, address), users(id, first_name, last_name, email)`,
           );
 
         if (specificPropertyId) {
@@ -144,7 +146,7 @@ function EditBuildingUser() {
       .from("users")
       .select("id, first_name, last_name, email")
       .or(
-        `first_name.ilike.%${inputValue}%,last_name.ilike.%${inputValue}%,email.ilike.%${inputValue}%`
+        `first_name.ilike.%${inputValue}%,last_name.ilike.%${inputValue}%,email.ilike.%${inputValue}%`,
       )
       .limit(20);
     return (data || []).map((u) => ({
@@ -180,7 +182,7 @@ function EditBuildingUser() {
         .eq("id", propertyData.id);
       if (error) throw error;
 
-      setAlert({ show: true, message: "✅ Запазено!", type: "success" });
+      setAlert({ show: true, message: "Успешно запазено!", type: "success" });
       setTimeout(() => goBack(), 1000);
     } catch (err) {
       setAlert({
@@ -216,45 +218,8 @@ function EditBuildingUser() {
     }
   };
 
-  const selectStyles = {
-    control: (base, state) => ({
-      ...base,
-      background: isDarkMode ? "var(--au-bg-page)" : "white",
-      borderColor: state.isFocused ? "var(--au-primary)" : "var(--au-border)",
-      color: "var(--au-text-main)",
-      minHeight: "42px",
-    }),
-    menu: (base) => ({
-      ...base,
-      background: isDarkMode ? "#1e293b" : "white",
-      zIndex: 999,
-    }),
-    option: (base, state) => ({
-      ...base,
-      background: state.isFocused
-        ? isDarkMode
-          ? "#334155"
-          : "#eff6ff"
-        : "transparent",
-      color: isDarkMode ? "#f1f5f9" : "#334155",
-      cursor: "pointer",
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: isDarkMode ? "#f1f5f9" : "#334155",
-    }),
-    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#334155" }),
-  };
-
   if (fetching)
-    return (
-      <div
-        className="loading-text"
-        style={{ padding: "2rem", textAlign: "center" }}
-      >
-        Зареждане данни за имота...
-      </div>
-    );
+    return <div className="ebu-loading">Зареждане данни за имота...</div>;
 
   return (
     <div className={`ebu-container ${isDarkMode ? "au-dark" : "au-light"}`}>
@@ -270,27 +235,24 @@ function EditBuildingUser() {
 
       <div className="ebu-grid">
         <div className="ebu-card">
-          <div className="ebu-card-title">📝 Данни за имота</div>
+          <div className="ebu-card-title">
+            <FileText size={20} strokeWidth={2.5} /> Данни за имота
+          </div>
           <div className="ebu-form-group">
             <label>Собственик / Живущ</label>
             <AsyncSelect
+              className="ebu-react-select-container"
+              classNamePrefix="ebu-react-select"
               cacheOptions
               defaultOptions
               loadOptions={loadUsers}
               value={selectedOwner}
               onChange={setSelectedOwner}
-              styles={selectStyles}
               placeholder="Търси собственик..."
               noOptionsMessage={() => "Няма намерени"}
             />
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className="ebu-form-row">
             <div className="ebu-form-group">
               <label>Номер (№)</label>
               <input
@@ -310,13 +272,7 @@ function EditBuildingUser() {
               />
             </div>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className="ebu-form-row">
             <div className="ebu-form-group">
               <label>Площ (m²)</label>
               <input
@@ -357,7 +313,7 @@ function EditBuildingUser() {
               onClick={() => setShowConfirm(true)}
               disabled={loading}
             >
-              🗑️ Изтрий имота
+              <Trash2 size={18} strokeWidth={2.5} /> Изтрий имота
             </button>
             <button
               className="ebu-btn ebu-btn-primary"
@@ -369,37 +325,21 @@ function EditBuildingUser() {
           </div>
         </div>
 
-        <div className="ebu-card" style={{ height: "fit-content" }}>
-          <div className="ebu-card-title">🏢 Инфо за сградата</div>
+        <div className="ebu-card ebu-card-fit">
+          <div className="ebu-card-title">
+            <Building2 size={20} strokeWidth={2.5} /> Инфо за сградата
+          </div>
           <div className="ebu-form-group">
             <label>Сграда</label>
-            <div style={{ fontWeight: 600 }}>
+            <div className="ebu-info-value">
               {propertyData.building_name || "-"}
             </div>
-            <div style={{ fontSize: "0.9rem", color: "var(--au-text-sec)" }}>
-              {propertyData.building_address}
-            </div>
+            <div className="ebu-info-sub">{propertyData.building_address}</div>
           </div>
-          <hr
-            style={{
-              width: "100%",
-              borderTop: "1px dashed var(--au-border)",
-              margin: "1rem 0",
-            }}
-          />
+          <hr className="ebu-divider" />
           <div className="ebu-form-group">
             <label>Тип Обект</label>
-            <div
-              className="au-badge"
-              style={{
-                display: "inline-block",
-                textAlign: "center",
-                background:
-                  propertyData.type === "apartment" ? "#dbeafe" : "#f3f4f6",
-                color:
-                  propertyData.type === "apartment" ? "#1e40af" : "#374151",
-              }}
-            >
+            <div className={`ebu-badge ebu-badge-${propertyData.type}`}>
               {TYPE_LABELS[propertyData.type] || propertyData.type}
             </div>
           </div>

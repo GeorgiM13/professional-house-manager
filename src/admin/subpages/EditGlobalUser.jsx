@@ -4,6 +4,7 @@ import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
+import { User, Lock, Trash2 } from "lucide-react";
 import "./styles/EditGlobalUser.css";
 
 function EditGlobalUser() {
@@ -80,9 +81,8 @@ function EditGlobalUser() {
     setLoading(true);
     try {
       if (formData.email && formData.email !== originalEmail) {
-        
         if (!authUserId) {
-             throw new Error("Липсва Auth User ID. Не може да се промени входът.");
+          throw new Error("Липсва Auth User ID. Не може да се промени входът.");
         }
 
         const { data: funcData, error: funcError } =
@@ -97,11 +97,11 @@ function EditGlobalUser() {
           console.error("Auth update error:", funcError);
           let msg = "Неуспешна смяна на Auth имейл.";
           try {
-              if (funcError && typeof funcError === 'object') {
-                  msg = funcError.message || JSON.stringify(funcError);
-              }
-          } catch(e) {}
-          
+            if (funcError && typeof funcError === "object") {
+              msg = funcError.message || JSON.stringify(funcError);
+            }
+          } catch (e) {}
+
           throw new Error(msg);
         }
       }
@@ -123,7 +123,7 @@ function EditGlobalUser() {
 
       setAlert({
         show: true,
-        message: "✅ Профилът и данните за вход са обновени успешно!",
+        message: "Профилът и данните за вход са обновени успешно!",
         type: "success",
       });
 
@@ -134,12 +134,12 @@ function EditGlobalUser() {
       console.error("Update error:", err);
       let displayMsg = err.message;
       if (displayMsg.includes('{"error":')) {
-          try {
-              const parsed = JSON.parse(displayMsg);
-              if (parsed.error) displayMsg = parsed.error;
-          } catch(e) {}
+        try {
+          const parsed = JSON.parse(displayMsg);
+          if (parsed.error) displayMsg = parsed.error;
+        } catch (e) {}
       }
-      
+
       setAlert({ show: true, message: "Грешка: " + displayMsg, type: "error" });
     } finally {
       setLoading(false);
@@ -181,85 +181,98 @@ function EditGlobalUser() {
     });
   };
 
-  if (fetching)
-    return (
-      <div
-        className="loading-text"
-        style={{ padding: "2rem", textAlign: "center" }}
-      >
-        Зареждане...
-      </div>
-    );
+  if (fetching) return <div className="egu-loading-state">Зареждане...</div>;
 
   return (
     <div className={`egu-container ${isDarkMode ? "au-dark" : "au-light"}`}>
       <div className="egu-header">
-        <h1>Редакция на профил</h1>
-        <p>Промяна на лични данни и контакти</p>
+        <div>
+          <h1>Редакция на профил</h1>
+          <p>Промяна на лични данни и контакти</p>
+        </div>
+        <button className="egu-btn egu-btn-secondary" onClick={goBack}>
+          Назад
+        </button>
       </div>
 
-      <div className="egu-card">
-        <div className="egu-form-grid">
-          <div className="egu-form-group">
-            <label>Име *</label>
-            <input
-              name="first_name"
-              className="egu-input"
-              value={formData.first_name}
-              onChange={handleChange}
-            />
+      <div className="egu-grid">
+        <div className="egu-card">
+          <div className="egu-card-title">
+            <User size={20} strokeWidth={2.5} className="egu-card-icon" /> Лични
+            данни
           </div>
 
-          <div className="egu-form-group">
-            <label>Презиме</label>
-            <input
-              name="second_name"
-              className="egu-input"
-              value={formData.second_name}
-              onChange={handleChange}
-            />
+          <div className="egu-row">
+            <div className="egu-form-group">
+              <label>Име *</label>
+              <input
+                name="first_name"
+                className="egu-input"
+                value={formData.first_name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="egu-form-group">
+              <label>Презиме</label>
+              <input
+                name="second_name"
+                className="egu-input"
+                value={formData.second_name}
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
-          <div className="egu-form-group">
-            <label>Фамилия *</label>
-            <input
-              name="last_name"
-              className="egu-input"
-              value={formData.last_name}
-              onChange={handleChange}
-            />
+          <div className="egu-row">
+            <div className="egu-form-group">
+              <label>Фамилия *</label>
+              <input
+                name="last_name"
+                className="egu-input"
+                value={formData.last_name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="egu-form-group">
+              <label>Фирма</label>
+              <input
+                name="company_name"
+                className="egu-input"
+                value={formData.company_name}
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
-          <div className="egu-form-group">
-            <label>Фирма</label>
-            <input
-              name="company_name"
-              className="egu-input"
-              placeholder="напр. ЕООД..."
-              value={formData.company_name}
-              onChange={handleChange}
-            />
+          <div className="egu-row">
+            <div className="egu-form-group">
+              <label>Телефон</label>
+              <input
+                name="phone"
+                className="egu-input"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="egu-form-group">
+              <label>Email адрес (Вход)</label>
+              <input
+                name="email"
+                type="email"
+                className="egu-input"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
           </div>
+        </div>
 
-          <div className="egu-form-group full-width">
-            <label>Email адрес (Вход)</label>
-            <input
-              name="email"
-              type="email"
-              className="egu-input"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="egu-form-group">
-            <label>Телефон</label>
-            <input
-              name="phone"
-              className="egu-input"
-              value={formData.phone}
-              onChange={handleChange}
-            />
+        <div className="egu-card">
+          <div className="egu-card-title">
+            <Lock size={20} strokeWidth={2.5} className="egu-card-icon" />{" "}
+            Настройки и Роля
           </div>
 
           <div className="egu-form-group">
@@ -275,15 +288,18 @@ function EditGlobalUser() {
             </select>
           </div>
         </div>
+      </div>
 
-        <div className="egu-actions">
-          <button
-            className="egu-btn egu-btn-danger"
-            onClick={() => setShowConfirm(true)}
-            disabled={loading}
-          >
-            🗑️ Изтрий
-          </button>
+      <div className="egu-actions-container">
+        <button
+          className="egu-btn egu-btn-danger"
+          onClick={() => setShowConfirm(true)}
+          disabled={loading}
+        >
+          <Trash2 size={18} strokeWidth={2.5} /> Изтрий
+        </button>
+
+        <div className="egu-actions-right">
           <button
             className="egu-btn egu-btn-secondary"
             onClick={goBack}

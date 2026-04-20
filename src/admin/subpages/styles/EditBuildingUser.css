@@ -4,18 +4,18 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  background-color: var(--au-bg-page, #f8fafc);
-  color: var(--au-text-main, #1e293b);
-  transition: background-color 0.3s, color 0.3s;
+  background-color: var(--au-bg-page);
+  color: var(--au-text-main);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
 
-.ebu-container.au-dark {
-  --au-bg-page: #0f172a;
-  --au-bg-card: #1e293b;
-  --au-text-main: #f1f5f9;
-  --au-text-sec: #94a3b8;
-  --au-border: #334155;
-  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.ebu-loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--au-text-sec);
+  font-weight: 500;
 }
 
 .ebu-header {
@@ -24,11 +24,13 @@
   justify-content: space-between;
   align-items: center;
 }
+
 .ebu-header h1 {
   margin: 0;
   font-size: 1.8rem;
   color: var(--au-text-main);
 }
+
 .ebu-header p {
   color: var(--au-text-sec);
   margin-top: 5px;
@@ -41,14 +43,18 @@
 }
 
 .ebu-card {
-  background: var(--au-bg-card, #ffffff);
-  border: 1px solid var(--au-border, #e2e8f0);
+  background: var(--au-bg-card);
+  border: 1px solid var(--au-border);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: var(--au-shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  box-shadow: var(--au-shadow);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.ebu-card-fit {
+  height: fit-content;
 }
 
 .ebu-card-title {
@@ -60,7 +66,7 @@
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .ebu-form-group {
@@ -68,6 +74,13 @@
   flex-direction: column;
   gap: 0.5rem;
 }
+
+.ebu-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 .ebu-form-group label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -84,23 +97,127 @@
   outline: none;
   width: 100%;
   box-sizing: border-box;
-}
-
-.au-light .ebu-input {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1e293b;
-}
-
-.au-dark .ebu-input {
-  background-color: #0f172a;
-  border-color: #334155;
-  color: #f1f5f9;
+  background-color: var(--au-bg-card);
+  border-color: var(--au-border);
+  color: var(--au-text-main);
 }
 
 .ebu-input:focus {
-  border-color: var(--au-primary, #3b82f6) !important;
+  border-color: var(--au-primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.ebu-react-select-container {
+  width: 100%;
+}
+
+.ebu-react-select__control {
+  background-color: var(--au-bg-card) !important;
+  border-color: var(--au-border) !important;
+  border-radius: 8px !important;
+  min-height: 42px !important;
+  box-shadow: none !important;
+}
+
+.ebu-react-select__control--is-focused {
+  border-color: var(--au-primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+.ebu-react-select__menu {
+  background-color: var(--au-bg-card) !important;
+  border: 1px solid var(--au-border) !important;
+  border-radius: 8px !important;
+  z-index: 999 !important;
+  box-shadow: var(--au-shadow) !important;
+  overflow: hidden;
+}
+
+.ebu-react-select__option {
+  background-color: transparent !important;
+  color: var(--au-text-main) !important;
+  cursor: pointer !important;
+  padding: 10px 12px !important;
+}
+
+.ebu-react-select__option--is-focused {
+  background-color: var(--au-hover) !important;
+}
+
+.ebu-react-select__option--is-selected {
+  background-color: var(--au-primary) !important;
+  color: white !important;
+}
+
+.ebu-react-select__single-value {
+  color: var(--au-text-main) !important;
+}
+
+.ebu-react-select__input-container,
+.ebu-react-select__placeholder {
+  color: var(--au-text-sec) !important;
+}
+
+.ebu-info-value {
+  font-weight: 600;
+  color: var(--au-text-main);
+}
+
+.ebu-info-sub {
+  font-size: 0.9rem;
+  color: var(--au-text-sec);
+}
+
+.ebu-divider {
+  width: 100%;
+  border: none;
+  border-top: 1px dashed var(--au-border);
+  margin: 1rem 0;
+}
+
+.ebu-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ebu-badge-apartment {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.ebu-badge-office {
+  background: #fce7f3;
+  color: #9d174d;
+}
+.ebu-badge-garage {
+  background: #f3f4f6;
+  color: #374151;
+}
+.ebu-badge-retail {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.au-dark .ebu-badge-apartment {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+.au-dark .ebu-badge-office {
+  background: rgba(236, 72, 153, 0.2);
+  color: #f9a8d4;
+}
+.au-dark .ebu-badge-garage {
+  background: rgba(107, 114, 128, 0.2);
+  color: #d1d5db;
+}
+.au-dark .ebu-badge-retail {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
 }
 
 .ebu-actions {
@@ -113,37 +230,37 @@
 }
 
 .ebu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .ebu-btn-primary {
-  background: var(--au-primary, #3b82f6);
+  background: var(--au-primary);
   color: white;
   border-color: var(--au-primary);
 }
 
+.ebu-btn-primary:hover {
+  filter: brightness(0.95);
+}
+
 .ebu-btn-secondary {
-  background-color: transparent;
+  background-color: var(--au-bg-card);
+  border-color: var(--au-border);
+  color: var(--au-text-sec);
 }
-.au-light .ebu-btn-secondary {
-  background-color: #ffffff;
-  border-color: #cbd5e1;
-  color: #475569;
-}
-.au-light .ebu-btn-secondary:hover {
-  background-color: #f1f5f9;
-}
-.au-dark .ebu-btn-secondary {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: #475569;
-  color: #e2e8f0;
-}
-.au-dark .ebu-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+
+.ebu-btn-secondary:hover {
+  background-color: var(--au-hover);
+  color: var(--au-text-main);
 }
 
 .ebu-btn-danger {
@@ -151,22 +268,21 @@
   color: #ef4444;
   border-color: rgba(239, 68, 68, 0.3);
 }
+
 .ebu-btn-danger:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
 }
 
-
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button {
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-input[type=number] {
+input[type="number"] {
   appearance: textfield;
 }
-
 
 @media (max-width: 768px) {
   .ebu-container {

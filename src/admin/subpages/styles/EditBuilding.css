@@ -91,7 +91,7 @@
 }
 
 .edb-icon-purple {
-  color: #a855f7;
+  color: var(--au-primary, #3b82f6);
 }
 
 .edb-mt-2 {

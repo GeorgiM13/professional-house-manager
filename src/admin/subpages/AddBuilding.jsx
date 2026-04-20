@@ -5,14 +5,9 @@ import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import {
   Building2,
-  MapPin,
-  Hash,
-  Home,
-  Car,
-  Briefcase,
+  Settings,
   Save,
   ArrowLeft,
-  Sliders,
 } from "lucide-react";
 import "./styles/AddBuilding.css";
 
@@ -113,7 +108,6 @@ function AddBuilding() {
         <div className="adb-grid-row">
           <div className="adb-form-group">
             <label>
-              <Building2 size={16} strokeWidth={2.5} />
               Име на сградата *
             </label>
             <input
@@ -127,7 +121,6 @@ function AddBuilding() {
           </div>
           <div className="adb-form-group">
             <label>
-              <MapPin size={16} strokeWidth={2.5} />
               Адрес *
             </label>
             <input
@@ -144,14 +137,13 @@ function AddBuilding() {
         </div>
 
         <div className="adb-section-title adb-mt">
-          <Sliders className="section-icon" size={20} strokeWidth={2.5} />
+          <Settings className="section-icon" size={20} strokeWidth={2.5} />
           Параметри
         </div>
 
         <div className="adb-grid-row">
           <div className="adb-form-group">
             <label>
-              <Hash size={16} strokeWidth={2.5} />
               Брой етажи *
             </label>
             <input
@@ -168,7 +160,6 @@ function AddBuilding() {
           </div>
           <div className="adb-form-group">
             <label>
-              <Home size={16} strokeWidth={2.5} />
               Брой апартаменти
             </label>
             <input
@@ -185,7 +176,6 @@ function AddBuilding() {
         <div className="adb-grid-row">
           <div className="adb-form-group">
             <label>
-              <Car size={16} strokeWidth={2.5} />
               Брой гаражи
             </label>
             <input
@@ -199,7 +189,6 @@ function AddBuilding() {
           </div>
           <div className="adb-form-group">
             <label>
-              <Briefcase size={16} strokeWidth={2.5} />
               Брой офиси
             </label>
             <input

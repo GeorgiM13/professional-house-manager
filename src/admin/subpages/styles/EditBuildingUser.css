@@ -1,3 +1,30 @@
+.au-light {
+  --au-bg-page: #f8f9fa;
+  --au-bg-card: #ffffff;
+  --au-text-main: #2c3e50;
+  --au-text-sec: #7f8c8d;
+  --au-border: #e2e8f0;
+  --au-table-head: #f1f3f5;
+  --au-table-border: #dee2e6;
+  --au-hover: #f8f9fa;
+  --au-primary: #007bff;
+  --au-primary-hover: #0056b3;
+  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.au-dark {
+  --au-bg-page: #0f172a;
+  --au-bg-card: #1e293b;
+  --au-text-main: #f1f5f9;
+  --au-text-sec: #94a3b8;
+  --au-border: #334155;
+  --au-table-head: #334155;
+  --au-table-border: #475569;
+  --au-hover: #334155;
+  --au-primary: #3b82f6;
+  --au-primary-hover: #60a5fa;
+  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
 .ebu-container {
   padding: 2rem;
   max-width: 900px;

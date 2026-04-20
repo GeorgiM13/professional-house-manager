@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
+import {
+  Megaphone,
+  Clock,
+  Lock,
+  CalendarDays,
+  Hash,
+  Pencil,
+} from "lucide-react";
 import "./styles/ReportDetails.css";
 
 function ReportDetails() {
@@ -25,7 +33,7 @@ function ReportDetails() {
             updated_at,
             created_at,
             building:building_id(name,address)
-          `
+          `,
         )
         .eq("id", id)
         .single();
@@ -106,7 +114,9 @@ function ReportDetails() {
       <div className="rpd-main-card fade-in">
         <div className="rpd-card-header">
           <div className="rpd-location-badge">
-            <span className="icon">📢</span>
+            <span className="icon">
+              <Megaphone size={28} strokeWidth={2.5} />
+            </span>
             <div>
               <h3>{report.building?.name || "Неизвестна сграда"}</h3>
               <small>{report.building?.address || "Няма адрес"}</small>
@@ -114,7 +124,9 @@ function ReportDetails() {
           </div>
           <div className="rpd-dates">
             <div className="date-item">
-              <span>🕒 Последна промяна:</span>
+              <span className="rpd-date-label">
+                <Clock size={16} strokeWidth={2.5} /> Последна промяна:
+              </span>
               <strong>{formatDateTime(report.updated_at)}</strong>
             </div>
           </div>
@@ -137,7 +149,7 @@ function ReportDetails() {
           {report.notes && (
             <div className="rpd-notes-box">
               <span className="rpd-notes-label">
-                🔒 Административни бележки
+                <Lock size={16} strokeWidth={2.5} /> Административни бележки
               </span>
               <div className="rpd-notes-content">{report.notes}</div>
             </div>
@@ -145,7 +157,9 @@ function ReportDetails() {
 
           <div className="rpd-meta-grid">
             <div className="meta-box">
-              <span className="meta-icon">📅</span>
+              <span className="meta-icon">
+                <CalendarDays size={24} strokeWidth={2.5} />
+              </span>
               <div className="meta-info">
                 <span className="meta-label">Дата на създаване</span>
                 <span className="meta-value">
@@ -155,7 +169,9 @@ function ReportDetails() {
             </div>
 
             <div className="meta-box">
-              <span className="meta-icon">🆔</span>
+              <span className="meta-icon">
+                <Hash size={24} strokeWidth={2.5} />
+              </span>
               <div className="meta-info">
                 <span className="meta-label">ID на сигнала</span>
                 <span className="meta-value mono">#{report.id}</span>
@@ -169,7 +185,7 @@ function ReportDetails() {
             className="rpd-btn rpd-btn-primary"
             onClick={() => navigate(`/admin/editreport/${report.id}`)}
           >
-            ✏️ Редактирай сигнала
+            <Pencil size={18} strokeWidth={2.5} /> Редактирай сигнала
           </button>
         </div>
       </div>

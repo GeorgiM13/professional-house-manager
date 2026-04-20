@@ -150,8 +150,8 @@
   gap: 1rem;
 }
 .rpd-location-badge .icon {
-  font-size: 2rem;
   background: var(--st-def-bg);
+  color: #f97316;
   width: 3.5rem;
   height: 3.5rem;
   display: flex;
@@ -177,7 +177,11 @@
   flex-direction: column;
   font-size: 0.9rem;
 }
-.date-item span {
+.rpd-date-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   color: var(--text-sec);
   margin-bottom: 0.2rem;
 }
@@ -234,7 +238,9 @@
   border-radius: var(--radius-md);
 }
 .rpd-notes-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--note-text);
@@ -271,8 +277,10 @@
 }
 
 .meta-icon {
-  font-size: 1.5rem;
-  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
 }
 .meta-info {
   display: flex;
@@ -305,6 +313,10 @@
 }
 
 .rpd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 0.75rem 2rem;
   border-radius: 8px;
   font-weight: 600;
@@ -374,5 +386,8 @@
   }
   .rpd-btn {
     width: 100%;
+  }
+  .rpd-date-label {
+    justify-content: flex-start;
   }
 }

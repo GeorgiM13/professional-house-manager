@@ -76,39 +76,6 @@ function AddUserToBuilding() {
 
   const loadUsersDebounced = useCallback(debouncePromise(fetchUsers, 1000), []);
 
-  const selectStyles = {
-    control: (base, state) => ({
-      ...base,
-      background: isDarkMode ? "var(--au-bg-page)" : "white",
-      borderColor: state.isFocused ? "var(--au-primary)" : "var(--au-border)",
-      color: "var(--au-text-main)",
-      minHeight: "42px",
-      borderRadius: "8px",
-    }),
-    menu: (base) => ({
-      ...base,
-      background: isDarkMode ? "#1e293b" : "white",
-      zIndex: 999,
-      border: "1px solid var(--au-border)",
-    }),
-    option: (base, state) => ({
-      ...base,
-      background: state.isFocused
-        ? isDarkMode
-          ? "#334155"
-          : "#eff6ff"
-        : "transparent",
-      color: isDarkMode ? "#f1f5f9" : "#334155",
-      cursor: "pointer",
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: isDarkMode ? "#f1f5f9" : "#334155",
-    }),
-    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#334155" }),
-    placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
-  };
-
   const handleSave = async () => {
     const newErrors = {};
     if (!selectedUser) newErrors.selectedUser = "Изберете потребител";
@@ -214,7 +181,8 @@ function AddUserToBuilding() {
             }`}
             onClick={() => setSelectedType("apartment")}
           >
-            <Home size={18} strokeWidth={2.5} /> Апартамент
+            <Home size={18} strokeWidth={2.5} />
+            <span className="aub-toggle-text">Апартамент</span>
           </button>
           <button
             type="button"
@@ -223,7 +191,8 @@ function AddUserToBuilding() {
             }`}
             onClick={() => setSelectedType("garage")}
           >
-            <CarFront size={18} strokeWidth={2.5} /> Гараж
+            <CarFront size={18} strokeWidth={2.5} />
+            <span className="aub-toggle-text">Гараж</span>
           </button>
           <button
             type="button"
@@ -232,7 +201,8 @@ function AddUserToBuilding() {
             }`}
             onClick={() => setSelectedType("office")}
           >
-            <Briefcase size={18} strokeWidth={2.5} /> Офис
+            <Briefcase size={18} strokeWidth={2.5} />
+            <span className="aub-toggle-text">Офис</span>
           </button>
         </div>
 
@@ -240,13 +210,14 @@ function AddUserToBuilding() {
           <div className="aub-form-group">
             <label>Потребител *</label>
             <AsyncSelect
+              className="aub-react-select-container"
+              classNamePrefix="aub-react-select"
               cacheOptions
               defaultOptions
               loadOptions={loadUsersDebounced}
               onChange={setSelectedUser}
               placeholder="Търсене (мин. 2 символа)..."
               isClearable
-              styles={selectStyles}
               noOptionsMessage={({ inputValue }) =>
                 inputValue.length < 2
                   ? "Въведете поне 2 букви"
@@ -261,12 +232,13 @@ function AddUserToBuilding() {
           <div className="aub-form-group">
             <label>Сграда *</label>
             <Select
+              className="aub-react-select-container"
+              classNamePrefix="aub-react-select"
               options={buildingOptions}
               isLoading={loadingBuildings}
               onChange={setSelectedBuilding}
               placeholder="Избери сграда..."
               isClearable
-              styles={selectStyles}
               noOptionsMessage={() => "Няма сгради"}
               isSearchable={true}
             />
@@ -276,13 +248,7 @@ function AddUserToBuilding() {
           </div>
         </div>
 
-        <hr
-          style={{
-            borderTop: "1px dashed var(--au-border)",
-            width: "100%",
-            margin: "0.5rem 0",
-          }}
-        />
+        <hr className="aub-divider" />
 
         <div className="aub-grid-row">
           <div className="aub-form-group">

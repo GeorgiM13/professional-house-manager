@@ -256,25 +256,75 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
-  padding: 20px 0;
+  gap: 24px;
+  padding: 24px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.au-pagination button {
+.au-pagination-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   background: var(--au-bg-card);
   border: 1px solid var(--au-border);
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--au-text-main);
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.au-pagination button:disabled {
-  opacity: 0.5;
+.au-pagination-btn:hover:not(:disabled) {
+  background: var(--au-hover);
+  border-color: var(--au-primary);
+  color: var(--au-primary);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+}
+
+.au-icon-slide-left,
+.au-icon-slide-right {
+  transition: transform 0.2s ease;
+}
+
+.au-pagination-btn:hover:not(:disabled) .au-icon-slide-left {
+  transform: translateX(-4px);
+}
+
+.au-pagination-btn:hover:not(:disabled) .au-icon-slide-right {
+  transform: translateX(4px);
+}
+
+.au-pagination-btn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+.au-pagination-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--au-text-main);
+  background: var(--au-bg-card);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--au-border);
+}
+
+.au-page-numbers {
+  font-weight: 700;
+  color: var(--au-primary);
+}
+
+.au-page-slash {
+  display: none;
 }
 
 .au-mobile-list {
@@ -303,6 +353,7 @@
   font-weight: 700;
   color: var(--au-text-main);
   font-size: 1.1rem;
+  word-break: break-word;
 }
 
 .au-card-user-icon {
@@ -315,6 +366,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .mobile-view {
@@ -359,5 +412,39 @@
   .au-toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+  .au-pagination {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 0;
+  }
+
+  .au-pagination-btn {
+    padding: 10px 12px;
+    flex: 1;
+    max-width: 120px;
+  }
+
+  .au-pagination-btn-text {
+    display: none;
+  }
+
+  .au-page-word,
+  .au-page-separator {
+    display: none;
+  }
+
+  .au-page-slash {
+    display: inline;
+    margin: 0 4px;
+    color: var(--au-text-sec);
+  }
+
+  .au-pagination-info {
+    flex: 0 1 auto;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
   }
 }

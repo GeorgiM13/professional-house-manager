@@ -47,40 +47,6 @@ const PERIOD_OPTIONS = [
   { value: "month", label: "Този месец", icon: Calendar },
 ];
 
-const CUSTOM_SELECT_STYLES = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: "var(--acf-bg-card)",
-    borderColor: state.isFocused ? "var(--acf-accent)" : "var(--acf-border)",
-    borderRadius: "8px",
-    color: "var(--acf-text-main)",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--acf-accent-light)" : "none",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    backgroundColor: "var(--acf-bg-card)",
-  }),
-  singleValue: (provided) => ({ ...provided, color: "var(--acf-text-main)" }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--acf-accent)"
-      : state.isFocused
-        ? "var(--acf-bg-page)"
-        : "transparent",
-    color: state.isSelected ? "white" : "var(--acf-text-main)",
-    cursor: "pointer",
-  }),
-};
-
-const customFormatOptionLabel = ({ label, icon: Icon }) => (
-  <div className="select-option-container">
-    {Icon && <Icon size={18} strokeWidth={2.5} className="select-icon" />}
-    <span>{label}</span>
-  </div>
-);
-
 export default function AdminContactForms() {
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
@@ -174,35 +140,27 @@ export default function AdminContactForms() {
   const getSelectValue = (options, value) =>
     options.find((o) => String(o.value) === String(value)) || options[0];
 
-  const formatDate = (dateString) => {
-    if (!dateString) return null;
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
     const d = new Date(dateString);
-
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const yearFull = d.getFullYear();
-    const yearShort = String(yearFull).slice(-2);
-    const time = d.toLocaleTimeString("bg-BG", {
+    const datePart = d.toLocaleDateString("bg-BG", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const timePart = d.toLocaleTimeString("bg-BG", {
       hour: "2-digit",
       minute: "2-digit",
     });
-
-    return (
-      <>
-        <span className="date-desktop">
-          {day}.{month}.{yearFull} г.{" "}
-          <span className="acf-date-time">{time}</span>
-        </span>
-
-        <div className="date-mobile">
-          <div className="dm-date">
-            {day}.{month}.{yearShort}
-          </div>
-          <div className="dm-time">{time}</div>
-        </div>
-      </>
-    );
+    return `${datePart} ${timePart}`;
   };
+
+  const customFormatOptionLabel = ({ label, icon: Icon }) => (
+    <div className="select-option-container">
+      {Icon && <Icon size={16} strokeWidth={2.5} className="select-icon" />}
+      <span>{label}</span>
+    </div>
+  );
 
   return (
     <div className={`acf-page ${isDarkMode ? "acf-dark" : "acf-light"}`}>
@@ -211,7 +169,6 @@ export default function AdminContactForms() {
           <h1>Контактни форми</h1>
           <p className="acf-subtitle">Входяща поща и запитвания</p>
         </div>
-        <div className="acf-header-right"></div>
       </div>
 
       <div className="acf-stats-grid">
@@ -253,17 +210,16 @@ export default function AdminContactForms() {
       <div className="acf-toolbar">
         <h3>Списък съобщения</h3>
         <div className="acf-filters-right">
-          <div className="acf-filter-wrapper">
-            <Select
-              options={PERIOD_OPTIONS}
-              value={getSelectValue(PERIOD_OPTIONS, filterPeriod)}
-              onChange={(opt) => setFilterPeriod(opt.value)}
-              styles={CUSTOM_SELECT_STYLES}
-              formatOptionLabel={customFormatOptionLabel}
-              isSearchable={false}
-              placeholder="Период"
-            />
-          </div>
+          <Select
+            className="acf-react-select-container"
+            classNamePrefix="acf-react-select"
+            options={PERIOD_OPTIONS}
+            value={getSelectValue(PERIOD_OPTIONS, filterPeriod)}
+            onChange={(opt) => setFilterPeriod(opt.value)}
+            formatOptionLabel={customFormatOptionLabel}
+            isSearchable={false}
+            placeholder="Период"
+          />
         </div>
       </div>
 
@@ -274,89 +230,150 @@ export default function AdminContactForms() {
         </div>
       ) : (
         <>
-          <table className="acf-table">
-            <thead>
-              <tr>
-                <th>№</th>
-                <th>Подател</th>
-                <th>Контакти</th>
-                <th>Съобщение</th>
-                <th>Дата</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedMessages.length === 0 ? (
+          <div className="acf-table-responsive desktop-view">
+            <table className="acf-table">
+              <thead>
                 <tr>
-                  <td colSpan="6" className="acf-no-data">
-                    Няма намерени съобщения за избрания период.
-                  </td>
+                  <th className="acf-th-idx">№</th>
+                  <th className="acf-th-sender">Подател</th>
+                  <th className="acf-th-contacts">Контакти</th>
+                  <th className="acf-th-message">Съобщение</th>
+                  <th className="acf-th-date">Дата</th>
                 </tr>
-              ) : (
-                paginatedMessages.map((msg, idx) => (
-                  <tr
-                    key={msg.id}
-                    onClick={() => navigate(`/admin/message/${msg.id}`)}
-                    className="acf-row"
-                  >
-                    <td className="acf-idx">
-                      {(currentPage - 1) * pageSize + idx + 1}
+              </thead>
+              <tbody>
+                {paginatedMessages.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="acf-no-data">
+                      Няма намерени съобщения за избрания период.
                     </td>
-
-                    <td data-label="Подател" className="acf-sender">
-                      <User size={16} strokeWidth={2.5} className="acf-icon" />
-                      {msg.first_name} {msg.last_name}
-                    </td>
-
-                    <td data-label="Контакти" className="acf-contacts">
-                      <div className="contact-row">
-                        <Mail
-                          size={14}
-                          strokeWidth={2.5}
-                          className="acf-icon-sm"
-                        />
-                        {msg.email}
-                      </div>
-                      <div className="contact-row">
-                        <Phone
-                          size={14}
-                          strokeWidth={2.5}
-                          className="acf-icon-sm"
-                        />
-                        {msg.phone}
-                      </div>
-                    </td>
-
-                    <td data-label="Съобщение" className="acf-message-cell">
-                      {msg.message}
-                    </td>
-
-                    <td data-label="Дата">{formatDate(msg.created_at)}</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  paginatedMessages.map((msg, idx) => (
+                    <tr
+                      key={msg.id}
+                      onClick={() => navigate(`/admin/message/${msg.id}`)}
+                      className="acf-row"
+                    >
+                      <td className="acf-idx">
+                        {(currentPage - 1) * pageSize + idx + 1}
+                      </td>
+
+                      <td>
+                        <div className="acf-sender-wrapper">
+                          <User
+                            size={16}
+                            strokeWidth={2.5}
+                            className="acf-icon"
+                          />
+                          <span>
+                            {msg.first_name} {msg.last_name}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="acf-contacts">
+                        <div className="contact-row">
+                          <Mail
+                            size={14}
+                            strokeWidth={2.5}
+                            className="acf-icon-sm"
+                          />
+                          <span>{msg.email}</span>
+                        </div>
+                        <div className="contact-row">
+                          <Phone
+                            size={14}
+                            strokeWidth={2.5}
+                            className="acf-icon-sm"
+                          />
+                          <span>{msg.phone}</span>
+                        </div>
+                      </td>
+
+                      <td className="acf-message-cell">{msg.message}</td>
+
+                      <td className="acf-date-cell">
+                        {formatDateTime(msg.created_at)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="acf-mobile-list mobile-view">
+            {paginatedMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className="acf-mobile-card"
+                onClick={() => navigate(`/admin/message/${msg.id}`)}
+              >
+                <div className="acf-card-header">
+                  <div className="acf-card-title">
+                    <User
+                      size={18}
+                      strokeWidth={2.5}
+                      className="acf-card-icon"
+                    />
+                    {msg.first_name} {msg.last_name}
+                  </div>
+                  <span className="acf-card-date">
+                    {formatDateTime(msg.created_at)}
+                  </span>
+                </div>
+
+                <div className="acf-card-subtitle">
+                  <Mail size={16} strokeWidth={2.5} className="acf-icon-sm" />
+                  <span>{msg.email}</span>
+                </div>
+                <div className="acf-card-subtitle">
+                  <Phone size={16} strokeWidth={2.5} className="acf-icon-sm" />
+                  <span>{msg.phone}</span>
+                </div>
+
+                <div className="acf-card-message">{msg.message}</div>
+              </div>
+            ))}
+          </div>
 
           {totalPages > 1 && (
             <div className="acf-pagination">
               <button
-                className="acf-pagination-btn"
+                className="acf-pagination-btn prev-btn"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
               >
-                <ChevronLeft size={18} strokeWidth={2.5} />
-                Предишна
+                <ChevronLeft
+                  size={18}
+                  strokeWidth={2.5}
+                  className="acf-icon-slide-left"
+                />
+                <span className="acf-pagination-btn-text">Предишна</span>
               </button>
-              <span className="acf-pagination-info">
-                Страница {currentPage} от {totalPages}
-              </span>
+
+              <div className="acf-pagination-info">
+                <span className="acf-page-word">Страница </span>
+                <span className="acf-page-numbers">
+                  {currentPage}
+                  <span className="acf-page-separator"> от </span>
+                  <span className="acf-page-slash"> / </span>
+                  {totalPages}
+                </span>
+              </div>
+
               <button
-                className="acf-pagination-btn"
+                className="acf-pagination-btn next-btn"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
               >
-                Следваща
-                <ChevronRight size={18} strokeWidth={2.5} />
+                <span className="acf-pagination-btn-text">Следваща</span>
+                <ChevronRight
+                  size={18}
+                  strokeWidth={2.5}
+                  className="acf-icon-slide-right"
+                />
               </button>
             </div>
           )}

@@ -93,7 +93,6 @@ function Buildings() {
 
       <div className="ab-stats-grid">
         <div className="ab-stat-card blue">
-          {" "}
           <div className="ab-stat-icon">
             <Building2 size={24} strokeWidth={2.5} />
           </div>
@@ -103,7 +102,6 @@ function Buildings() {
           </div>
         </div>
         <div className="ab-stat-card purple">
-          {" "}
           <div className="ab-stat-icon">
             <Home size={24} strokeWidth={2.5} />
           </div>
@@ -113,7 +111,6 @@ function Buildings() {
           </div>
         </div>
         <div className="ab-stat-card green">
-          {" "}
           <div className="ab-stat-icon">
             <Car size={24} strokeWidth={2.5} />
           </div>
@@ -146,39 +143,41 @@ function Buildings() {
         <div className="ab-empty">Няма намерени сгради</div>
       ) : (
         <>
-          <div className="ab-table-wrapper desktop-view">
-            <table className="ab-table">
-              <thead>
-                <tr>
-                  <th>Име</th>
-                  <th>Адрес</th>
-                  <th className="text-center">Ет.</th>
-                  <th className="text-center">Ап.</th>
-                  <th className="text-center">Оф.</th>
-                  <th className="text-center">Гар.</th>
-                  <th className="text-right">Добавена</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedBuildings.map((b) => (
-                  <tr
-                    key={b.id}
-                    onClick={() => navigate(`/admin/buildings/${b.id}/edit`)}
-                    className="ab-row"
-                  >
-                    <td className="fw-bold text-main">{b.name}</td>
-                    <td className="text-sec">{b.address}</td>
-                    <td className="text-center">{b.floors || 0}</td>
-                    <td className="text-center">{b.apartments || 0}</td>
-                    <td className="text-center">{b.offices || 0}</td>
-                    <td className="text-center">{b.garages || 0}</td>
-                    <td className="text-right text-small">
-                      {formatDateTime(b.created_at)}
-                    </td>
+          <div className="ab-table-responsive desktop-view">
+            <div className="ab-table-wrapper">
+              <table className="ab-table">
+                <thead>
+                  <tr>
+                    <th>Име</th>
+                    <th>Адрес</th>
+                    <th className="text-center">Ет.</th>
+                    <th className="text-center">Ап.</th>
+                    <th className="text-center">Оф.</th>
+                    <th className="text-center">Гар.</th>
+                    <th className="text-right">Добавена</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedBuildings.map((b) => (
+                    <tr
+                      key={b.id}
+                      onClick={() => navigate(`/admin/buildings/${b.id}/edit`)}
+                      className="ab-row"
+                    >
+                      <td className="fw-bold text-main">{b.name}</td>
+                      <td className="text-sec">{b.address}</td>
+                      <td className="text-center">{b.floors || 0}</td>
+                      <td className="text-center">{b.apartments || 0}</td>
+                      <td className="text-center">{b.offices || 0}</td>
+                      <td className="text-center">{b.garages || 0}</td>
+                      <td className="text-right text-small">
+                        {formatDateTime(b.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="ab-mobile-list mobile-view">
@@ -231,21 +230,39 @@ function Buildings() {
           {totalPages > 1 && (
             <div className="ab-pagination">
               <button
+                className="ab-pagination-btn prev-btn"
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                <ChevronLeft size={18} strokeWidth={2.5} />
-                Предишна
+                <ChevronLeft
+                  size={18}
+                  strokeWidth={2.5}
+                  className="ab-icon-slide-left"
+                />
+                <span className="ab-pagination-btn-text">Предишна</span>
               </button>
-              <span>
-                Страница {page} от {totalPages}
-              </span>
+
+              <div className="ab-pagination-info">
+                <span className="ab-page-word">Страница </span>
+                <span className="ab-page-numbers">
+                  {page}
+                  <span className="ab-page-separator"> от </span>
+                  <span className="ab-page-slash"> / </span>
+                  {totalPages}
+                </span>
+              </div>
+
               <button
+                className="ab-pagination-btn next-btn"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Следваща
-                <ChevronRight size={18} strokeWidth={2.5} />
+                <span className="ab-pagination-btn-text">Следваща</span>
+                <ChevronRight
+                  size={18}
+                  strokeWidth={2.5}
+                  className="ab-icon-slide-right"
+                />
               </button>
             </div>
           )}

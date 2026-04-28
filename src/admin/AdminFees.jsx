@@ -6,6 +6,21 @@ import Swal from "sweetalert2";
 import { useUserBuildings } from "./hooks/UseUserBuildings";
 import { useLocalUser } from "./hooks/UseLocalUser";
 import { useTheme } from "../components/ThemeContext";
+import {
+  Building2,
+  Zap,
+  Users,
+  CheckCircle2,
+  LayoutDashboard,
+  List,
+  CreditCard,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Wallet,
+  Target,
+} from "lucide-react";
 import "./styles/AdminFees.css";
 
 const formatObjectName = (type, number) => {
@@ -47,35 +62,20 @@ const AnimatedCounter = ({ value, duration = 800 }) => {
   return <>{count.toFixed(2)}</>;
 };
 
-const customSelectStyles = {
-  control: (base, state) => ({
-    ...base,
-    backgroundColor: "var(--af-bg-input)",
-    borderColor: state.isFocused ? "var(--af-primary)" : "var(--af-border)",
-    color: "var(--af-text-main)",
-    borderRadius: "8px",
-    minHeight: "42px",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--af-primary-light)" : "none",
-  }),
-  menu: (base) => ({
-    ...base,
-    backgroundColor: "var(--af-bg-card)",
-    border: "1px solid var(--af-border)",
-    zIndex: 9999,
-  }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isSelected
-      ? "var(--af-primary)"
-      : state.isFocused
-      ? "var(--af-bg-hover)"
-      : "transparent",
-    color: state.isSelected ? "white" : "var(--af-text-main)",
-    cursor: "pointer",
-  }),
-  singleValue: (base) => ({ ...base, color: "var(--af-text-main)" }),
-  input: (base) => ({ ...base, color: "var(--af-text-main)" }),
-  placeholder: (base) => ({ ...base, color: "var(--af-text-sec)" }),
+const customFormatOptionLabel = ({ label, iconType }, { context }) => {
+  let Icon = null;
+  if (iconType === "building") Icon = Building2;
+
+  const shouldShowIcon = Icon && context === "value";
+
+  return (
+    <div className="af-select-item">
+      {shouldShowIcon && (
+        <Icon size={16} strokeWidth={2.5} className="af-select-icon" />
+      )}
+      <span>{label}</span>
+    </div>
+  );
 };
 
 const ITEMS_PER_PAGE = 30;
@@ -103,7 +103,10 @@ function AdminFees() {
       value: b.id,
       label: `${b.name}, ${b.address}`,
     }));
-    return [{ value: "all", label: "🏢 Всички сгради" }, ...opts];
+    return [
+      { value: "all", label: "Всички сгради", iconType: "building" },
+      ...opts,
+    ];
   }, [buildings]);
 
   const monthOptions = useMemo(
@@ -112,7 +115,7 @@ function AdminFees() {
         value: i + 1,
         label: new Date(0, i).toLocaleString("bg-BG", { month: "long" }),
       })),
-    []
+    [],
   );
 
   const yearOptions = useMemo(
@@ -121,7 +124,7 @@ function AdminFees() {
         const y = new Date().getFullYear() - i;
         return { value: y, label: String(y) };
       }),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -171,7 +174,7 @@ function AdminFees() {
       return Swal.fire(
         "Внимание",
         "Моля, изберете конкретна сграда, за да генерирате такси.",
-        "warning"
+        "warning",
       );
     }
 
@@ -189,7 +192,7 @@ function AdminFees() {
         selectedBuilding.value,
         selectedMonth,
         selectedYear,
-        algorithmType
+        algorithmType,
       );
 
       alert(`✅ Генерирани са ${count} такси (${algorithmType}).`);
@@ -209,7 +212,7 @@ function AdminFees() {
       return Swal.fire(
         "Информация",
         "Този месец вече е платен или няма задължение.",
-        "info"
+        "info",
       );
     }
 
@@ -218,7 +221,7 @@ function AdminFees() {
     const result = await Swal.fire({
       title: "Плащане на текуща сметка",
       text: `Потвърждавате ли плащане на сума от ${amountToPay.toFixed(
-        2
+        2,
       )} лв. за ${objectName}?`,
       icon: "question",
       showCancelButton: true,
@@ -258,7 +261,7 @@ function AdminFees() {
     const result = await Swal.fire({
       title: "Пълно погасяване",
       text: `Потвърждавате ли плащане на ЦЯЛАТА сума от ${totalRem.toFixed(
-        2
+        2,
       )} лв. за ${objectName}?`,
       icon: "warning",
       showCancelButton: true,
@@ -302,7 +305,7 @@ function AdminFees() {
   const currentFees = useMemo(
     () =>
       fees.filter((f) => f.month === selectedMonth && f.year === selectedYear),
-    [fees, selectedMonth, selectedYear]
+    [fees, selectedMonth, selectedYear],
   );
 
   const remainingByObject = useMemo(() => {
@@ -345,7 +348,7 @@ function AdminFees() {
       return String(a.object_number).localeCompare(
         String(b.object_number),
         "bg",
-        { numeric: true }
+        { numeric: true },
       );
     });
   }, [currentFees]);
@@ -401,7 +404,7 @@ function AdminFees() {
     const totalRem = remainingByObject[key] || 0;
     const rowRem = Math.max(
       Number(fee.total_due || 0) - Number(fee.paid || 0),
-      0
+      0,
     );
     const isPaidCurrent = rowRem < 0.01;
     const isFullyPaid = totalRem < 0.01;
@@ -424,19 +427,23 @@ function AdminFees() {
     totalPages > 1 && (
       <div className="af-pagination">
         <button
+          className="af-flex-align af-flex-center"
           disabled={currentPage === 1}
           onClick={() => setCurrentPage((p) => p - 1)}
         >
-          «
+          <ChevronLeft size={18} strokeWidth={2.5} />
+          <span className="af-pag-text">Предишна</span>
         </button>
-        <span>
-          Стр. {currentPage} от {totalPages}
+        <span className="af-pag-info">
+          Страница {currentPage} от {totalPages}
         </span>
         <button
-          disabled={currentPage === totalPages}
+          className="af-flex-align af-flex-center"
+          disabled={currentPage >= totalPages}
           onClick={() => setCurrentPage((p) => p + 1)}
         >
-          »
+          <span className="af-pag-text">Следваща</span>
+          <ChevronRight size={18} strokeWidth={2.5} />
         </button>
       </div>
     );
@@ -447,8 +454,8 @@ function AdminFees() {
     let debtClass = isFullyPaid
       ? "val-green"
       : status === "debt"
-      ? "val-red"
-      : "val-orange";
+        ? "val-red"
+        : "val-orange";
 
     return (
       <tr key={fee.id} className="af-row">
@@ -494,7 +501,9 @@ function AdminFees() {
               Всичко
             </button>
           )}
-          {isFullyPaid && <span>✅</span>}
+          {isFullyPaid && (
+            <CheckCircle2 size={20} strokeWidth={2.5} className="val-green" />
+          )}
         </td>
       </tr>
     );
@@ -525,10 +534,12 @@ function AdminFees() {
               options={buildingOptions}
               value={selectedBuilding}
               onChange={setSelectedBuilding}
-              styles={customSelectStyles}
+              classNamePrefix="react-select"
+              className="react-select-container"
               placeholder="Изберете сграда..."
               isLoading={loadingBuildings}
               isSearchable={true}
+              formatOptionLabel={customFormatOptionLabel}
               noOptionsMessage={() => "Няма намерена сграда"}
             />
           </div>
@@ -539,7 +550,8 @@ function AdminFees() {
                 options={monthOptions}
                 value={monthOptions.find((m) => m.value === selectedMonth)}
                 onChange={(op) => setSelectedMonth(op.value)}
-                styles={customSelectStyles}
+                classNamePrefix="react-select"
+                className="react-select-container"
                 isSearchable={false}
                 placeholder="Месец"
               />
@@ -549,44 +561,65 @@ function AdminFees() {
                 options={yearOptions}
                 value={yearOptions.find((y) => y.value === selectedYear)}
                 onChange={(op) => setSelectedYear(op.value)}
-                styles={customSelectStyles}
+                classNamePrefix="react-select"
+                className="react-select-container"
                 isSearchable={false}
                 placeholder="Година"
               />
             </div>
 
-            <button className="af-main-btn" onClick={handleGenerateFees}>
+            <button
+              className="af-main-btn af-flex-align"
+              onClick={handleGenerateFees}
+            >
               <span className="desktop-view">Генерирай</span>
-              <span className="mobile-view">⚡</span>
+              <span className="mobile-view">
+                <Zap size={18} strokeWidth={2.5} />
+              </span>
             </button>
           </div>
         </div>
       </div>
 
       <div className="af-stats-grid">
-        <div className="af-stat-card">
-          <div className="label">Очаквани</div>
-          <div className="value">
-            <AnimatedCounter value={stats.toCollect} /> <small>лв.</small>
+        <div className="af-stat-card blue">
+          <div className="af-stat-icon icon-blue">
+            <CircleDollarSign size={24} strokeWidth={2.5} />
           </div>
-        </div>
-        <div className="af-stat-card">
-          <div className="label">Събрани</div>
-          <div className="value green">
-            <AnimatedCounter value={stats.collected} /> <small>лв.</small>
-          </div>
-        </div>
-        <div className="af-stat-card progress-card">
-          <div className="label">Успеваемост</div>
-          <div className="af-progress-wrap">
-            <div className="value blue">
-              <AnimatedCounter value={stats.progress} />%
+          <div className="af-stat-info">
+            <div className="label">Очаквани</div>
+            <div className="value">
+              <AnimatedCounter value={stats.toCollect} /> <small>лв.</small>
             </div>
-            <div className="af-progress-bar">
-              <div
-                className="fill"
-                style={{ width: `${stats.progress}%` }}
-              ></div>
+          </div>
+        </div>
+        <div className="af-stat-card green">
+          <div className="af-stat-icon icon-green">
+            <Wallet size={24} strokeWidth={2.5} />
+          </div>
+          <div className="af-stat-info">
+            <div className="label">Събрани</div>
+            <div className="value">
+              <AnimatedCounter value={stats.collected} /> <small>лв.</small>
+            </div>
+          </div>
+        </div>
+        <div className="af-stat-card progress-card purple">
+          <div className="af-stat-icon icon-purple">
+            <Target size={24} strokeWidth={2.5} />
+          </div>
+          <div className="af-stat-info" style={{ width: "100%" }}>
+            <div className="label">Успеваемост</div>
+            <div className="af-progress-wrap">
+              <div className="value">
+                <AnimatedCounter value={stats.progress} />%
+              </div>
+              <div className="af-progress-bar">
+                <div
+                  className="fill"
+                  style={{ width: `${stats.progress}%` }}
+                ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -595,20 +628,20 @@ function AdminFees() {
       <div className="af-view-controls mobile-view">
         <div className="af-view-toggle-group">
           <button
-            className={`af-vt-btn ${
+            className={`af-vt-btn af-flex-align ${
               mobileViewMode === "elevator" ? "active" : ""
             }`}
             onClick={() => setMobileViewMode("elevator")}
             type="button"
           >
-            🏢 Панел
+            <LayoutDashboard size={16} strokeWidth={2.5} /> Панел
           </button>
           <button
-            className={`af-vt-btn ${mobileViewMode === "list" ? "active" : ""}`}
+            className={`af-vt-btn af-flex-align ${mobileViewMode === "list" ? "active" : ""}`}
             onClick={() => setMobileViewMode("list")}
             type="button"
           >
-            📋 Списък
+            <List size={16} strokeWidth={2.5} /> Списък
           </button>
         </div>
         <div className="af-view-info">
@@ -648,7 +681,7 @@ function AdminFees() {
                     const groupTotal = group.rows.reduce(
                       (sum, r) =>
                         sum + (remainingByObject[getObjectKey(r)] || 0),
-                      0
+                      0,
                     );
                     return (
                       <Fragment key={group.clientId}>
@@ -657,13 +690,20 @@ function AdminFees() {
                           onClick={() =>
                             setExpandedUsers((p) => ({
                               ...p,
-                              [group.clientId]: !p[group.clientId],
+                              ...(!p[group.clientId]
+                                ? { [group.clientId]: true }
+                                : { [group.clientId]: false }),
                             }))
                           }
                         >
                           <td colSpan="8">
                             <div className="af-group-content">
-                              <span className="icon">📁</span> {group.name}
+                              <Users
+                                size={18}
+                                strokeWidth={2.5}
+                                className="af-text-sec"
+                              />{" "}
+                              {group.name}
                               <span className="count-badge">
                                 {group.rows.length} обекта
                               </span>
@@ -724,7 +764,7 @@ function AdminFees() {
             {userGroups.map((group) => {
               const groupTotal = group.rows.reduce(
                 (sum, r) => sum + (remainingByObject[getObjectKey(r)] || 0),
-                0
+                0,
               );
               const isExpanded = expandedUsers[group.clientId];
               return (
@@ -745,7 +785,17 @@ function AdminFees() {
                           {groupTotal.toFixed(0)} лв.
                         </span>
                       )}
-                      <span className="arrow">{isExpanded ? "▼" : "▶"}</span>
+                      <span className="arrow">
+                        {isExpanded ? (
+                          <ChevronRight
+                            size={18}
+                            strokeWidth={2.5}
+                            style={{ transform: "rotate(90deg)" }}
+                          />
+                        ) : (
+                          <ChevronRight size={18} strokeWidth={2.5} />
+                        )}
+                      </span>
                     </div>
                   </div>
                   {isExpanded && (
@@ -770,7 +820,9 @@ function AdminFees() {
                               <span className="af-m-row-val">
                                 {totalRem.toFixed(2)} лв.
                               </span>
-                              <span className="af-m-action-icon">💳</span>
+                              <span className="af-m-action-icon">
+                                <CreditCard size={18} strokeWidth={2.5} />
+                              </span>
                             </div>
                           </div>
                         );
@@ -797,7 +849,7 @@ function AdminFees() {
               <h2>
                 {formatObjectName(
                   selectedFeeForModal.type,
-                  selectedFeeForModal.object_number
+                  selectedFeeForModal.object_number,
                 )}
               </h2>
               <button
@@ -805,7 +857,7 @@ function AdminFees() {
                 onClick={() => setSelectedFeeForModal(null)}
                 type="button"
               >
-                ✕
+                <X size={24} strokeWidth={2.5} />
               </button>
             </div>
             <div className="af-modal-body">
@@ -830,7 +882,9 @@ function AdminFees() {
                     </div>
                     <div className="af-modal-actions">
                       {isFullyPaid ? (
-                        <div className="paid-stamp">✅ ПЛАТЕНО</div>
+                        <div className="paid-stamp af-flex-align af-flex-center">
+                          <CheckCircle2 size={24} strokeWidth={2.5} /> ПЛАТЕНО
+                        </div>
                       ) : (
                         <>
                           {!isPaidCurrent && (

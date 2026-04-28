@@ -193,15 +193,15 @@ function BuildingUsers() {
   const getTypeIcon = (type) => {
     switch (type) {
       case "apartment":
-        return <Home size={14} strokeWidth={2.5} />;
+        return <Home size={16} strokeWidth={2.5} />;
       case "office":
-        return <Briefcase size={14} strokeWidth={2.5} />;
+        return <Briefcase size={16} strokeWidth={2.5} />;
       case "garage":
-        return <CarFront size={14} strokeWidth={2.5} />;
+        return <CarFront size={16} strokeWidth={2.5} />;
       case "retail":
-        return <Store size={14} strokeWidth={2.5} />;
+        return <Store size={16} strokeWidth={2.5} />;
       default:
-        return <Package size={14} strokeWidth={2.5} />;
+        return <Package size={16} strokeWidth={2.5} />;
     }
   };
 
@@ -312,78 +312,82 @@ function BuildingUsers() {
             </div>
           ) : (
             <>
-              <table className="bu-table desktop-view">
-                <thead>
-                  <tr>
-                    <th>Обект</th>
-                    <th>Етаж</th>
-                    <th>Номер</th>
-                    <th>Собственик</th>
-                    <th>Площ</th>
-                    <th className="bu-text-right">Живущи</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentData.length === 0 ? (
+              <div className="bu-table-responsive desktop-view">
+                <table className="bu-table">
+                  <thead>
                     <tr>
-                      <td colSpan="6" className="bu-table-empty">
-                        Няма намерени резултати.
-                      </td>
+                      <th>Обект</th>
+                      <th>Етаж</th>
+                      <th>Номер</th>
+                      <th>Собственик</th>
+                      <th>Площ</th>
+                      <th className="bu-text-right">Живущи</th>
                     </tr>
-                  ) : (
-                    currentData.map((u) => (
-                      <tr
-                        key={`${u.type}-${u.id}`}
-                        onClick={() =>
-                          navigate(`/admin/edit-user/${u.user_id}`, {
-                            state: {
-                              buildingId: u.building_id,
-                              propertyId: u.id,
-                              propertyType: u.type,
-                              previousBuilding: selectedBuilding,
-                              previousPage: currentPage,
-                              previousSearch: localSearch,
-                              scrollPosition: window.scrollY,
-                            },
-                          })
-                        }
-                      >
-                        <td>
-                          <span className={`bu-badge ${getBadgeClass(u.type)}`}>
-                            {getTypeIcon(u.type)}
-                            {getTypeLabel(u.type)}
-                          </span>
-                        </td>
-                        <td>{u.floor}</td>
-                        <td className="bu-font-bold">{u.number}</td>
-                        <td>
-                          {u.first_name ? (
-                            <div className="bu-owner-cell">
-                              <span className="bu-owner-name">
-                                {u.first_name} {u.last_name}
-                              </span>
-                              {u.phone && (
-                                <span className="bu-owner-phone">
-                                  <Phone size={14} strokeWidth={2.5} />
-                                  {u.phone}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="bu-empty-state-text">
-                              - Свободен -
-                            </span>
-                          )}
-                        </td>
-                        <td>{u.area} m²</td>
-                        <td className="bu-text-right bu-font-bold">
-                          {u.residents}
+                  </thead>
+                  <tbody>
+                    {currentData.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="bu-table-empty">
+                          Няма намерени резултати.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      currentData.map((u) => (
+                        <tr
+                          key={`${u.type}-${u.id}`}
+                          onClick={() =>
+                            navigate(`/admin/edit-user/${u.user_id}`, {
+                              state: {
+                                buildingId: u.building_id,
+                                propertyId: u.id,
+                                propertyType: u.type,
+                                previousBuilding: selectedBuilding,
+                                previousPage: currentPage,
+                                previousSearch: localSearch,
+                                scrollPosition: window.scrollY,
+                              },
+                            })
+                          }
+                        >
+                          <td>
+                            <span
+                              className={`bu-badge ${getBadgeClass(u.type)}`}
+                            >
+                              {getTypeIcon(u.type)}
+                              {getTypeLabel(u.type)}
+                            </span>
+                          </td>
+                          <td>{u.floor}</td>
+                          <td className="bu-font-bold">{u.number}</td>
+                          <td>
+                            {u.first_name ? (
+                              <div className="bu-owner-cell">
+                                <span className="bu-owner-name">
+                                  {u.first_name} {u.last_name}
+                                </span>
+                                {u.phone && (
+                                  <span className="bu-owner-phone">
+                                    <Phone size={14} strokeWidth={2.5} />
+                                    {u.phone}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="bu-empty-state-text">
+                                - Свободен -
+                              </span>
+                            )}
+                          </td>
+                          <td>{u.area} m²</td>
+                          <td className="bu-text-right bu-font-bold">
+                            {u.residents}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               <div className="bu-mobile-list mobile-view">
                 {currentData.length === 0 ? (
@@ -409,7 +413,9 @@ function BuildingUsers() {
                     >
                       <div className="bu-card-header">
                         <div className="bu-card-header-left">
-                          <span className="bu-card-icon-large">
+                          <span
+                            className={`bu-card-icon-large ${getBadgeClass(u.type)}`}
+                          >
                             {getTypeIcon(u.type)}
                           </span>
                           <span className="bu-card-title">№ {u.number}</span>
@@ -419,12 +425,20 @@ function BuildingUsers() {
 
                       <div className="bu-card-subtitle">
                         {u.first_name ? (
-                          <>
-                            <User size={16} strokeWidth={2.5} />
-                            <span>
-                              {u.first_name} {u.last_name}
-                            </span>
-                          </>
+                          <div className="bu-mobile-owner-wrapper">
+                            <div className="bu-mobile-owner-name">
+                              <User size={16} strokeWidth={2.5} />
+                              <span>
+                                {u.first_name} {u.last_name}
+                              </span>
+                            </div>
+                            {u.phone && (
+                              <div className="bu-mobile-owner-phone">
+                                <Phone size={14} strokeWidth={2.5} />
+                                <span>{u.phone}</span>
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <span className="bu-empty-state-text">
                             Няма собственик

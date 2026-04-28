@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
+  User,
 } from "lucide-react";
 
 const CountUp = ({ value, duration = 800, decimals = 0 }) => {
@@ -539,10 +540,17 @@ export default function AdminEvents() {
                         </span>
                       </td>
 
-                      <td data-label="Възложено">
-                        {event.assigned_user
-                          ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
-                          : "-"}
+                      <td data-label="Възложено" className="adev-assigned">
+                        <User
+                          size={14}
+                          strokeWidth={2.5}
+                          className="adev-assigned-icon"
+                        />
+                        <span className="adev-assigned-text">
+                          {event.assigned_user
+                            ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
+                            : "-"}
+                        </span>
                       </td>
 
                       <td

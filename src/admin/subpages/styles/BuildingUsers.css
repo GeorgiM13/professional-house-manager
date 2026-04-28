@@ -34,6 +34,7 @@
   color: var(--au-text-main);
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .bu-header {
@@ -254,6 +255,9 @@
   text-transform: uppercase;
   color: var(--au-text-sec);
   font-weight: 600;
+  line-height: 1.2;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .bu-stat-value {
@@ -304,6 +308,12 @@
   opacity: 0.5;
 }
 
+.bu-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
 .bu-table {
   width: 100%;
   background: var(--au-bg-card);
@@ -312,7 +322,6 @@
   border-spacing: 0;
   box-shadow: var(--au-shadow);
   overflow: hidden;
-  margin-bottom: 20px;
   border: 1px solid var(--au-border);
 }
 
@@ -428,8 +437,8 @@
   align-items: center;
   gap: 15px;
   padding: 20px 0;
+  flex-wrap: wrap;
 }
-
 .bu-pagination button {
   display: flex;
   align-items: center;
@@ -448,8 +457,20 @@
   cursor: not-allowed;
 }
 
-.bu-mobile-list {
+.mobile-view {
   display: none;
+}
+.desktop-view {
+  display: block;
+}
+
+.bu-card-icon-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50px;
 }
 
 .bu-mobile-card {
@@ -462,6 +483,16 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.bu-mobile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--au-shadow);
+  border-color: var(--au-primary);
 }
 
 .bu-card-header {
@@ -473,7 +504,7 @@
 .bu-card-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .bu-card-title {
@@ -482,15 +513,10 @@
   font-size: 1.1rem;
 }
 
-.bu-card-icon-large {
-  color: var(--au-text-sec);
-  display: flex;
-  align-items: center;
-}
-
 .bu-card-floor {
   font-size: 0.9rem;
   color: var(--au-text-sec);
+  font-weight: 500;
 }
 
 .bu-card-subtitle {
@@ -498,8 +524,29 @@
   font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 8px;
+  width: 100%;
   margin-top: 4px;
+}
+
+.bu-mobile-owner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bu-mobile-owner-name,
+.bu-mobile-owner-phone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bu-mobile-owner-phone {
+  font-size: 0.85rem;
+  opacity: 0.9;
 }
 
 .bu-card-footer {
@@ -512,22 +559,30 @@
   color: var(--au-text-main);
 }
 
-.mobile-view {
-  display: none !important;
-}
-.desktop-view {
-  display: table !important;
+@media (max-width: 1024px) {
+  .desktop-view {
+    display: none !important;
+  }
+  .mobile-view {
+    display: block !important;
+  }
+
+  .bu-mobile-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
 }
 
 @media (max-width: 768px) {
   .bu-page {
-    padding: 10px;
+    padding: 1rem;
   }
   .bu-header {
     flex-direction: column;
     align-items: stretch;
     gap: 15px;
-    padding: 15px;
+    padding: 1.2rem;
   }
   .bu-header-right {
     flex-direction: column;
@@ -541,20 +596,14 @@
     flex-direction: column;
     align-items: stretch;
   }
-  .bu-select-wrapper {
+  .bu-select-wrapper,
+  .bu-react-select-container {
     width: 100%;
   }
   .bu-stats-container {
     grid-template-columns: 1fr;
   }
-  .desktop-view {
-    display: none !important;
-  }
-  .mobile-view {
-    display: block !important;
-  }
   .bu-mobile-list {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }

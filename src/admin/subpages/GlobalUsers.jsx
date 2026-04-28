@@ -273,19 +273,39 @@ function GlobalUsers() {
           {totalPages > 1 && (
             <div className="au-pagination">
               <button
+                className="au-pagination-btn prev-btn"
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                <ChevronLeft size={16} strokeWidth={2.5} /> Предишна
+                <ChevronLeft
+                  size={18}
+                  strokeWidth={2.5}
+                  className="au-icon-slide-left"
+                />
+                <span className="au-pagination-btn-text">Предишна</span>
               </button>
-              <span>
-                Страница {page} от {totalPages}
-              </span>
+
+              <div className="au-pagination-info">
+                <span className="au-page-word">Страница </span>
+                <span className="au-page-numbers">
+                  {page}
+                  <span className="au-page-separator"> от </span>
+                  <span className="au-page-slash"> / </span>
+                  {totalPages}
+                </span>
+              </div>
+
               <button
+                className="au-pagination-btn next-btn"
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Следваща <ChevronRight size={16} strokeWidth={2.5} />
+                <span className="au-pagination-btn-text">Следваща</span>
+                <ChevronRight
+                  size={18}
+                  strokeWidth={2.5}
+                  className="au-icon-slide-right"
+                />
               </button>
             </div>
           )}

@@ -1,21 +1,37 @@
+.au-light {
+  --au-bg-page: #f8fafc;
+  --au-bg-card: #ffffff;
+  --au-text-main: #1e293b;
+  --au-text-sec: #64748b;
+  --au-border: #e2e8f0;
+  --au-hover: #f1f5f9;
+  --au-primary: #3b82f6;
+  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.au-dark {
+  --au-bg-page: #0f172a;
+  --au-bg-card: #1e293b;
+  --au-text-main: #f1f5f9;
+  --au-text-sec: #94a3b8;
+  --au-border: #334155;
+  --au-hover: #334155;
+  --au-primary: #3b82f6;
+  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .aub-container {
   padding: 2rem;
   max-width: 900px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  background-color: var(--au-bg-page, #f8fafc);
-  color: var(--au-text-main, #1e293b);
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.aub-container.au-dark {
-  --au-bg-page: #0f172a;
-  --au-bg-card: #1e293b;
-  --au-text-main: #f1f5f9;
-  --au-text-sec: #94a3b8;
-  --au-border: #334155;
-  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background-color: var(--au-bg-page);
+  color: var(--au-text-main);
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+  overflow-x: hidden;
 }
 
 .aub-header {
@@ -37,14 +53,16 @@
 }
 
 .aub-card {
-  background: var(--au-bg-card, #ffffff);
-  border: 1px solid var(--au-border, #e2e8f0);
+  background: var(--au-bg-card);
+  border: 1px solid var(--au-border);
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: var(--au-shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  box-shadow: var(--au-shadow);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .aub-toggle-container {
@@ -54,10 +72,8 @@
   border-radius: 10px;
   border: 1px solid var(--au-border);
   margin-bottom: 1rem;
-}
-
-.au-dark .aub-toggle-container {
-  background-color: #0f172a;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .aub-toggle-btn {
@@ -83,24 +99,26 @@
 
 .aub-toggle-btn.active {
   background-color: var(--au-bg-card);
-  color: var(--au-primary, #3b82f6);
+  color: var(--au-primary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.au-dark .aub-toggle-btn.active {
-  background-color: #334155;
-  color: #fff;
+
+.aub-toggle-text {
+  display: inline;
 }
 
 .aub-grid-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+  width: 100%;
 }
 
 .aub-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .aub-form-group label {
@@ -114,7 +132,9 @@
 .aub-input {
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid;
+  border: 1px solid var(--au-border);
+  background-color: var(--au-bg-page);
+  color: var(--au-text-main);
   font-size: 1rem;
   transition: all 0.2s;
   outline: none;
@@ -122,20 +142,8 @@
   box-sizing: border-box;
 }
 
-.au-light .aub-input {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1e293b;
-}
-
-.au-dark .aub-input {
-  background-color: #0f172a;
-  border-color: #334155;
-  color: #f1f5f9;
-}
-
 .aub-input:focus {
-  border-color: var(--au-primary, #3b82f6) !important;
+  border-color: var(--au-primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -143,6 +151,13 @@
   color: #ef4444;
   font-size: 0.8rem;
   margin-top: 0.2rem;
+}
+
+.aub-divider {
+  border: none;
+  border-top: 1px dashed var(--au-border);
+  width: 100%;
+  margin: 0.5rem 0;
 }
 
 .aub-actions {
@@ -160,7 +175,9 @@
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: filter 0.2s;
+  transition:
+    filter 0.2s,
+    background-color 0.2s;
 }
 
 .aub-btn:hover {
@@ -168,37 +185,107 @@
 }
 
 .aub-btn-primary {
-  background: var(--au-primary, #3b82f6);
+  background: var(--au-primary);
   color: white;
-  border-color: var(--au-primary, #3b82f6);
+  border-color: var(--au-primary);
 }
 
 .aub-btn-secondary {
   background-color: transparent;
+  border-color: var(--au-border);
+  color: var(--au-text-sec);
 }
-.au-light .aub-btn-secondary {
-  background-color: #ffffff;
-  border-color: #cbd5e1;
-  color: #475569;
+
+.aub-btn-secondary:hover {
+  background-color: var(--au-hover);
+  color: var(--au-text-main);
 }
-.au-light .aub-btn-secondary:hover {
-  background-color: #f1f5f9;
+
+.aub-react-select-container {
+  width: 100%;
 }
-.au-dark .aub-btn-secondary {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: #475569;
-  color: #e2e8f0;
+
+.aub-react-select__control {
+  background-color: var(--au-bg-page) !important;
+  border-color: var(--au-border) !important;
+  border-radius: 8px !important;
+  min-height: 42px !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
 }
-.au-dark .aub-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+
+.aub-react-select__control--is-focused {
+  border-color: var(--au-primary) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.aub-react-select__menu {
+  background-color: var(--au-bg-card) !important;
+  border: 1px solid var(--au-border) !important;
+  box-shadow: var(--au-shadow) !important;
+  border-radius: 8px !important;
+  z-index: 9999 !important;
+  overflow: hidden;
+}
+
+.aub-react-select__option {
+  background-color: transparent !important;
+  color: var(--au-text-main) !important;
+  cursor: pointer !important;
+  padding: 10px 12px !important;
+}
+
+.aub-react-select__option--is-focused {
+  background-color: var(--au-hover) !important;
+}
+
+.aub-react-select__option--is-selected {
+  background-color: var(--au-primary) !important;
+  color: white !important;
+}
+
+.aub-react-select__single-value {
+  color: var(--au-text-main) !important;
+}
+
+.aub-react-select__input-container,
+.aub-react-select__placeholder {
+  color: var(--au-text-sec) !important;
+}
+
+.aub-react-select__indicator-separator {
+  background-color: var(--au-border) !important;
+}
+
+.aub-react-select__dropdown-indicator,
+.aub-react-select__clear-indicator {
+  color: var(--au-text-sec) !important;
+}
+
+.aub-react-select__dropdown-indicator:hover,
+.aub-react-select__clear-indicator:hover {
+  color: var(--au-text-main) !important;
+}
+
+@media (max-width: 1024px) {
+  .aub-container {
+    padding: 1.5rem;
+  }
+  .aub-card {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
   .aub-container {
     padding: 1rem;
   }
+  .aub-card {
+    padding: 1.25rem;
+  }
   .aub-grid-row {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
   .aub-header {
     flex-direction: column;
@@ -210,5 +297,11 @@
   }
   .aub-btn {
     width: 100%;
+  }
+  .aub-toggle-text {
+    display: none;
+  }
+  .aub-toggle-btn {
+    padding: 12px 8px;
   }
 }

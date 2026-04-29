@@ -51,10 +51,6 @@ const UserFees = lazy(() => import("./client/UserFees"));
 const UserExpenses = lazy(() => import("./client/UserExpenses"));
 const UserBuildingCash = lazy(() => import("./client/UserBuildingCash"));
 
-const UserEventDetails = lazy(() => import("./client/subpages/UserEventDetails"));
-const UserAddReport = lazy(() => import("./client/subpages/AddUserReport"));
-const UserReportDetails = lazy(() => import("./client/subpages/UserReportDetails"));
-const UserExpensesDetails = lazy(() => import("./client/subpages/UserExpensesDetails"));
 
 
 const LoadingScreen = () => (
@@ -119,13 +115,9 @@ function App() {
                 <Route element={<ProtectedRoute requiredRole="user" />}>
                   <Route path="/client" element={<UserLayout />}>
                     <Route path="userevents" element={<UserEvents />} />
-                    <Route path="event/:id" element={<UserEventDetails />} />
                     <Route path="reports" element={<UserReports />} />
-                    <Route path="addreport" element={<UserAddReport />} />
-                    <Route path="report/:id" element={<UserReportDetails />} />
                     <Route path="fees" element={<UserFees />} />
                     <Route path="expenses" element={<UserExpenses />} />
-                    <Route path="expense/:id" element={<UserExpensesDetails />} />
                     <Route path="buildingCash" element={<UserBuildingCash />} />
                     <Route path="profile/change" element={<EditProfile />} />
                   </Route>

@@ -1,33 +1,46 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
+import {
+  Building2,
+  CalendarDays,
+  AlignLeft,
+  MessageSquare,
+  RefreshCw,
+  Loader2,
+  AlertCircle,
+  X,
+} from "lucide-react";
 import "./styles/UserReportDetails.css";
 
-function UserReportDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function UserReportDetails({ reportId, isOpen, onClose }) {
   const { isDarkMode } = useTheme();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchReport() {
+      if (!isOpen || !reportId) return;
+
+      setLoading(true);
+      setReport(null);
+
       const { data, error } = await supabase
         .from("reports")
         .select(
           `
-          id,
-          status,
-          subject,
-          description,
-          notes,
-          created_at,
-          updated_at,
-          building:building_id(name,address)
-        `
+            id,
+            status,
+            subject,
+            description,
+            notes,
+            created_at,
+            updated_at,
+            building_id,
+            building:building_id(name,address)
+          `,
         )
-        .eq("id", id)
+        .eq("id", reportId)
         .single();
 
       if (error) {
@@ -38,7 +51,7 @@ function UserReportDetails() {
       setLoading(false);
     }
     fetchReport();
-  }, [id]);
+  }, [reportId, isOpen]);
 
   function formatDateTime(dateString) {
     if (!dateString) return "-";
@@ -64,112 +77,130 @@ function UserReportDetails() {
     return "urepd-status-default";
   };
 
-  if (loading)
-    return (
-      <div
-        className={`urepd-wrapper ${
-          isDarkMode ? "client-dark" : "client-light"
-        }`}
-      >
-        <div className="urepd-loading">
-          <div className="urepd-spinner"></div>
-          <p>Зареждане на сигнала...</p>
-        </div>
-      </div>
-    );
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("urepd-modal-overlay")) {
+      onClose();
+    }
+  };
 
-  if (!report)
-    return (
-      <div
-        className={`urepd-wrapper ${
-          isDarkMode ? "client-dark" : "client-light"
-        }`}
-      >
-        <div className="urepd-error">Сигналът не е намерен.</div>
-      </div>
-    );
-
-  const statusClass = getStatusClass(report.status);
+  if (!isOpen) return null;
 
   return (
     <div
-      className={`urepd-wrapper ${isDarkMode ? "client-dark" : "client-light"}`}
+      className={`urepd-modal-overlay ${isDarkMode ? "client-dark" : "client-light"}`}
+      onClick={handleOverlayClick}
     >
-      <div className="urepd-page-header">
-        <button
-          className="urepd-back-link"
-          onClick={() => navigate("/client/reports")}
-        >
-          ← Назад към списъка
-        </button>
-        <div className={`urepd-status-pill ${statusClass}`}>
-          {report.status || "Няма статус"}
-        </div>
-      </div>
-
-      <div className="urepd-main-card fade-in">
-        <div className="urepd-card-header">
-          <div className="urepd-location-badge">
-            <span className="icon">🏢</span>
-            <div>
-              <h3>{report.building?.name || "Неизвестна сграда"}</h3>
-              <small>{report.building?.address || "Няма адрес"}</small>
-            </div>
+      <div className="urepd-modal-content fade-in">
+        {loading ? (
+          <div className="urepd-loading urepd-flex-col urepd-flex-center">
+            <Loader2
+              size={40}
+              strokeWidth={2.5}
+              className="urepd-spinner-icon"
+            />
+            <p>Зареждане на детайли...</p>
           </div>
-          <div className="urepd-dates">
-            <div className="date-item">
-              <span>📅 Подаден на:</span>
-              <strong>{formatDateTime(report.created_at)}</strong>
-            </div>
+        ) : !report ? (
+          <div className="urepd-error urepd-flex-col urepd-flex-center">
+            <AlertCircle size={48} strokeWidth={2} />
+            <p>Сигналът не е намерен.</p>
+            <button className="urepd-close-btn-error" onClick={onClose}>
+              Затвори
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="urepd-card-header">
+              <div className="urepd-header-top urepd-flex-align">
+                <div
+                  className={`urepd-status-pill ${getStatusClass(report.status)}`}
+                >
+                  {report.status || "Няма статус"}
+                </div>
+                <button
+                  className="urepd-close-btn"
+                  onClick={onClose}
+                  title="Затвори"
+                >
+                  <X size={24} strokeWidth={2.5} />
+                </button>
+              </div>
 
-        <div className="urepd-divider"></div>
+              <div className="urepd-title-section">
+                <h1 className="urepd-title">{report.subject}</h1>
+              </div>
 
-        <div className="urepd-body">
-          <h1 className="urepd-title">{report.subject}</h1>
-
-          <div className="urepd-section-group">
-            <span className="urepd-section-label">Описание на проблема</span>
-            <div className="urepd-box urepd-description-box">
-              {report.description}
-            </div>
-          </div>
-
-          <div className="urepd-section-group">
-            <span className="urepd-section-label">
-              Отговор / Бележки от администратора
-            </span>
-            <div
-              className={`urepd-box urepd-notes-box ${
-                !report.notes ? "empty" : ""
-              }`}
-            >
-              {report.notes ? (
-                <>
-                  <span className="admin-reply-icon">💬</span>
-                  {report.notes}
-                </>
-              ) : (
-                <em className="text-muted">
-                  Все още няма добавен отговор от администратор.
-                </em>
-              )}
-            </div>
-          </div>
-
-          <div className="urepd-meta-grid">
-            <div className="urepd-meta-box">
-              <span className="urepd-meta-icon">🔄</span>
-              <div className="urepd-meta-info">
-                <span className="urepd-meta-label">Последна промяна</span>
-                <span className="urepd-meta-value">
-                  {formatDateTime(report.updated_at)}
-                </span>
+              <div className="urepd-location-badge urepd-flex-align">
+                <div className="urepd-icon-wrapper">
+                  <Building2 size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h3>{report.building?.name || "Неизвестна сграда"}</h3>
+                  <small>{report.building?.address || "Няма адрес"}</small>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+
+            <div className="urepd-divider"></div>
+
+            <div className="urepd-body">
+              <div className="urepd-description-container">
+                <span className="urepd-section-label urepd-flex-align">
+                  <AlignLeft size={16} strokeWidth={2.5} /> Описание на проблема
+                </span>
+                <div className="urepd-description-content">
+                  {report.description || (
+                    <em className="text-muted">Няма въведено описание.</em>
+                  )}
+                </div>
+              </div>
+
+              <div className="urepd-description-container">
+                <span className="urepd-section-label urepd-flex-align">
+                  <MessageSquare size={16} strokeWidth={2.5} /> Отговор от
+                  администратор
+                </span>
+                <div
+                  className={`urepd-description-content ${!report.notes ? "empty-notes" : "admin-notes"}`}
+                >
+                  {report.notes ? (
+                    report.notes
+                  ) : (
+                    <em className="text-muted">
+                      Все още няма добавен отговор от администратор.
+                    </em>
+                  )}
+                </div>
+              </div>
+
+              <div className="urepd-meta-grid">
+                <div className="urepd-meta-box">
+                  <div className="urepd-meta-icon">
+                    <CalendarDays size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="urepd-meta-info">
+                    <span className="urepd-meta-label">Подаден на</span>
+                    <span className="urepd-meta-value urepd-primary-text">
+                      {formatDateTime(report.created_at)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="urepd-meta-box">
+                  <div className="urepd-meta-icon">
+                    <RefreshCw size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="urepd-meta-info">
+                    <span className="urepd-meta-label">Последна промяна</span>
+                    <span className="urepd-meta-value">
+                      {formatDateTime(report.updated_at)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

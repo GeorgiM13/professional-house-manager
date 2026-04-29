@@ -6,6 +6,31 @@ import { useUserBuildings } from "./hooks/useUserBuildings";
 import { useLocalUser } from "./hooks/useLocalUser";
 import { useTheme } from "../components/ThemeContext";
 import ExpenseForecast from "../admin/ai/components/ExpenseForecast";
+import {
+  Zap,
+  ArrowUpDown,
+  Droplets,
+  Sparkles,
+  Wrench,
+  Briefcase,
+  Lightbulb,
+  ClipboardCheck,
+  Wifi,
+  Key,
+  Bug,
+  Package,
+  BarChart3,
+  Receipt,
+  Flame,
+  MapPin,
+  Building,
+  CalendarDays,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Inbox,
+} from "lucide-react";
+import UserExpenseDetails from "./subpages/UserExpensesDetails";
 import "./styles/UserExpenses.css";
 
 const CountUp = ({ value, duration = 800, decimals = 2 }) => {
@@ -72,51 +97,29 @@ const EXPENSE_TYPES = {
   other: "Други",
 };
 
-const CUSTOM_SELECT_STYLES = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: "var(--uex-bg-card)",
-    borderColor: state.isFocused ? "var(--uex-accent)" : "var(--uex-border)",
-    borderRadius: "8px",
-    color: "var(--uex-text-main)",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--uex-accent-light)" : "none",
-    minHeight: "42px",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    backgroundColor: "var(--uex-bg-card)",
-    border: "1px solid var(--uex-border)",
-  }),
-  singleValue: (provided) => ({ ...provided, color: "var(--uex-text-main)" }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--uex-accent)"
-      : state.isFocused
-      ? "var(--uex-bg-page)"
-      : "transparent",
-    color: state.isSelected ? "white" : "var(--uex-text-main)",
-    cursor: "pointer",
-  }),
-  placeholder: (provided) => ({ ...provided, color: "var(--uex-text-sec)" }),
-};
-
-const getExpenseIcon = (type) => {
-  if (!type) return "📝";
+const getExpenseIcon = (type, size = 18) => {
+  if (!type) return <Package size={size} strokeWidth={2.5} />;
   const t = type.toLowerCase();
-  if (t.includes("electricity") || t.includes("tok")) return "⚡";
-  if (t.includes("lift") || t.includes("asansyor")) return "🛗";
-  if (t.includes("water")) return "💧";
-  if (t.includes("clean")) return "🧹";
-  if (t.includes("repair")) return "🛠️";
-  if (t.includes("manager")) return "👨‍💼";
-  if (t.includes("lighting")) return "💡";
-  if (t.includes("review")) return "📋";
-  if (t.includes("internet") || t.includes("video")) return "📡";
-  if (t.includes("access") || t.includes("chip")) return "🔑";
-  if (t.includes("pest") || t.includes("дезинсекция")) return "🕷️";
-  return "📦";
+  if (t.includes("electricity") || t.includes("tok"))
+    return <Zap size={size} strokeWidth={2.5} />;
+  if (t.includes("lift") || t.includes("asansyor"))
+    return <ArrowUpDown size={size} strokeWidth={2.5} />;
+  if (t.includes("water")) return <Droplets size={size} strokeWidth={2.5} />;
+  if (t.includes("clean") || t.includes("хигиенист"))
+    return <Sparkles size={size} strokeWidth={2.5} />;
+  if (t.includes("repair")) return <Wrench size={size} strokeWidth={2.5} />;
+  if (t.includes("manager")) return <Briefcase size={size} strokeWidth={2.5} />;
+  if (t.includes("lighting"))
+    return <Lightbulb size={size} strokeWidth={2.5} />;
+  if (t.includes("review"))
+    return <ClipboardCheck size={size} strokeWidth={2.5} />;
+  if (t.includes("internet") || t.includes("video"))
+    return <Wifi size={size} strokeWidth={2.5} />;
+  if (t.includes("access") || t.includes("chip"))
+    return <Key size={size} strokeWidth={2.5} />;
+  if (t.includes("pest") || t.includes("дезинсекция"))
+    return <Bug size={size} strokeWidth={2.5} />;
+  return <Package size={size} strokeWidth={2.5} />;
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -144,23 +147,26 @@ function UserExpenses() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
 
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedExpenseId, setSelectedExpenseId] = useState(null);
+
   const tableAbortController = useRef(null);
   const statsAbortController = useRef(null);
 
   const yearOptions = useMemo(() => {
     const years = Array.from(
       { length: CURRENT_YEAR - 2015 + 2 },
-      (_, i) => CURRENT_YEAR + 1 - i
+      (_, i) => CURRENT_YEAR + 1 - i,
     );
     return [
-      { value: "all", label: "📅 Всички години" },
+      { value: "all", label: "Всички години", iconType: "calendar" },
       ...years.map((y) => ({ value: y, label: `${y} година` })),
     ];
   }, []);
 
   const monthOptions = useMemo(() => {
     return [
-      { value: "all", label: "📅 Всички месеци" },
+      { value: "all", label: "Всички месеци", iconType: "calendar" },
       ...Object.entries(MONTH_NAMES).map(([key, name]) => ({
         value: key,
         label: name,
@@ -170,14 +176,33 @@ function UserExpenses() {
 
   const buildingOptions = useMemo(
     () => [
-      { value: "all", label: "🏢 Всички сгради" },
+      { value: "all", label: "Всички сгради", iconType: "building" },
       ...buildings.map((b) => ({
         value: b.id,
-        label: `${b.name}, ${b.address}`,
+        label: [b.name, b.address].filter(Boolean).join(", "),
       })),
     ],
-    [buildings]
+    [buildings],
   );
+
+  const customFormatOptionLabel = ({ label, iconType }, { context }) => {
+    let Icon = null;
+    if (iconType === "building") Icon = Building;
+    if (iconType === "calendar") Icon = CalendarDays;
+
+    const shouldShowIcon = Icon && context === "value";
+    const cleanLabel =
+      typeof label === "string" ? label.replace(/^[,\s]+/, "") : label;
+
+    return (
+      <div className="flex-align">
+        {shouldShowIcon && (
+          <Icon size={16} strokeWidth={2.5} className="uex-select-icon" />
+        )}
+        <span>{cleanLabel}</span>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (buildings.length === 1) {
@@ -194,7 +219,7 @@ function UserExpenses() {
       } else if (buildings.length > 0) {
         query = query.in(
           "building_id",
-          buildings.map((b) => b.id)
+          buildings.map((b) => b.id),
         );
       } else {
         return null;
@@ -205,7 +230,7 @@ function UserExpenses() {
 
       return query;
     },
-    [selectedBuilding, filterYear, filterMonth, buildings]
+    [selectedBuilding, filterYear, filterMonth, buildings],
   );
 
   useEffect(() => {
@@ -218,7 +243,7 @@ function UserExpenses() {
       try {
         let query = buildBaseQuery(
           `id, type, month, year, current_month, paid, notes, building:building_id(name,address)`,
-          { count: "exact" }
+          { count: "exact" },
         );
 
         if (!query) {
@@ -281,12 +306,12 @@ function UserExpenses() {
           } else {
             const total = allData.reduce(
               (sum, item) => sum + Number(item.current_month || 0),
-              0
+              0,
             );
             const max = allData.reduce((prev, current) =>
               Number(prev.current_month) > Number(current.current_month)
                 ? prev
-                : current
+                : current,
             );
             setBuildingStats({
               total,
@@ -327,42 +352,50 @@ function UserExpenses() {
 
   return (
     <div className={`uex-page ${isDarkMode ? "uex-dark" : "uex-light"}`}>
-      <div className="uex-header">
+      <div className="uex-header flex-align-between">
         <div className="uex-header-left">
           <h1>Разходи</h1>
           <p className="uex-subtitle">Преглед на сметки и плащания</p>
         </div>
 
-        <div className="uex-header-right">
+        <div className="uex-header-right flex-align">
           {buildings.length > 1 ? (
-            <div style={{ width: "250px" }}>
+            <div className="uex-select-wrapper-lg">
               <Select
                 options={buildingOptions}
                 value={getCurrentOption(buildingOptions, selectedBuilding)}
                 onChange={(opt) =>
                   handleFilterChange(
                     setSelectedBuilding,
-                    opt ? opt.value : "all"
+                    opt ? opt.value : "all",
                   )
                 }
-                styles={CUSTOM_SELECT_STYLES}
+                formatOptionLabel={customFormatOptionLabel}
                 placeholder="Изберете сграда"
                 isSearchable={false}
+                className="react-select-container"
+                classNamePrefix="react-select"
               />
             </div>
           ) : (
             buildings.length === 1 && (
-              <div className="uex-single-building">🏢 {buildings[0].name}</div>
+              <div className="uex-single-building flex-align">
+                <Building size={18} strokeWidth={2.5} /> {buildings[0].name}
+              </div>
             )
           )}
         </div>
       </div>
+
       <ExpenseForecast buildingId={selectedBuilding} />
+
       <div className="uex-stats-grid">
         <div
           className={`uex-stat-card total ${loadingStats ? "updating" : ""}`}
         >
-          <div className="uex-stat-icon">📊</div>
+          <div className="uex-stat-icon uex-icon-blue flex-center">
+            <BarChart3 size={24} strokeWidth={2.5} />
+          </div>
           <div className="uex-stat-info">
             <span className="uex-stat-label">Общо разходи</span>
             <span className="uex-stat-value">
@@ -375,7 +408,9 @@ function UserExpenses() {
         <div
           className={`uex-stat-card count ${loadingStats ? "updating" : ""}`}
         >
-          <div className="uex-stat-icon">🧾</div>
+          <div className="uex-stat-icon uex-icon-purple flex-center">
+            <Receipt size={24} strokeWidth={2.5} />
+          </div>
           <div className="uex-stat-info">
             <span className="uex-stat-label">Брой сметки</span>
             <span className="uex-stat-value">
@@ -386,7 +421,9 @@ function UserExpenses() {
         </div>
 
         <div className={`uex-stat-card max ${loadingStats ? "updating" : ""}`}>
-          <div className="uex-stat-icon">🔥</div>
+          <div className="uex-stat-icon uex-icon-orange flex-center">
+            <Flame size={24} strokeWidth={2.5} />
+          </div>
           <div className="uex-stat-info">
             <span className="uex-stat-label">Най-голям разход</span>
             <span className="uex-stat-value">
@@ -409,38 +446,45 @@ function UserExpenses() {
           </div>
         </div>
       </div>
+
       <div className="uex-toolbar">
         <h3>История на плащанията</h3>
-        <div className="uex-filters-right">
-          <div style={{ width: "160px" }}>
+        <div className="uex-filters-right flex-align">
+          <div className="uex-select-wrapper-sm">
             <Select
               options={yearOptions}
               value={getCurrentOption(yearOptions, filterYear)}
               onChange={(opt) =>
                 handleFilterChange(setFilterYear, opt ? opt.value : "all")
               }
-              styles={CUSTOM_SELECT_STYLES}
+              formatOptionLabel={customFormatOptionLabel}
+              className="react-select-container"
+              classNamePrefix="react-select"
               isSearchable={false}
               placeholder="Година"
             />
           </div>
-          <div style={{ width: "160px" }}>
+          <div className="uex-select-wrapper-sm">
             <Select
               options={monthOptions}
               value={getCurrentOption(monthOptions, filterMonth)}
               onChange={(opt) =>
                 handleFilterChange(setFilterMonth, opt ? opt.value : "all")
               }
-              styles={CUSTOM_SELECT_STYLES}
+              formatOptionLabel={customFormatOptionLabel}
+              className="react-select-container"
+              classNamePrefix="react-select"
               isSearchable={false}
               placeholder="Месец"
             />
           </div>
         </div>
       </div>
+
       {loadingExpenses ? (
-        <div className="uex-loading">
-          <span className="uex-spinner">↻</span> Зареждане...
+        <div className="uex-loading flex-align flex-center">
+          <Loader2 className="uex-spinner-icon" size={24} strokeWidth={2.5} />{" "}
+          Зареждане...
         </div>
       ) : (
         <>
@@ -460,6 +504,11 @@ function UserExpenses() {
               {expenses.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="uex-no-data">
+                    <Inbox
+                      className="uex-empty-icon"
+                      size={48}
+                      strokeWidth={2}
+                    />
                     Няма намерени записи.
                   </td>
                 </tr>
@@ -475,21 +524,28 @@ function UserExpenses() {
                   return (
                     <tr
                       key={exp.id}
-                      onClick={() => navigate(`/client/expense/${exp.id}`)}
+                      onClick={() => {
+                        setSelectedExpenseId(exp.id);
+                        setIsDetailsModalOpen(true);
+                      }}
                       className="uex-row"
                     >
                       <td className="uex-idx">
                         {(currentPage - 1) * pageSize + idx + 1}
                       </td>
 
-                      <td data-label="Вид" className="uex-type-cell">
-                        <span className="uex-icon">
-                          {getExpenseIcon(exp.type)}
-                        </span>
-                        {EXPENSE_TYPES[exp.type] || exp.type}
+                      <td data-label="Вид">
+                        <div className="uex-type-cell">
+                          <span className="uex-icon flex-align flex-center">
+                            {getExpenseIcon(exp.type, 18)}
+                          </span>
+                          <span>{EXPENSE_TYPES[exp.type] || exp.type}</span>
+                        </div>
                       </td>
 
-                      <td data-label="Сграда">{exp.building?.name}</td>
+                      <td data-label="Сграда" className="uex-address">
+                        {exp.building?.name}
+                      </td>
 
                       <td data-label="Период">
                         {MONTH_NAMES[exp.month]} {exp.year}
@@ -507,19 +563,10 @@ function UserExpenses() {
                         </span>
                       </td>
 
-                      <td
-                        data-label="Бележка"
-                        style={{
-                          color: "var(--uex-text-sec)",
-                          fontStyle: "italic",
-                          fontSize: "0.85rem",
-                        }}
-                      >
-                        {exp.notes
-                          ? exp.notes.length > 25
-                            ? exp.notes.substring(0, 25) + "..."
-                            : exp.notes
-                          : "-"}
+                      <td data-label="Бележка">
+                        <div className="uex-notes-cell">
+                          {exp.notes ? exp.notes : "-"}
+                        </div>
                       </td>
 
                       <td data-label="Сума" className="uex-amount">
@@ -534,7 +581,10 @@ function UserExpenses() {
 
           <div className="uex-mobile-list mobile-view">
             {expenses.length === 0 ? (
-              <div className="uex-no-data">Няма намерени записи.</div>
+              <div className="uex-no-data flex-align flex-center flex-col">
+                <Inbox className="uex-empty-icon" size={48} strokeWidth={2} />
+                Няма намерени записи.
+              </div>
             ) : (
               expenses.map((exp) => {
                 const paidVal = `${exp.paid ?? ""}`.toLowerCase();
@@ -548,12 +598,15 @@ function UserExpenses() {
                   <div
                     key={exp.id}
                     className="uex-mobile-card"
-                    onClick={() => navigate(`/client/expense/${exp.id}`)}
+                    onClick={() => {
+                      setSelectedExpenseId(exp.id);
+                      setIsDetailsModalOpen(true);
+                    }}
                   >
                     <div className="uex-card-header">
-                      <div className="uex-card-type">
-                        <span className="uex-icon-large">
-                          {getExpenseIcon(exp.type)}
+                      <div className="uex-card-type flex-align">
+                        <span className="uex-icon-large flex-center">
+                          {getExpenseIcon(exp.type, 20)}
                         </span>
                         <span>{EXPENSE_TYPES[exp.type] || exp.type}</span>
                       </div>
@@ -566,12 +619,18 @@ function UserExpenses() {
                       </span>
                     </div>
 
-                    <div className="uex-card-address">
-                      📍 {exp.building?.name}
+                    <div className="uex-card-address flex-align">
+                      <MapPin
+                        size={14}
+                        strokeWidth={2.5}
+                        className="uex-address-icon"
+                      />
+                      <span>{exp.building?.name}</span>
                     </div>
 
                     <div className="uex-card-footer">
-                      <span className="uex-card-date">
+                      <span className="uex-card-date flex-align">
+                        <CalendarDays size={14} strokeWidth={2.5} />
                         {MONTH_NAMES[exp.month]} {exp.year}
                       </span>
                       <span className="uex-card-amount">
@@ -585,22 +644,32 @@ function UserExpenses() {
           </div>
 
           {totalCount > pageSize && (
-            <div className="uex-pagination">
+            <div className="uex-pagination flex-align flex-center">
               <button
+                className="flex-align"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
               >
-                ⬅ Предишна
+                <ChevronLeft size={18} strokeWidth={2.5} />
+                <span className="uex-pag-text">Предишна</span>
               </button>
-              <span>
+              <span className="uex-pag-info">
                 Страница {currentPage} от {totalPages || 1}
               </span>
               <button
+                className="flex-align"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
               >
-                Следваща ➡
+                <span className="uex-pag-text">Следваща</span>
+                <ChevronRight size={18} strokeWidth={2.5} />
               </button>
+
+              <UserExpenseDetails
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                expenseId={selectedExpenseId}
+              />
             </div>
           )}
         </>

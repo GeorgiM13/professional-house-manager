@@ -1,10 +1,22 @@
 ﻿import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { supabase } from "../supabaseClient";
 import { useUserBuildings } from "./hooks/useUserBuildings";
 import { useLocalUser } from "./hooks/useLocalUser";
 import { useTheme } from "../components/ThemeContext";
+import {
+  CalendarDays,
+  Building,
+  Megaphone,
+  CircleDollarSign,
+  Wrench,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import UserEventDetails from "./subpages/UserEventDetails";
 import "./styles/UserEvents.css";
 
 const CountUp = ({ value, duration = 800, decimals = 0 }) => {
@@ -45,62 +57,79 @@ const MONTH_NAMES = {
   11: "Ноември",
   12: "Декември",
 };
+
 const CURRENT_YEAR = new Date().getFullYear();
+
 const YEAR_OPTIONS = [
-  { value: "all", label: "📅 Всички години" },
+  { value: "all", label: "Всички години", iconType: "calendar" },
   ...Array.from({ length: 5 }, (_, i) => ({
     value: CURRENT_YEAR - i,
     label: `${CURRENT_YEAR - i} година`,
   })),
 ];
+
 const MONTH_OPTIONS = [
-  { value: "all", label: "📅 Всички месеци" },
+  { value: "all", label: "Всички месеци", iconType: "calendar" },
   ...Object.entries(MONTH_NAMES).map(([key, name]) => ({
     value: key,
     label: name,
   })),
 ];
 
-const CUSTOM_SELECT_STYLES = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: "var(--ue-bg-card)",
-    borderColor: state.isFocused ? "var(--ue-accent)" : "var(--ue-border)",
-    borderRadius: "8px",
-    color: "var(--ue-text-main)",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--ue-accent-light)" : "none",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    backgroundColor: "var(--ue-bg-card)",
-    border: "1px solid var(--ue-border)",
-  }),
-  singleValue: (provided) => ({ ...provided, color: "var(--ue-text-main)" }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--ue-accent)"
-      : state.isFocused
-      ? "var(--ue-bg-page)"
-      : "transparent",
-    color: state.isSelected ? "white" : "var(--ue-text-main)",
-    cursor: "pointer",
-  }),
+const customFormatOptionLabel = ({ label, iconType }, { context }) => {
+  let Icon = null;
+  if (iconType === "calendar") Icon = CalendarDays;
+  if (iconType === "building") Icon = Building;
+
+  const shouldShowIcon = Icon && context === "value";
+
+  return (
+    <div className="uev-select-item">
+      {shouldShowIcon && (
+        <Icon size={16} strokeWidth={2.5} className="uev-select-icon" />
+      )}
+      <span>{label}</span>
+    </div>
+  );
 };
 
-const getEventIcon = (subject, status) => {
+const getEventIconData = (subject, status) => {
   const sub = subject?.toLowerCase() || "";
-  if (sub.includes("събрание")) return "📢";
-  if (sub.includes("каса") || sub.includes("такси") || sub.includes("плащане"))
-    return "💰";
-  if (sub.includes("ремонт")) return "🛠️";
-  if (sub.includes("почистване")) return "🧹";
-  return "📅";
+  if (sub.includes("събрание")) {
+    return {
+      icon: <Megaphone size={18} strokeWidth={2.5} />,
+      colorClass: "icon-purple",
+    };
+  }
+  if (
+    sub.includes("каса") ||
+    sub.includes("такси") ||
+    sub.includes("плащане")
+  ) {
+    return {
+      icon: <CircleDollarSign size={18} strokeWidth={2.5} />,
+      colorClass: "icon-green",
+    };
+  }
+  if (sub.includes("ремонт")) {
+    return {
+      icon: <Wrench size={18} strokeWidth={2.5} />,
+      colorClass: "icon-orange",
+    };
+  }
+  if (sub.includes("почистване")) {
+    return {
+      icon: <Sparkles size={18} strokeWidth={2.5} />,
+      colorClass: "icon-cyan",
+    };
+  }
+  return {
+    icon: <CalendarDays size={18} strokeWidth={2.5} />,
+    colorClass: "icon-blue",
+  };
 };
 
 export default function UserEvents() {
-  const navigate = useNavigate();
   const { userId } = useLocalUser();
   const { isDarkMode } = useTheme();
 
@@ -114,18 +143,20 @@ export default function UserEvents() {
   const [filterToday, setFilterToday] = useState(false);
   const [stats, setStats] = useState({ total: 0, meetings: 0, fees: 0 });
 
+  const [selectedEventId, setSelectedEventId] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
   const buildingOptions = useMemo(
     () => [
-      { value: "all", label: "🏢 Всички мои сгради" },
+      { value: "all", label: "Всички мои сгради", iconType: "building" },
       ...buildings.map((b) => ({
         value: b.id,
         label: `${b.name}, ${b.address}`,
       })),
     ],
-    [buildings]
+    [buildings],
   );
 
   useEffect(() => {
@@ -142,7 +173,7 @@ export default function UserEvents() {
         let query = supabase
           .from("events")
           .select(
-            `id, status, subject, completion_date, created_at, building_id, building:building_id(name, address), assigned_user:assigned_to(first_name, last_name)`
+            `id, status, subject, completion_date, created_at, building_id, building:building_id(name, address), assigned_user:assigned_to(first_name, last_name)`,
           )
           .order("completion_date", { ascending: false });
 
@@ -151,7 +182,7 @@ export default function UserEvents() {
         } else if (buildings.length > 0) {
           query = query.in(
             "building_id",
-            buildings.map((b) => b.id)
+            buildings.map((b) => b.id),
           );
         } else {
           setEvents([]);
@@ -176,14 +207,14 @@ export default function UserEvents() {
             tableData = tableData.filter(
               (e) =>
                 new Date(e.completion_date || e.created_at).getFullYear() ===
-                Number(filterYear)
+                Number(filterYear),
             );
           }
           if (filterMonth !== "all") {
             tableData = tableData.filter(
               (e) =>
                 new Date(e.completion_date || e.created_at).getMonth() + 1 ===
-                Number(filterMonth)
+                Number(filterMonth),
             );
           }
         }
@@ -226,7 +257,7 @@ export default function UserEvents() {
   const calculateStats = (data) => {
     const total = data.length;
     const meetings = data.filter((e) =>
-      e.subject?.toLowerCase().includes("събрание")
+      e.subject?.toLowerCase().includes("събрание"),
     ).length;
     const fees = data.filter((e) => {
       const sub = e.subject?.toLowerCase() || "";
@@ -252,10 +283,8 @@ export default function UserEvents() {
     return (
       <>
         <span className="date-desktop">
-          {day}.{month}.{yearFull} г.{" "}
-          <span style={{ color: "var(--ue-text-sec)", marginLeft: "4px" }}>
-            {time}
-          </span>
+          {day}.{month}.{yearFull} г.
+          <span className="uev-time-desktop">{time}</span>
         </span>
         <div className="date-mobile">
           <div className="dm-date">
@@ -269,7 +298,7 @@ export default function UserEvents() {
 
   const paginatedEvents = events.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
   const totalPages = Math.ceil(events.length / pageSize);
   const getSelectValue = (options, value) =>
@@ -285,19 +314,23 @@ export default function UserEvents() {
 
         <div className="uev-header-right">
           {buildings.length > 1 ? (
-            <div style={{ width: "250px" }}>
+            <div className="uev-select-wrapper-lg">
               <Select
                 options={buildingOptions}
                 value={getSelectValue(buildingOptions, selectedBuilding)}
                 onChange={(opt) => setSelectedBuilding(opt ? opt.value : "all")}
-                styles={CUSTOM_SELECT_STYLES}
+                className="react-select-container"
+                classNamePrefix="react-select"
                 placeholder="Изберете сграда"
                 isSearchable={false}
+                formatOptionLabel={customFormatOptionLabel}
               />
             </div>
           ) : (
             buildings.length === 1 && (
-              <div className="uev-single-building">🏢 {buildings[0].name}</div>
+              <div className="uev-single-building uev-flex-align">
+                <Building size={18} strokeWidth={2.5} /> {buildings[0].name}
+              </div>
             )
           )}
         </div>
@@ -305,7 +338,9 @@ export default function UserEvents() {
 
       <div className="uev-stats-grid">
         <div className="uev-stat-card blue">
-          <div className="uev-stat-icon">📅</div>
+          <div className="uev-stat-icon icon-blue">
+            <CalendarDays size={24} strokeWidth={2.5} />
+          </div>
           <div className="uev-stat-info">
             <span className="uev-stat-label">
               {filterYear === "all" && filterMonth === "all"
@@ -318,16 +353,20 @@ export default function UserEvents() {
           </div>
         </div>
         <div className="uev-stat-card purple">
-          <div className="uev-stat-icon">📢</div>
+          <div className="uev-stat-icon icon-purple">
+            <Megaphone size={24} strokeWidth={2.5} />
+          </div>
           <div className="uev-stat-info">
-            <span className="uev-stat-label">Събрания</span>
+            <span className="uev-stat-label">Събрания (този месец)</span>
             <span className="uev-stat-value">
               <CountUp value={stats.meetings} /> <small>бр.</small>
             </span>
           </div>
         </div>
         <div className="uev-stat-card green">
-          <div className="uev-stat-icon">💰</div>
+          <div className="uev-stat-icon icon-green">
+            <CircleDollarSign size={24} strokeWidth={2.5} />
+          </div>
           <div className="uev-stat-info">
             <span className="uev-stat-label">Финанси</span>
             <span className="uev-stat-value">
@@ -341,130 +380,160 @@ export default function UserEvents() {
         <h3>Списък</h3>
         <div className="uev-filters-right">
           <button
-            className={`uev-today-toggle ${filterToday ? "active" : ""}`}
+            className={`uev-today-toggle uev-flex-align ${filterToday ? "active" : ""}`}
             onClick={() => setFilterToday(!filterToday)}
             title="Покажи събития само за днес"
           >
-            {filterToday ? "✅ Днес" : "📅 Днес"}
+            {filterToday ? (
+              <CheckCircle2 size={16} strokeWidth={2.5} />
+            ) : (
+              <CalendarDays size={16} strokeWidth={2.5} />
+            )}
+            Днес
           </button>
-          <div style={{ width: "140px" }}>
+          <div className="uev-filter-date">
             <Select
               options={YEAR_OPTIONS}
               value={getSelectValue(YEAR_OPTIONS, filterYear)}
               onChange={(opt) => setFilterYear(opt.value)}
-              styles={CUSTOM_SELECT_STYLES}
+              className="react-select-container"
+              classNamePrefix="react-select"
               isSearchable={false}
               placeholder="Година"
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
-          <div style={{ width: "140px" }}>
+          <div className="uev-filter-date">
             <Select
               options={MONTH_OPTIONS}
               value={getSelectValue(MONTH_OPTIONS, filterMonth)}
               onChange={(opt) => setFilterMonth(opt.value)}
-              styles={CUSTOM_SELECT_STYLES}
+              className="react-select-container"
+              classNamePrefix="react-select"
               isSearchable={false}
               placeholder="Месец"
+              formatOptionLabel={customFormatOptionLabel}
             />
           </div>
         </div>
       </div>
 
-      {loadingEvents ? (
-        <div className="uev-loading">
-          <span className="uev-spinner">↻</span> Зареждане...
-        </div>
-      ) : (
-        <>
-          <table className="uev-table">
-            <thead>
-              <tr>
-                <th>№</th>
-                <th>Тема</th>
-                <th>Сграда</th>
-                <th>Дата на изпълнение</th>
-                <th>Статус</th>
-                <th>Възложено на</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedEvents.length === 0 ? (
+      <div className="uev-table-wrapper">
+        {loadingEvents ? (
+          <div className="uev-loading uev-flex-align uev-flex-center">
+            <Loader2 className="uev-spinner-icon" size={24} strokeWidth={2.5} />
+            Зареждане...
+          </div>
+        ) : (
+          <>
+            <table className="uev-table">
+              <thead>
                 <tr>
-                  <td colSpan="6" className="uev-no-data">
-                    Няма намерени събития.
-                  </td>
+                  <th>№</th>
+                  <th>Тема</th>
+                  <th>Сграда</th>
+                  <th>Дата на изпълнение</th>
+                  <th>Статус</th>
+                  <th>Възложено на</th>
                 </tr>
-              ) : (
-                paginatedEvents.map((event, idx) => {
-                  const s = (event.status || "").toLowerCase();
-                  let statusClass = "st-default";
-                  if (s.includes("ново") || s.includes("new"))
-                    statusClass = "st-new";
-                  else if (s.includes("изпълнено") || s.includes("done"))
-                    statusClass = "st-done";
+              </thead>
+              <tbody>
+                {paginatedEvents.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="uev-no-data">
+                      Няма намерени събития.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedEvents.map((event, idx) => {
+                    const s = (event.status || "").toLowerCase();
+                    let statusClass = "st-default";
+                    if (s.includes("ново") || s.includes("new"))
+                      statusClass = "st-new";
+                    else if (s.includes("изпълнено") || s.includes("done"))
+                      statusClass = "st-done";
 
-                  return (
-                    <tr
-                      key={event.id}
-                      onClick={() => navigate(`/client/event/${event.id}`)}
-                      className="uev-row"
-                    >
-                      <td className="uev-idx">
-                        {(currentPage - 1) * pageSize + idx + 1}
-                      </td>
+                    const eventIconData = getEventIconData(
+                      event.subject,
+                      event.status,
+                    );
 
-                      <td data-label="Тема" className="uev-subject">
-                        <span className="uev-icon">
-                          {getEventIcon(event.subject, event.status)}
-                        </span>
-                        {event.subject}
-                      </td>
+                    return (
+                      <tr
+                        key={event.id}
+                        onClick={() => setSelectedEventId(event.id)}
+                        className="uev-row"
+                      >
+                        <td className="uev-idx">
+                          {(currentPage - 1) * pageSize + idx + 1}
+                        </td>
 
-                      <td data-label="Сграда">{event.building?.name}</td>
+                        <td data-label="Тема" className="uev-subject">
+                          <span
+                            className={`uev-icon ${eventIconData.colorClass}`}
+                          >
+                            {eventIconData.icon}
+                          </span>
+                          <span>{event.subject}</span>
+                        </td>
 
-                      <td data-label="Дата">
-                        {formatDate(event.completion_date)}
-                      </td>
+                        <td data-label="Сграда">{event.building?.name}</td>
 
-                      <td data-label="Статус">
-                        <span className={`uev-badge ${statusClass}`}>
-                          {event.status || "Очаква"}
-                        </span>
-                      </td>
+                        <td data-label="Дата">
+                          {formatDate(event.completion_date)}
+                        </td>
 
-                      <td data-label="Възложено">
-                        {event.assigned_user
-                          ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
-                          : "-"}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        <td data-label="Статус">
+                          <span className={`uev-badge ${statusClass}`}>
+                            {event.status || "Очаква"}
+                          </span>
+                        </td>
 
-          {totalPages > 1 && (
-            <div className="uev-pagination">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-              >
-                ⬅ Предишна
-              </button>
-              <span>
-                Страница {currentPage} от {totalPages}
-              </span>
-              <button
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage((p) => p + 1)}
-              >
-                Следваща ➡
-              </button>
-            </div>
-          )}
-        </>
-      )}
+                        <td data-label="Възложено">
+                          {event.assigned_user
+                            ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
+                            : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+
+            {totalPages > 1 && (
+              <div className="uev-pagination">
+                <button
+                  className="uev-flex-align"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  <ChevronLeft size={18} strokeWidth={2.5} />
+                  <span className="uev-pag-text">Предишна</span>
+                </button>
+                <span className="uev-pag-info">
+                  Страница {currentPage} от {totalPages}
+                </span>
+                <button
+                  className="uev-flex-align"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  <span className="uev-pag-text">Следваща</span>
+                  <ChevronRight size={18} strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
+
+            {selectedEventId && (
+              <UserEventDetails
+                eventId={selectedEventId}
+                onClose={() => setSelectedEventId(null)}
+              />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

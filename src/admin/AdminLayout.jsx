@@ -12,7 +12,7 @@ import {
   Mail,
   CircleDollarSign,
   ReceiptText,
-  Landmark,
+  Wallet,
   Building,
   Users,
   Settings,
@@ -109,7 +109,7 @@ export default function AdminLayout() {
         {
           to: "/admin/buildingcash",
           label: "Каса",
-          icon: <Landmark size={20} strokeWidth={2.5} />,
+          icon: <Wallet size={20} strokeWidth={2.5} />,
         },
       ],
     },

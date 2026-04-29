@@ -1,10 +1,10 @@
-.uar-wrapper {
+.uar-overlay {
   --uar-primary: #2563eb;
   --uar-primary-hover: #1d4ed8;
   --uar-primary-light: rgba(37, 99, 235, 0.2);
 
-  --uar-bg-page: #f8fafc;
-  --uar-bg-card: #ffffff;
+  --uar-bg-overlay: rgba(0, 0, 0, 0.5);
+  --uar-bg-modal: #ffffff;
   --uar-bg-input: #ffffff;
   --uar-bg-hover: #f1f5f9;
 
@@ -13,22 +13,29 @@
   --uar-text-placeholder: #94a3b8;
 
   --uar-border: #e2e8f0;
-  --uar-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --uar-radius: 12px;
+  --uar-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --uar-radius: 16px;
 
-  padding: 2rem;
-  background-color: var(--uar-bg-page);
-  color: var(--uar-text-main);
-  font-family: system-ui, -apple-system, sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--uar-bg-overlay);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--uar-text-main);
 }
 
-.uar-wrapper.client-dark {
-  --uar-bg-page: #0f172a;
-  --uar-bg-card: #1e293b;
+.uar-overlay.client-dark {
+  --uar-bg-overlay: rgba(0, 0, 0, 0.7);
+  --uar-bg-modal: #1e293b;
   --uar-bg-input: #0f172a;
   --uar-bg-hover: rgba(255, 255, 255, 0.05);
 
@@ -37,50 +44,64 @@
   --uar-text-placeholder: #64748b;
 
   --uar-border: #334155;
-  --uar-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --uar-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.uar-container {
+.uar-modal {
+  background-color: var(--uar-bg-modal);
   width: 100%;
   max-width: 600px;
-}
-
-.uar-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.uar-back-btn {
-  background: none;
-  border: none;
-  color: var(--uar-text-sec);
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-}
-.uar-back-btn:hover {
-  color: var(--uar-primary);
-  text-decoration: underline;
-}
-
-.uar-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  color: var(--uar-text-main);
-  font-weight: 800;
-}
-.uar-subtitle {
-  color: var(--uar-text-sec);
-  margin-top: 0.5rem;
-}
-
-.uar-card {
-  background-color: var(--uar-bg-card);
-  padding: 2rem;
   border-radius: var(--uar-radius);
   box-shadow: var(--uar-shadow);
   border: 1px solid var(--uar-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.uar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--uar-border);
+  position: relative;
+  background-color: var(--uar-bg-modal);
+}
+
+.uar-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--uar-text-main);
+  font-weight: 700;
+}
+
+.uar-subtitle {
+  color: var(--uar-text-sec);
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.uar-close-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--uar-text-sec);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  justify-content: center;
+}
+
+.uar-close-btn:hover {
+  background-color: var(--uar-bg-hover);
+  color: var(--uar-text-main);
+}
+
+.uar-form {
+  padding: 1.5rem;
+  overflow-y: auto;
 }
 
 .uar-form-group {
@@ -91,10 +112,10 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--uar-text-sec);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .uar-input,
@@ -127,21 +148,69 @@
   background-color: var(--uar-bg-hover);
   cursor: not-allowed;
   border-color: var(--uar-border);
-  opacity: 0.8;
+  color: var(--uar-text-sec);
+}
+
+.react-select-container .react-select__control {
+  background-color: var(--uar-bg-input);
+  border-color: var(--uar-border);
+  color: var(--uar-text-main);
+  border-radius: 8px;
+  min-height: 44px;
+  box-shadow: none;
+  cursor: pointer;
+}
+.react-select-container .react-select__control:hover {
+  border-color: var(--uar-primary);
+}
+.react-select-container .react-select__control--is-focused {
+  border-color: var(--uar-primary);
+  box-shadow: 0 0 0 3px var(--uar-primary-light);
+}
+.react-select-container .react-select__single-value,
+.react-select-container .react-select__input-container {
+  color: var(--uar-text-main);
+}
+.react-select-container .react-select__menu {
+  background-color: var(--uar-bg-modal);
+  border: 1px solid var(--uar-border);
+  z-index: 9999;
+}
+.react-select-container .react-select__option {
+  background-color: transparent;
+  color: var(--uar-text-main);
+  cursor: pointer;
+}
+.react-select-container .react-select__option--is-focused {
+  background-color: var(--uar-bg-hover);
+  color: var(--uar-text-main);
+}
+.react-select-container .react-select__option--is-selected {
+  background-color: var(--uar-primary);
+  color: #ffffff;
+}
+.react-select-container .react-select__placeholder {
+  color: var(--uar-text-placeholder);
+}
+
+.uar-select-icon {
+  color: var(--uar-text-sec);
 }
 
 .uar-loading-field {
   padding: 12px;
   color: var(--uar-text-sec);
-  font-style: italic;
   background: var(--uar-bg-hover);
   border-radius: 8px;
+  font-size: 0.95rem;
 }
 
 .uar-actions {
   display: flex;
   gap: 1rem;
   margin-top: 2rem;
+  border-top: 1px solid var(--uar-border);
+  padding-top: 1.5rem;
 }
 
 .uar-btn-submit,
@@ -154,10 +223,7 @@
   cursor: pointer;
   border: none;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 8px;
 }
 
 .uar-btn-submit {
@@ -166,7 +232,6 @@
 }
 .uar-btn-submit:hover:not(:disabled) {
   background-color: var(--uar-primary-hover);
-  transform: translateY(-1px);
 }
 .uar-btn-submit:disabled {
   opacity: 0.7;
@@ -178,7 +243,7 @@
   border: 1px solid var(--uar-border);
   color: var(--uar-text-main);
 }
-.uar-btn-cancel:hover {
+.uar-btn-cancel:hover:not(:disabled) {
   background-color: var(--uar-bg-hover);
 }
 
@@ -186,7 +251,6 @@
   padding: 12px;
   border-radius: 8px;
   font-size: 0.9rem;
-  margin-top: 1rem;
   text-align: center;
 }
 .uar-message.success {
@@ -211,41 +275,48 @@
   border-color: rgba(153, 27, 27, 0.4);
 }
 
-.uar-spinner-sm {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.uar-spinner-icon {
+  animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
   }
 }
 
 .fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-@media (max-width: 480px) {
-  .uar-wrapper {
-    padding: 1rem;
+@media (max-width: 600px) {
+  .uar-overlay {
+    padding: 0;
+    align-items: flex-end;
   }
-  .uar-card {
-    padding: 1.5rem;
+
+  .uar-modal {
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
   }
+
   .uar-actions {
     flex-direction: column-reverse;
   }

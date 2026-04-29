@@ -1,7 +1,27 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
+import {
+  X,
+  Building2,
+  AlignLeft,
+  Loader2,
+  AlertCircle,
+  Zap,
+  ArrowUpDown,
+  Droplets,
+  Sparkles,
+  Wrench,
+  Briefcase,
+  Lightbulb,
+  ClipboardCheck,
+  Wifi,
+  Key,
+  Bug,
+  Package,
+  CheckCircle,
+  Clock,
+} from "lucide-react";
 import "./styles/UserExpensesDetails.css";
 
 const MONTH_NAMES = {
@@ -36,41 +56,52 @@ const EXPENSE_TYPES = {
   other: "Други",
 };
 
-const getExpenseIcon = (type) => {
-  if (!type) return "📝";
+const getExpenseIcon = (type, size = 28) => {
+  if (!type) return <Package size={size} strokeWidth={2.5} />;
   const t = type.toLowerCase();
-  if (t.includes("electricity") || t.includes("tok")) return "⚡";
-  if (t.includes("lift") || t.includes("asansyor")) return "🛗";
-  if (t.includes("water")) return "💧";
-  if (t.includes("clean")) return "🧹";
-  if (t.includes("repair")) return "🛠️";
-  if (t.includes("manager")) return "👨‍💼";
-  if (t.includes("lighting")) return "💡";
-  if (t.includes("review")) return "📋";
-  if (t.includes("internet") || t.includes("video")) return "📡";
-  if (t.includes("access") || t.includes("chip")) return "🔑";
-  if (t.includes("pest") || t.includes("дезинсекция")) return "🕷️";
-  return "📦";
+  if (t.includes("electricity") || t.includes("tok"))
+    return <Zap size={size} strokeWidth={2.5} />;
+  if (t.includes("lift") || t.includes("asansyor"))
+    return <ArrowUpDown size={size} strokeWidth={2.5} />;
+  if (t.includes("water")) return <Droplets size={size} strokeWidth={2.5} />;
+  if (t.includes("clean") || t.includes("хигиенист"))
+    return <Sparkles size={size} strokeWidth={2.5} />;
+  if (t.includes("repair")) return <Wrench size={size} strokeWidth={2.5} />;
+  if (t.includes("manager")) return <Briefcase size={size} strokeWidth={2.5} />;
+  if (t.includes("lighting"))
+    return <Lightbulb size={size} strokeWidth={2.5} />;
+  if (t.includes("review"))
+    return <ClipboardCheck size={size} strokeWidth={2.5} />;
+  if (t.includes("internet") || t.includes("video"))
+    return <Wifi size={size} strokeWidth={2.5} />;
+  if (t.includes("access") || t.includes("chip"))
+    return <Key size={size} strokeWidth={2.5} />;
+  if (t.includes("pest") || t.includes("дезинсекция"))
+    return <Bug size={size} strokeWidth={2.5} />;
+  return <Package size={size} strokeWidth={2.5} />;
 };
 
-function UserExpenseDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function UserExpenseDetails({ expenseId, isOpen, onClose }) {
   const { isDarkMode } = useTheme();
   const [expense, setExpense] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchExpense() {
+      if (!isOpen || !expenseId) return;
+
+      setLoading(true);
+      setExpense(null);
+
       const { data, error } = await supabase
         .from("expenses")
         .select(
           `
             id, type, month, year, current_month, paid, notes, created_at,
             building_id, building:building_id(name,address)
-        `
+        `,
         )
-        .eq("id", id)
+        .eq("id", expenseId)
         .single();
 
       if (error) {
@@ -81,103 +112,126 @@ function UserExpenseDetails() {
       setLoading(false);
     }
     fetchExpense();
-  }, [id]);
+  }, [expenseId, isOpen]);
 
-  if (loading)
-    return (
-      <div
-        className={`uexd-wrapper ${
-          isDarkMode ? "client-dark" : "client-light"
-        }`}
-      >
-        <div className="uexd-loading">
-          <div className="uexd-spinner"></div>
-          <p>Зареждане на детайли...</p>
-        </div>
-      </div>
-    );
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("uexd-modal-overlay")) {
+      onClose();
+    }
+  };
 
-  if (!expense)
-    return (
-      <div
-        className={`uexd-wrapper ${
-          isDarkMode ? "client-dark" : "client-light"
-        }`}
-      >
-        <div className="uexd-error">Разходът не е намерен.</div>
-      </div>
-    );
+  if (!isOpen) return null;
 
-  const isPaid =
-    String(expense.paid).toLowerCase() === "true" ||
-    expense.paid === true ||
-    String(expense.paid).toLowerCase() === "да";
+  const isPaid = expense
+    ? String(expense.paid).toLowerCase() === "true" ||
+      expense.paid === true ||
+      String(expense.paid).toLowerCase() === "да"
+    : false;
 
   return (
     <div
-      className={`uexd-wrapper ${isDarkMode ? "client-dark" : "client-light"}`}
+      className={`uexd-modal-overlay ${isDarkMode ? "client-dark" : "client-light"}`}
+      onClick={handleOverlayClick}
     >
-      <div className="uexd-page-header">
-        <button
-          className="uexd-back-link"
-          onClick={() => navigate("/client/expenses")}
-        >
-          ← Назад към списъка
-        </button>
-        <div
-          className={`uexd-status-pill ${isPaid ? "uexd-paid" : "uexd-unpaid"}`}
-        >
-          {isPaid ? "✅ ПЛАТЕНО" : "⏳ НЕПЛАТЕНО"}
-        </div>
-      </div>
+      <div className="uexd-modal-content fade-in">
+        {loading ? (
+          <div className="uexd-loading uexd-flex-col uexd-flex-center">
+            <Loader2
+              size={40}
+              strokeWidth={2.5}
+              className="uexd-spinner-icon"
+            />
+            <p>Зареждане на детайли...</p>
+          </div>
+        ) : !expense ? (
+          <div className="uexd-error uexd-flex-col uexd-flex-center">
+            <AlertCircle size={48} strokeWidth={2} />
+            <p>Разходът не е намерен.</p>
+            <button className="uexd-close-btn-error" onClick={onClose}>
+              Затвори
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="uexd-card-header">
+              <div className="uexd-header-top uexd-flex-align">
+                <div
+                  className={`uexd-status-pill uexd-flex-align ${isPaid ? "uexd-paid" : "uexd-unpaid"}`}
+                >
+                  {isPaid ? (
+                    <>
+                      <CheckCircle size={16} strokeWidth={3} /> Платено
+                    </>
+                  ) : (
+                    <>
+                      <Clock size={16} strokeWidth={3} /> Неплатено
+                    </>
+                  )}
+                </div>
+                <button
+                  className="uexd-close-btn"
+                  onClick={onClose}
+                  title="Затвори"
+                >
+                  <X size={24} strokeWidth={2.5} />
+                </button>
+              </div>
 
-      <div className="uexd-main-card fade-in">
-        <div className="uexd-card-header">
-          <div className="uexd-location-badge">
-            <span className="icon">🏢</span>
-            <div>
-              <h3>{expense.building?.name || "Неизвестна сграда"}</h3>
-              <small>{expense.building?.address || "Няма адрес"}</small>
+              <div className="uexd-title-section uexd-flex-align">
+                <div className="uexd-type-icon uexd-flex-center">
+                  {getExpenseIcon(expense.type)}
+                </div>
+                <h1 className="uexd-title">
+                  {EXPENSE_TYPES[expense.type] || expense.type}
+                </h1>
+              </div>
+
+              <div className="uexd-location-badge uexd-flex-align">
+                <div className="uexd-icon-wrapper">
+                  <Building2 size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h3>{expense.building?.name || "Неизвестна сграда"}</h3>
+                  <small>{expense.building?.address || "Няма адрес"}</small>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="uexd-period">
-            <div className="period-item">
-              <span>🗓️ Период:</span>
-              <strong>
-                {MONTH_NAMES[expense.month]} {expense.year}
-              </strong>
+
+            <div className="uexd-divider"></div>
+            <div className="uexd-body">
+              <div className="uexd-summary-grid">
+                <div className="uexd-summary-box">
+                  <span className="label">Сума</span>
+                  <span className="value">
+                    {Number(expense.current_month).toFixed(2)}{" "}
+                    <small>лв.</small>
+                  </span>
+                </div>
+                <div className="uexd-summary-box">
+                  <span className="label">Период</span>
+                  <span className="value period">
+                    {MONTH_NAMES[expense.month]} {expense.year}
+                  </span>
+                </div>
+              </div>
+
+              <div className="uexd-description-container">
+                <span className="uexd-section-label uexd-flex-align">
+                  <AlignLeft size={16} strokeWidth={2.5} /> Допълнителни бележки
+                </span>
+                <div className="uexd-description-content">
+                  {expense.notes ? (
+                    expense.notes
+                  ) : (
+                    <em className="text-muted">
+                      Няма въведени бележки към този разход.
+                    </em>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="uexd-divider"></div>
-
-        <div className="uexd-body">
-          <div className="uexd-type-section">
-            <div className="uexd-type-icon">{getExpenseIcon(expense.type)}</div>
-            <h1 className="uexd-title">
-              {EXPENSE_TYPES[expense.type] || expense.type}
-            </h1>
-          </div>
-
-          <div className="uexd-amount-display">
-            <span className="label">Сума на разхода</span>
-            <span className="value">
-              {Number(expense.current_month).toFixed(2)} <small>лв.</small>
-            </span>
-          </div>
-
-          <div className="uexd-description-container">
-            <span className="uexd-section-label">Допълнителни бележки</span>
-            <div className="uexd-description-content">
-              {expense.notes || (
-                <em className="text-muted">
-                  Няма въведени бележки към този разход.
-                </em>
-              )}
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,51 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../../supabaseClient";
-import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { useUserBuildings } from "../hooks/useUserBuildings";
 import { useLocalUser } from "../hooks/useLocalUser";
 import { useTheme } from "../../components/ThemeContext";
+import { X, Send, Building, Loader2 } from "lucide-react";
 import "./styles/AddUserReport.css";
 
-const CUSTOM_SELECT_STYLES = {
-  control: (provided, state) => ({
-    ...provided,
-    backgroundColor: "var(--uar-bg-input)",
-    borderColor: state.isFocused ? "var(--uar-primary)" : "var(--uar-border)",
-    borderRadius: "8px",
-    color: "var(--uar-text-main)",
-    boxShadow: state.isFocused ? "0 0 0 2px var(--uar-primary-light)" : "none",
-    minHeight: "44px",
-  }),
-  menu: (provided) => ({
-    ...provided,
-    zIndex: 9999,
-    backgroundColor: "var(--uar-bg-card)",
-    border: "1px solid var(--uar-border)",
-  }),
-  singleValue: (provided) => ({ ...provided, color: "var(--uar-text-main)" }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? "var(--uar-primary)"
-      : state.isFocused
-      ? "var(--uar-bg-hover)"
-      : "transparent",
-    color: state.isSelected ? "white" : "var(--uar-text-main)",
-    cursor: "pointer",
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: "var(--uar-text-placeholder)",
-  }),
-  input: (provided) => ({ ...provided, color: "var(--uar-text-main)" }),
-};
-
-function AddUserReport() {
-  const navigate = useNavigate();
+function AddUserReport({ isOpen, onClose, onSuccess }) {
   const { userId } = useLocalUser();
   const { isDarkMode } = useTheme();
-
   const { buildings, loading: loadingBuildings } = useUserBuildings(userId);
 
   const [selectedBuilding, setSelectedBuilding] = useState("all");
@@ -56,15 +20,40 @@ function AddUserReport() {
 
   const buildingOptions = useMemo(
     () =>
-      buildings.map((b) => ({ value: b.id, label: `${b.name}, ${b.address}` })),
-    [buildings]
+      buildings.map((b) => ({
+        value: b.id,
+        label: [b.name, b.address].filter(Boolean).join(", "),
+      })),
+    [buildings],
   );
 
   useEffect(() => {
-    if (!loadingBuildings && buildings.length === 1) {
-      setSelectedBuilding(buildings[0].id);
+    if (isOpen) {
+      setSubject("");
+      setDescription("");
+      setMessage({ text: "", type: "" });
+      if (!loadingBuildings && buildings.length === 1) {
+        setSelectedBuilding(buildings[0].id);
+      } else {
+        setSelectedBuilding("all");
+      }
     }
-  }, [buildings, loadingBuildings]);
+  }, [isOpen, buildings, loadingBuildings]);
+
+  const customFormatOptionLabel = ({ label }, { context }) => {
+    const shouldShowIcon = context === "value";
+    const cleanLabel =
+      typeof label === "string" ? label.replace(/^[,\s]+/, "") : label;
+
+    return (
+      <div className="flex-align">
+        {shouldShowIcon && (
+          <Building size={16} strokeWidth={2.5} className="uar-select-icon" />
+        )}
+        <span>{cleanLabel}</span>
+      </div>
+    );
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -96,13 +85,14 @@ function AddUserReport() {
       if (error) throw error;
 
       setMessage({
-        text: "Сигналът е подаден успешно! Пренасочване...",
+        text: "Сигналът е подаден успешно!",
         type: "success",
       });
-      setSubject("");
-      setDescription("");
 
-      setTimeout(() => navigate("/client/reports"), 1500);
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 1500);
     } catch (error) {
       console.error("Error submitting report:", error);
       setMessage({
@@ -115,41 +105,59 @@ function AddUserReport() {
   }
 
   const getCurrentOption = () =>
-    buildingOptions.find((opt) => opt.value === selectedBuilding);
+    buildingOptions.find((opt) => opt.value === selectedBuilding) || null;
+
+  if (!isOpen) return null;
 
   return (
     <div
-      className={`uar-wrapper ${isDarkMode ? "client-dark" : "client-light"}`}
+      className={`uar-overlay ${isDarkMode ? "client-dark" : "client-light"}`}
     >
-      <div className="uar-container fade-in">
+      <div className="uar-modal fade-in">
         <div className="uar-header">
-          <button className="uar-back-btn" onClick={() => navigate(-1)}>
-            ← Назад
-          </button>
-          <h1>Подай нов сигнал</h1>
+          <h2>Подай нов сигнал</h2>
           <p className="uar-subtitle">Опишете проблема възможно най-детайлно</p>
+          <button
+            className="uar-close-btn flex-align"
+            onClick={onClose}
+            disabled={loadingSubmit}
+          >
+            <X size={24} strokeWidth={2.5} />
+          </button>
         </div>
 
-        <form className="uar-card" onSubmit={handleSubmit}>
+        <form className="uar-form" onSubmit={handleSubmit}>
           <div className="uar-form-group">
             <label>Вашата сграда</label>
             {loadingBuildings ? (
-              <div className="uar-loading-field">Зареждане на сгради...</div>
+              <div className="uar-loading-field flex-align">
+                <Loader2
+                  size={16}
+                  strokeWidth={2.5}
+                  className="uar-spinner-icon"
+                />{" "}
+                Зареждане на сгради...
+              </div>
             ) : buildings.length === 1 ? (
-              <input
-                type="text"
-                value={`${buildings[0].name} – ${buildings[0].address}`}
-                readOnly
-                className="uar-input uar-readonly"
-              />
+              <div className="uar-input uar-readonly flex-align">
+                <Building
+                  size={16}
+                  strokeWidth={2.5}
+                  className="uar-select-icon"
+                />
+                <span>{buildings[0].name}</span>
+              </div>
             ) : (
               <Select
                 options={buildingOptions}
                 value={getCurrentOption()}
                 onChange={(opt) => setSelectedBuilding(opt ? opt.value : "all")}
-                styles={CUSTOM_SELECT_STYLES}
+                formatOptionLabel={customFormatOptionLabel}
                 placeholder="Изберете сграда..."
                 isSearchable={true}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                isDisabled={loadingSubmit}
               />
             )}
           </div>
@@ -184,22 +192,30 @@ function AddUserReport() {
           <div className="uar-actions">
             <button
               type="button"
-              className="uar-btn-cancel"
-              onClick={() => navigate(-1)}
+              className="uar-btn-cancel flex-align"
+              onClick={onClose}
+              disabled={loadingSubmit}
             >
               Отказ
             </button>
             <button
               type="submit"
-              className="uar-btn-submit"
+              className="uar-btn-submit flex-align"
               disabled={loadingSubmit || loadingBuildings}
             >
               {loadingSubmit ? (
                 <>
-                  <span className="uar-spinner-sm"></span> Изпращане...
+                  <Loader2
+                    size={18}
+                    strokeWidth={2.5}
+                    className="uar-spinner-icon"
+                  />{" "}
+                  Изпращане...
                 </>
               ) : (
-                "🚀 Подай сигнал"
+                <>
+                  <Send size={18} strokeWidth={2.5} /> Подай сигнал
+                </>
               )}
             </button>
           </div>

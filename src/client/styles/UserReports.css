@@ -40,6 +40,15 @@
   --st-def-text: #94a3b8;
 }
 
+.flex-align {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.flex-center {
+  justify-content: center;
+}
+
 .urep-page {
   padding: 2rem;
   background-color: var(--urep-bg-page);
@@ -63,19 +72,68 @@
   box-shadow: var(--urep-shadow);
   border: 1px solid var(--urep-border);
 }
+
 .urep-header-left h1 {
   margin: 0;
   font-size: 1.8rem;
 }
+
 .urep-subtitle {
   margin: 5px 0 0;
   color: var(--urep-text-sec);
   font-size: 0.9rem;
 }
+
 .urep-header-right {
-  display: flex;
-  align-items: center;
   gap: 15px;
+}
+
+.urep-select-wrapper {
+  width: 250px;
+}
+.react-select-container .react-select__control {
+  background-color: var(--urep-bg-card);
+  border-color: var(--urep-border);
+  color: var(--urep-text-main);
+  border-radius: 8px;
+  min-height: 42px;
+  box-shadow: none;
+  cursor: pointer;
+}
+.react-select-container .react-select__control:hover {
+  border-color: var(--urep-accent);
+}
+.react-select-container .react-select__control--is-focused {
+  border-color: var(--urep-accent);
+  box-shadow: 0 0 0 3px var(--urep-accent-light);
+}
+.react-select-container .react-select__single-value,
+.react-select-container .react-select__input-container {
+  color: var(--urep-text-main);
+}
+.react-select-container .react-select__menu {
+  background-color: var(--urep-bg-card);
+  border: 1px solid var(--urep-border);
+  z-index: 9999;
+}
+.react-select-container .react-select__option {
+  background-color: transparent;
+  color: var(--urep-text-main);
+  cursor: pointer;
+}
+.react-select-container .react-select__option--is-focused {
+  background-color: var(--urep-bg-page);
+  color: var(--urep-text-main);
+}
+.react-select-container .react-select__option--is-selected {
+  background-color: var(--urep-accent);
+  color: #ffffff;
+}
+.react-select-container .react-select__placeholder {
+  color: var(--urep-text-sec);
+}
+.urep-select-icon {
+  color: var(--urep-text-sec);
 }
 
 .urep-add-btn {
@@ -83,11 +141,14 @@
   color: white;
   text-decoration: none;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   transition: opacity 0.2s, transform 0.2s;
   white-space: nowrap;
-  display: inline-block;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
 }
 .urep-add-btn:hover {
   opacity: 0.9;
@@ -183,9 +244,6 @@
 }
 
 .urep-pagination {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
   padding: 20px 0;
 }
 .urep-pagination button {
@@ -196,10 +254,13 @@
   cursor: pointer;
   color: var(--urep-accent);
   font-weight: 600;
+  transition: all 0.2s;
 }
 .urep-pagination button:disabled {
   color: var(--urep-text-sec);
   cursor: not-allowed;
+  border-color: transparent;
+  background: transparent;
 }
 
 .urep-no-data,
@@ -208,15 +269,21 @@
   padding: 40px;
   color: var(--urep-text-sec);
 }
+.urep-empty-icon {
+  margin: 0 auto 10px auto;
+  display: block;
+  color: var(--urep-text-sec);
+}
 .urep-spinner {
-  display: inline-block;
   animation: spin 1s infinite linear;
-  margin-right: 10px;
 }
 @keyframes spin {
   100% {
     transform: rotate(360deg);
   }
+}
+.urep-mobile-icon {
+  display: none;
 }
 
 @media (max-width: 1024px) {
@@ -224,8 +291,6 @@
     padding: 10px;
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
-    box-sizing: border-box;
   }
 
   .urep-header {
@@ -244,10 +309,11 @@
     gap: 10px;
   }
   .urep-add-btn,
-  .urep-header-right > div,
+  .urep-select-wrapper,
   .urep-single-building {
     width: 100% !important;
     text-align: center;
+    justify-content: center;
   }
 
   .urep-table {
@@ -286,7 +352,7 @@
     column-gap: 12px;
     row-gap: 8px;
     align-items: start;
-    
+
     height: 100%;
     box-sizing: border-box;
   }
@@ -296,6 +362,11 @@
     padding: 0;
     width: auto;
     display: block;
+  }
+
+  .urep-table td::before {
+    content: none !important;
+    display: none !important;
   }
 
   .urep-idx,
@@ -310,12 +381,16 @@
     color: var(--urep-text-main);
     line-height: 1.2;
     text-align: left;
-    
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .urep-mobile-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-right: 6px;
+    color: var(--urep-text-sec);
   }
 
   td[data-label="Сграда"] {
@@ -323,20 +398,13 @@
     font-size: 0.85rem;
     color: var(--urep-text-sec);
     text-align: left;
-    
-    display: block; 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    
-    padding-left: 0 !important;
+    display: flex;
+    align-items: center;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
     margin-top: 2px;
-  }
-  
-  td[data-label="Сграда"]::before {
-    content: none !important; 
-    display: none;
+    padding-left: 0 !important;
   }
 
   td[data-label="Създаден"] {
@@ -358,27 +426,39 @@
     padding: 3px 10px;
   }
 
-  td[data-label="Описание"] {
+td[data-label="Описание"] {
     grid-area: desc;
     width: 100% !important;
     margin-top: 10px;
     padding-top: 10px !important;
     border-top: 1px dashed var(--urep-border) !important;
-
     font-size: 0.9rem;
     color: var(--urep-text-sec);
     line-height: 1.5;
     text-align: left;
-
     display: -webkit-box !important;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
     white-space: normal;
+  }
+
+  .urep-pag-text {
+    display: none;
+  }
+  .urep-pagination button {
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+  }
+  .urep-pag-info {
+    font-size: 0.85rem;
   }
 }
 
 @media (max-width: 600px) {
   .urep-table tbody {
-      grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
 }

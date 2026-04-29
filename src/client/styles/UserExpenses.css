@@ -30,6 +30,25 @@
   --st-unpaid-text: #f87171;
 }
 
+.flex-align {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.flex-align-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flex-col {
+  flex-direction: column;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -52,9 +71,6 @@ body {
 }
 
 .uex-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 2rem;
   background: var(--uex-bg-card);
   padding: 1.5rem;
@@ -73,9 +89,57 @@ body {
   font-size: 0.9rem;
 }
 
-.uex-header-right {
-  display: flex;
-  align-items: center;
+.uex-select-wrapper-lg {
+  width: 250px;
+  text-align: left;
+}
+.uex-select-wrapper-sm {
+  width: 160px;
+  text-align: left;
+}
+.react-select-container .react-select__control {
+  background-color: var(--uex-bg-card);
+  border-color: var(--uex-border);
+  color: var(--uex-text-main);
+  border-radius: 8px;
+  min-height: 42px;
+  box-shadow: none;
+  cursor: pointer;
+}
+.react-select-container .react-select__control:hover {
+  border-color: var(--uex-accent);
+}
+.react-select-container .react-select__control--is-focused {
+  border-color: var(--uex-accent);
+  box-shadow: 0 0 0 3px var(--uex-accent-light);
+}
+.react-select-container .react-select__single-value,
+.react-select-container .react-select__input-container {
+  color: var(--uex-text-main);
+}
+.react-select-container .react-select__menu {
+  background-color: var(--uex-bg-card);
+  border: 1px solid var(--uex-border);
+  z-index: 9999;
+}
+.react-select-container .react-select__option {
+  background-color: transparent;
+  color: var(--uex-text-main);
+  cursor: pointer;
+}
+.react-select-container .react-select__option--is-focused {
+  background-color: var(--uex-bg-page);
+  color: var(--uex-text-main);
+}
+.react-select-container .react-select__option--is-selected {
+  background-color: var(--uex-accent);
+  color: #ffffff;
+}
+.react-select-container .react-select__placeholder {
+  color: var(--uex-text-sec);
+}
+.uex-select-icon {
+  color: var(--uex-text-sec);
 }
 
 .uex-single-building {
@@ -120,6 +184,7 @@ body {
 .uex-stat-card.max {
   border-left-color: #f97316;
 }
+
 .uex-stat-card.updating {
   opacity: 0.7;
   pointer-events: none;
@@ -128,15 +193,26 @@ body {
 .uex-stat-icon {
   width: 48px;
   height: 48px;
-  border-radius: 10px;
-  background-color: var(--uex-bg-page);
-  font-size: 1.5rem;
+  border-radius: 50px;
+  margin-right: 16px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
-  flex-shrink: 0;
 }
+.uex-icon-blue {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+.uex-icon-purple {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+.uex-icon-orange {
+  background-color: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+}
+
 .uex-stat-info {
   display: flex;
   flex-direction: column;
@@ -179,10 +255,6 @@ body {
   margin: 0;
   font-size: 1.2rem;
 }
-.uex-filters-right {
-  display: flex;
-  gap: 10px;
-}
 
 .uex-table {
   width: 100%;
@@ -217,13 +289,35 @@ body {
   background-color: var(--uex-bg-page);
 }
 
+.uex-type-cell {
+  display: flex;
+  align-items: center;
+}
 .uex-icon {
-  font-size: 1.2rem;
   margin-right: 10px;
+  color: var(--uex-text-sec);
 }
 .uex-amount {
   font-weight: 700;
   font-size: 1.05rem;
+}
+.uex-address {
+  font-weight: 500;
+}
+
+.uex-notes-cell {
+  color: var(--uex-text-sec);
+  font-style: italic;
+  font-size: 0.85rem;
+  max-width: 250px;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .uex-badge {
@@ -250,22 +344,24 @@ body {
   text-align: center;
   padding: 40px;
   color: var(--uex-text-sec);
+  gap: 10px;
 }
-.uex-spinner {
-  display: inline-block;
-  animation: spin 1s infinite linear;
-  margin-right: 10px;
+.uex-empty-icon {
+  margin: 0 auto;
+  display: block;
+  opacity: 0.5;
+}
+.uex-spinner-icon {
+  animation: spin 1s linear infinite;
+  color: var(--uex-accent);
 }
 @keyframes spin {
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
 .uex-pagination {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
   padding: 20px 0;
 }
 .uex-pagination button {
@@ -276,10 +372,13 @@ body {
   cursor: pointer;
   color: var(--uex-accent);
   font-weight: 600;
+  transition: all 0.2s;
 }
 .uex-pagination button:disabled {
   color: var(--uex-text-sec);
   cursor: not-allowed;
+  background: transparent;
+  border-color: transparent;
 }
 
 .mobile-view {
@@ -306,11 +405,13 @@ body {
     gap: 15px;
     padding: 15px;
   }
-  .uex-header-right > div {
+  .uex-header-right > div,
+  .uex-select-wrapper-lg {
     width: 100% !important;
   }
   .uex-single-building {
     text-align: center;
+    justify-content: center;
   }
 
   .uex-stats-grid {
@@ -330,8 +431,8 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
-  .uex-filters-right > div {
-    width: 100% !important;
+  .uex-select-wrapper-sm {
+    width: 100%;
   }
 
   .uex-mobile-list {
@@ -363,9 +464,6 @@ body {
   }
 
   .uex-card-type {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     font-size: 1rem;
     color: var(--uex-text-main);
     font-weight: 700;
@@ -374,16 +472,16 @@ body {
   }
 
   .uex-icon-large {
-    font-size: 1.2rem;
     width: 36px;
     height: 36px;
     background: var(--uex-bg-page);
+    border-radius: 50px;
+    flex-shrink: 0;
+    border: 1px solid var(--uex-border);
+    color: var(--uex-text-sec);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    flex-shrink: 0;
-    border: 1px solid var(--uex-border);
   }
 
   .uex-card-type span:last-child {
@@ -412,6 +510,9 @@ body {
     padding-left: 46px;
     margin-top: -6px;
   }
+  .uex-address-icon {
+    opacity: 0.8;
+  }
 
   .uex-card-footer {
     display: flex;
@@ -430,5 +531,16 @@ body {
     font-size: 1.2rem;
     font-weight: 800;
     color: var(--uex-text-main);
+  }
+
+  .uex-pag-text {
+    display: none;
+  }
+  .uex-pagination button {
+    padding: 8px;
+    justify-content: center;
+  }
+  .uex-pag-info {
+    font-size: 0.85rem;
   }
 }

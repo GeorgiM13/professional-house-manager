@@ -1,18 +1,32 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
-import { Building, CalendarDays, User, CalendarPlus } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  User,
+  Clock,
+  AlignLeft,
+  Loader2,
+  AlertCircle,
+  X,
+} from "lucide-react";
 import "./styles/EventDetails.css";
 
-function EventDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function EventDetails({ isOpen, onClose, eventId, onEditClick }) {
   const { isDarkMode } = useTheme();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isOpen || !eventId) {
+      setEvent(null);
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+
     async function fetchEvent() {
       const { data, error } = await supabase
         .from("events")
@@ -29,18 +43,24 @@ function EventDetails() {
             building:building_id(name,address)
           `,
         )
-        .eq("id", id)
+        .eq("id", eventId)
         .single();
 
-      if (error) {
-        console.error("Supabase error:", error);
-      } else {
-        setEvent(data);
+      if (isMounted) {
+        if (error) {
+          console.error("Supabase error:", error);
+        } else {
+          setEvent(data);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     }
     fetchEvent();
-  }, [id]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, eventId]);
 
   function formatDateTime(dateString) {
     if (!dateString) return "-";
@@ -56,116 +76,141 @@ function EventDetails() {
 
   const getStatusClass = (status) => {
     const s = status ? status.toLowerCase() : "";
-    if (s.includes("ново") || s.includes("new")) return "status-new";
-    if (s.includes("изпълнено") || s.includes("done")) return "status-done";
-    return "status-default";
+    if (s.includes("ново") || s.includes("new")) return "adm-evd-status-new";
+    if (s.includes("изпълнено") || s.includes("done"))
+      return "adm-evd-status-done";
+    return "adm-evd-status-default";
   };
 
-  if (loading)
-    return (
-      <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-        <div className="evd-loading">
-          <div className="spinner"></div>
-          <p>Зареждане на детайли...</p>
-        </div>
-      </div>
-    );
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("au-modal-overlay")) {
+      onClose();
+    }
+  };
 
-  if (!event)
-    return (
-      <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-        <div className="evd-error">Събитието не е намерено.</div>
-      </div>
-    );
-
-  const statusClass = getStatusClass(event.status);
+  if (!isOpen) return null;
 
   return (
-    <div className={`evd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="evd-page-header">
-        <button
-          className="evd-back-link"
-          onClick={() => navigate("/admin/adminevents")}
-        >
-          ← Назад към списъка
-        </button>
-        <div className={`evd-status-pill ${statusClass}`}>
-          {event.status || "Няма статус"}
-        </div>
-      </div>
-
-      <div className="evd-main-card fade-in">
-        <div className="evd-card-header">
-          <div className="evd-location-badge">
-            <span className="icon">
-              <Building size={28} strokeWidth={2.5} />
-            </span>
-            <div>
-              <h3>{event.building?.name || "Неизвестна сграда"}</h3>
-              <small>{event.building?.address || "Няма адрес"}</small>
-            </div>
+    <div
+      className={`au-modal-overlay ${isDarkMode ? "au-dark" : "au-light"}`}
+      onClick={handleOverlayClick}
+    >
+      <div className="au-modal-content fade-in adm-evd-modal-custom">
+        {loading ? (
+          <div className="adm-evd-loading adm-evd-flex-col adm-evd-flex-center">
+            <Loader2
+              size={40}
+              strokeWidth={2.5}
+              className="adm-evd-spinner-icon"
+            />
+            <p>Зареждане на детайли...</p>
           </div>
-          <div className="evd-dates">
-            <div className="date-item">
-              <span className="evd-date-label">
-                <CalendarDays size={16} strokeWidth={2.5} /> Краен срок:
-              </span>
-              <strong>{formatDateTime(event.completion_date)}</strong>
-            </div>
+        ) : !event ? (
+          <div className="adm-evd-error adm-evd-flex-col adm-evd-flex-center">
+            <AlertCircle size={48} strokeWidth={2} />
+            <p>Събитието не е намерено.</p>
+            <button className="adm-evd-close-btn-error" onClick={onClose}>
+              Затвори
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="adm-evd-card-header">
+              <div className="adm-evd-header-top adm-evd-flex-align-between">
+                <div
+                  className={`adm-evd-status-pill ${getStatusClass(event.status)}`}
+                >
+                  {event.status || "Няма статус"}
+                </div>
+                <button
+                  className="au-modal-close-btn"
+                  onClick={onClose}
+                  title="Затвори"
+                >
+                  <X size={24} strokeWidth={2.5} />
+                </button>
+              </div>
 
-        <div className="evd-divider"></div>
+              <div className="adm-evd-title-section">
+                <h1 className="adm-evd-title">{event.subject}</h1>
+              </div>
 
-        <div className="evd-body">
-          <h1 className="evd-title">{event.subject}</h1>
-
-          <div className="evd-description-container">
-            <span className="evd-section-label">Описание на задачата</span>
-            <div className="evd-description-content">
-              {event.description || (
-                <em className="text-muted">Няма въведено описание.</em>
-              )}
-            </div>
-          </div>
-
-          <div className="evd-meta-grid">
-            <div className="meta-box">
-              <span className="meta-icon">
-                <User size={24} strokeWidth={2.5} />
-              </span>
-              <div className="meta-info">
-                <span className="meta-label">Възложено на</span>
-                <span className="meta-value">
-                  {event.assigned_user
-                    ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
-                    : "Не е назначено"}
-                </span>
+              <div className="adm-evd-location-badge adm-evd-flex-align">
+                <div className="adm-evd-icon-wrapper">
+                  <Building2 size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h3>{event.building?.name || "Неизвестна сграда"}</h3>
+                  <small>{event.building?.address || "Няма адрес"}</small>
+                </div>
               </div>
             </div>
 
-            <div className="meta-box">
-              <span className="meta-icon">
-                <CalendarPlus size={24} strokeWidth={2.5} />
-              </span>
-              <div className="meta-info">
-                <span className="meta-label">Създадено на</span>
-                <span className="meta-value">
-                  {formatDateTime(event.created_at)}
+            <div className="adm-evd-divider"></div>
+
+            <div className="adm-evd-body">
+              <div className="adm-evd-description-container">
+                <span className="adm-evd-section-label adm-evd-flex-align">
+                  <AlignLeft size={16} strokeWidth={2.5} /> Описание на задачата
                 </span>
+                <div className="adm-evd-description-content">
+                  {event.description || (
+                    <em className="text-muted">Няма въведено описание.</em>
+                  )}
+                </div>
+              </div>
+
+              <div className="adm-evd-meta-grid">
+                <div className="adm-evd-meta-box">
+                  <div className="adm-evd-meta-icon">
+                    <CalendarDays size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="adm-evd-meta-info">
+                    <span className="adm-evd-meta-label">Краен срок</span>
+                    <span className="adm-evd-meta-value adm-evd-primary-text">
+                      {formatDateTime(event.completion_date)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="adm-evd-meta-box">
+                  <div className="adm-evd-meta-icon">
+                    <User size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="adm-evd-meta-info">
+                    <span className="adm-evd-meta-label">Възложено на</span>
+                    <span className="adm-evd-meta-value">
+                      {event.assigned_user
+                        ? `${event.assigned_user.first_name} ${event.assigned_user.last_name}`
+                        : "Не е назначено"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="adm-evd-meta-box">
+                  <div className="adm-evd-meta-icon">
+                    <Clock size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="adm-evd-meta-info">
+                    <span className="adm-evd-meta-label">Създадено на</span>
+                    <span className="adm-evd-meta-value">
+                      {formatDateTime(event.created_at)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="evd-footer">
-          <button
-            className="evd-btn evd-btn-primary"
-            onClick={() => navigate(`/admin/editevent/${event.id}`)}
-          >
-            Редактирай събитието
-          </button>
-        </div>
+            <div className="adm-evd-footer">
+              <button
+                className="adm-evd-btn adm-evd-btn-primary"
+                onClick={() => onEditClick(event.id)}
+              >
+                Редактирай събитието
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

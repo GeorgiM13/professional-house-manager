@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -18,6 +17,7 @@ import {
   User,
   Circle,
   CheckCircle2,
+  X,
 } from "lucide-react";
 
 import "./styles/AddEvent.css";
@@ -48,12 +48,12 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
     (context === "value" || (iconName !== "building" && iconName !== "user"));
 
   return (
-    <div className="adev-select-item">
+    <div className="add-ev-select-item">
       {shouldShowIcon && (
         <IconComponent
           size={16}
           strokeWidth={2.5}
-          className="adev-select-icon"
+          className="add-ev-select-icon"
           style={{ color: color || "inherit" }}
         />
       )}
@@ -62,9 +62,8 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
   );
 };
 
-function AddEvent() {
+function AddEvent({ isOpen, onClose, onSuccess }) {
   const { isDarkMode } = useTheme();
-  const navigate = useNavigate();
 
   const { user: currentUser } = useLocalUser();
   const { buildings, loading: loadingBuildings } = useUserBuildings(
@@ -84,16 +83,27 @@ function AddEvent() {
   });
 
   useEffect(() => {
-    async function fetchUsers() {
-      const { data } = await supabase
-        .from("users")
-        .select("id, first_name, last_name, role")
-        .or("role.eq.admin,role.eq.manager");
+    if (isOpen) {
+      setNewEvent({
+        status: "ново",
+        subject: "",
+        description: "",
+        completion_date: null,
+        assigned_to: "",
+        building_id: "",
+      });
 
-      setUsers(data || []);
+      async function fetchUsers() {
+        const { data } = await supabase
+          .from("users")
+          .select("id, first_name, last_name, role")
+          .or("role.eq.admin,role.eq.manager");
+
+        setUsers(data || []);
+      }
+      fetchUsers();
     }
-    fetchUsers();
-  }, []);
+  }, [isOpen]);
 
   const buildingOptions = useMemo(() => {
     return buildings.map((b) => ({
@@ -119,8 +129,13 @@ function AddEvent() {
     container: (base) => ({
       ...base,
       width: "100%",
+      fontFamily: "system-ui, -apple-system, sans-serif",
     }),
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 1050,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
     control: (base, state) => ({
       ...base,
       background: isDarkMode ? "#0f172a" : "#f8fafc",
@@ -133,11 +148,12 @@ function AddEvent() {
       minHeight: "42px",
       borderRadius: "8px",
       boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+      fontFamily: "system-ui, -apple-system, sans-serif",
     }),
     menu: (base) => ({
       ...base,
       background: isDarkMode ? "#1e293b" : "white",
-      zIndex: 9999,
+      zIndex: 1050,
       border: "1px solid var(--au-border)",
     }),
     option: (base, state) => {
@@ -212,7 +228,9 @@ function AddEvent() {
         timer: 1500,
         showConfirmButton: false,
       });
-      navigate("/admin/adminevents");
+
+      if (onSuccess) onSuccess();
+      onClose();
     } catch (err) {
       Swal.fire({ icon: "error", title: "Грешка", text: err.message });
     } finally {
@@ -220,161 +238,175 @@ function AddEvent() {
     }
   };
 
-  const goBack = () => navigate("/admin/adminevents");
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("add-ev-overlay")) {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <div className={`adev-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="adev-header">
-        <div>
-          <h1>Добавяне на събитие</h1>
-          <p>Планиране на нова задача или среща</p>
-        </div>
-        <button className="adev-btn adev-btn-secondary" onClick={goBack}>
-          Назад
-        </button>
-      </div>
-
-      <div className="adev-grid">
-        <div className="adev-card">
-          <div className="adev-section-title">
-            <FileText
-              size={20}
-              strokeWidth={2.5}
-              className="adev-section-icon"
-            />
-            Описание на задачата
+    <div
+      className={`add-ev-overlay ${isDarkMode ? "au-dark" : "au-light"}`}
+      onClick={handleOverlayClick}
+    >
+      <div className="add-ev-modal">
+        <div className="add-ev-header flex-align-between">
+          <div>
+            <h1>Добавяне на събитие</h1>
+            <p>Планиране на нова задача или среща</p>
           </div>
-
-          <div className="adev-form-group">
-            <label>Относно *</label>
-            <input
-              className="adev-input"
-              value={newEvent.subject}
-              onChange={(e) => handleChange("subject", e.target.value)}
-              placeholder="Напр. Общо събрание"
-            />
-          </div>
-
-          <div className="adev-form-group">
-            <label>Описание</label>
-            <textarea
-              className="adev-textarea"
-              value={newEvent.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Детайли за събитието..."
-            />
-          </div>
+          <button className="add-ev-close-btn flex-center" onClick={onClose}>
+            <X size={24} strokeWidth={2.5} />
+          </button>
         </div>
 
-        <div className="adev-card" style={{ height: "fit-content" }}>
-          <div className="adev-section-title">
-            <Settings
-              size={20}
-              strokeWidth={2.5}
-              className="adev-section-icon"
-            />
-            Детайли за изпълнение
-          </div>
+        <div className="add-ev-grid">
+          <div className="add-ev-card">
+            <div className="add-ev-section-title">
+              <FileText
+                size={20}
+                strokeWidth={2.5}
+                className="add-ev-section-icon"
+              />
+              Описание на задачата
+            </div>
 
-          <div className="adev-form-group">
-            <label>Сграда *</label>
-            <Select
-              options={buildingOptions}
-              value={getSelectValue(buildingOptions, newEvent.building_id)}
-              isLoading={loadingBuildings}
-              onChange={(opt) => handleChange("building_id", opt?.value)}
-              placeholder={
-                <div className="adev-select-item">
-                  <Building
-                    size={16}
-                    strokeWidth={2.5}
-                    className="adev-select-icon"
-                  />
-                  <span>Избери сграда...</span>
-                </div>
-              }
-              styles={selectStyles}
-              noOptionsMessage={() => "Няма намерени"}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-          </div>
+            <div className="add-ev-form-group">
+              <label>Относно *</label>
+              <input
+                className="add-ev-input"
+                value={newEvent.subject}
+                onChange={(e) => handleChange("subject", e.target.value)}
+                placeholder="Напр. Общо събрание"
+              />
+            </div>
 
-          <div className="adev-form-group" style={{ marginTop: "1rem" }}>
-            <label>Статус</label>
-            <Select
-              options={STATUS_OPTIONS}
-              value={getSelectValue(STATUS_OPTIONS, newEvent.status)}
-              onChange={(opt) => handleChange("status", opt?.value)}
-              styles={selectStyles}
-              isSearchable={false}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-          </div>
-
-          <div className="adev-form-group" style={{ marginTop: "1rem" }}>
-            <label>Дата и час на изпълнение</label>
-            <div className="custom-datepicker-wrapper">
-              <span className="calendar-icon">
-                <CalendarDays size={18} strokeWidth={2.5} />
-              </span>
-              <DatePicker
-                selected={newEvent.completion_date}
-                onChange={(date) => handleChange("completion_date", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                timeCaption="Час"
-                dateFormat="dd MMMM yyyy, HH:mm"
-                placeholderText="Изберете дата и час..."
-                className="adev-input date-input-field"
-                wrapperClassName="w-full-datepicker"
-                locale="bg"
-                autoComplete="off"
-                isClearable
-                onFocus={(e) => e.target.blur()}
+            <div className="add-ev-form-group">
+              <label>Описание</label>
+              <textarea
+                className="add-ev-textarea"
+                value={newEvent.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+                placeholder="Детайли за събитието..."
               />
             </div>
           </div>
 
-          <div className="adev-form-group" style={{ marginTop: "1rem" }}>
-            <label>Възложено на</label>
-            <Select
-              options={assignedOptions}
-              value={getSelectValue(assignedOptions, newEvent.assigned_to)}
-              onChange={(opt) => handleChange("assigned_to", opt?.value)}
-              placeholder={
-                <div className="adev-select-item">
-                  <User
-                    size={16}
-                    strokeWidth={2.5}
-                    className="adev-select-icon"
-                  />
-                  <span>Избери служител...</span>
-                </div>
-              }
-              styles={selectStyles}
-              isSearchable={false}
-              formatOptionLabel={customFormatOptionLabel}
-            />
+          <div className="add-ev-card" style={{ height: "fit-content" }}>
+            <div className="add-ev-section-title">
+              <Settings
+                size={20}
+                strokeWidth={2.5}
+                className="add-ev-section-icon"
+              />
+              Детайли за изпълнение
+            </div>
+
+            <div className="add-ev-form-group">
+              <label>Сграда *</label>
+              <Select
+                options={buildingOptions}
+                value={getSelectValue(buildingOptions, newEvent.building_id)}
+                isLoading={loadingBuildings}
+                onChange={(opt) => handleChange("building_id", opt?.value)}
+                menuPortalTarget={document.body}
+                placeholder={
+                  <div className="add-ev-select-item">
+                    <Building
+                      size={16}
+                      strokeWidth={2.5}
+                      className="add-ev-select-icon"
+                    />
+                    <span>Избери сграда...</span>
+                  </div>
+                }
+                styles={selectStyles}
+                noOptionsMessage={() => "Няма намерени"}
+                formatOptionLabel={customFormatOptionLabel}
+              />
+            </div>
+
+            <div className="add-ev-form-group" style={{ marginTop: "1rem" }}>
+              <label>Статус</label>
+              <Select
+                options={STATUS_OPTIONS}
+                value={getSelectValue(STATUS_OPTIONS, newEvent.status)}
+                onChange={(opt) => handleChange("status", opt?.value)}
+                menuPortalTarget={document.body}
+                styles={selectStyles}
+                isSearchable={false}
+                formatOptionLabel={customFormatOptionLabel}
+              />
+            </div>
+
+            <div className="add-ev-form-group" style={{ marginTop: "1rem" }}>
+              <label>Дата и час на изпълнение</label>
+              <div className="add-ev-datepicker-wrap">
+                <span className="add-ev-cal-icon">
+                  <CalendarDays size={18} strokeWidth={2.5} />
+                </span>
+                <DatePicker
+                  selected={newEvent.completion_date}
+                  onChange={(date) => handleChange("completion_date", date)}
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  timeCaption="Час"
+                  dateFormat="dd MMMM yyyy, HH:mm"
+                  placeholderText="Изберете дата и час..."
+                  className="add-ev-input add-ev-date-field"
+                  wrapperClassName="add-ev-full-datepicker"
+                  locale="bg"
+                  autoComplete="off"
+                  isClearable
+                  onFocus={(e) => e.target.blur()}
+                />
+              </div>
+            </div>
+
+            <div className="add-ev-form-group" style={{ marginTop: "1rem" }}>
+              <label>Възложено на</label>
+              <Select
+                options={assignedOptions}
+                value={getSelectValue(assignedOptions, newEvent.assigned_to)}
+                onChange={(opt) => handleChange("assigned_to", opt?.value)}
+                menuPortalTarget={document.body}
+                placeholder={
+                  <div className="add-ev-select-item">
+                    <User
+                      size={16}
+                      strokeWidth={2.5}
+                      className="add-ev-select-icon"
+                    />
+                    <span>Избери служител...</span>
+                  </div>
+                }
+                styles={selectStyles}
+                isSearchable={false}
+                formatOptionLabel={customFormatOptionLabel}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="adev-actions">
-        <button
-          className="adev-btn adev-btn-secondary"
-          onClick={goBack}
-          disabled={loading}
-        >
-          Отказ
-        </button>
-        <button
-          className="adev-btn adev-btn-primary"
-          onClick={handleCreateEvent}
-          disabled={loading}
-        >
-          {loading ? "Запазване..." : "Създай събитие"}
-        </button>
+        <div className="add-ev-actions flex-align">
+          <button
+            className="add-ev-btn add-ev-btn-secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Отказ
+          </button>
+          <button
+            className="add-ev-btn add-ev-btn-primary"
+            onClick={handleCreateEvent}
+            disabled={loading}
+          >
+            {loading ? "Запазване..." : "Създай събитие"}
+          </button>
+        </div>
       </div>
     </div>
   );

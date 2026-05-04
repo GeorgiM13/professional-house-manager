@@ -75,18 +75,29 @@
 }
 
 .adev-add-btn {
-  background-color: var(--ae-accent);
-  color: white;
-  border: none;
-  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--au-primary, #3b82f6);
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
+
 .adev-add-btn:hover {
+  background-color: #2563eb;
   transform: translateY(-1px);
-  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.adev-add-btn:active {
+  transform: translateY(0);
 }
 
 .adev-toolbar {
@@ -188,6 +199,9 @@
   transition: background 0.2s;
   height: 60px !important;
   border-bottom: 1px solid var(--ae-border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s;
 }
 .adev-row:hover {
   background-color: var(--ae-hover);
@@ -462,6 +476,11 @@
   .adev-filters-right > div {
     width: 100% !important;
   }
+  .adev-add-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem;
+  }
   .adev-stats-grid {
     display: flex;
     flex-direction: column;
@@ -469,6 +488,39 @@
   }
   .adev-stat-card {
     padding: 12px;
+  }
+  .adev-page > .adev-header {
+    flex-direction: column !important;
+    gap: 1.5rem;
+  }
+
+  .adev-page > .adev-header .adev-header-right {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .adev-filter-building {
+    flex: 1;
+  }
+
+  .adev-add-btn {
+    width: 42px !important;
+    height: 42px !important;
+    padding: 0 !important;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+  }
+
+  .adev-add-btn .btn-text {
+    display: none;
+  }
+
+  .adev-add-btn svg {
+    margin: 0;
   }
 
   .adev-table {
@@ -503,6 +555,9 @@
     margin: 0;
     align-items: center;
     height: auto !important;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s;
   }
 
   .adev-idx {

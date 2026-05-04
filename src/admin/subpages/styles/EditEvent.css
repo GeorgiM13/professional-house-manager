@@ -1,60 +1,104 @@
-.edv-container {
-  padding: 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-  background-color: var(--au-bg-page, #f8fafc);
-  color: var(--au-text-main, #1e293b);
-  transition: background-color 0.3s, color 0.3s;
+.adm-editev-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
 }
 
-.edv-container.au-dark {
+.adm-editev-content {
+  background-color: var(--au-bg-page, #f8fafc);
+  color: var(--au-text-main, #1e293b);
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+
+  opacity: 0;
+  animation: admEditEvScaleUp 0.3s ease-out forwards !important;
+}
+
+.au-dark .adm-editev-content {
   --au-bg-page: #0f172a;
   --au-bg-card: #1e293b;
   --au-text-main: #f1f5f9;
   --au-text-sec: #94a3b8;
   --au-border: #334155;
-  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.edv-header {
-  margin-bottom: 2rem;
+.adm-editev-close-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8 !important;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adm-editev-close-btn:hover {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+  color: #ef4444 !important;
+}
+
+.adm-editev-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  background-color: transparent !important;
+  border-bottom: none;
+  padding: 0;
 }
-.edv-header h1 {
+
+.adm-editev-header h1 {
   margin: 0;
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--au-text-main);
+  line-height: 1.2;
 }
-.edv-header p {
+
+.adm-editev-header p {
   color: var(--au-text-sec);
-  margin-top: 5px;
+  margin: 0;
+  margin-top: 0.25rem;
   font-size: 0.95rem;
 }
 
-.edv-grid {
+.adm-editev-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
 }
 
-.edv-card {
+.adm-editev-card {
   background: var(--au-bg-card, #ffffff);
   border: 1px solid var(--au-border, #e2e8f0);
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: var(--au-shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   height: fit-content;
 }
 
-.edv-section-title {
+.adm-editev-section-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--au-text-main);
@@ -66,29 +110,29 @@
   gap: 0.5rem;
 }
 
-.edv-section-icon {
+.adm-editev-section-icon {
   color: var(--au-primary, #3b82f6);
   flex-shrink: 0;
 }
 
-.edv-select-item {
+.adm-editev-select-item {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.edv-select-icon {
+.adm-editev-select-icon {
   flex-shrink: 0;
   color: var(--au-text-sec);
 }
 
-.edv-form-group {
+.adm-editev-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.edv-form-group label {
+.adm-editev-form-group label {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--au-text-sec);
@@ -96,9 +140,8 @@
   letter-spacing: 0.5px;
 }
 
-.edv-input,
-.edv-select,
-.edv-textarea {
+.adm-editev-input,
+.adm-editev-textarea {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid;
@@ -109,45 +152,44 @@
   box-sizing: border-box;
 }
 
-.edv-textarea {
+.adm-editev-textarea {
   min-height: 150px;
   resize: vertical;
   font-family: inherit;
 }
 
-.au-light .edv-input,
-.au-light .edv-select,
-.au-light .edv-textarea {
+.au-light .adm-editev-input,
+.au-light .adm-editev-textarea {
   background-color: #f8fafc;
   border-color: #cbd5e1;
   color: #1e293b;
 }
-.au-dark .edv-input,
-.au-dark .edv-select,
-.au-dark .edv-textarea {
+
+.au-dark .adm-editev-input,
+.au-dark .adm-editev-textarea {
   background-color: #0f172a;
   border-color: #334155;
   color: #f1f5f9;
 }
 
-.edv-input:focus,
-.edv-select:focus,
-.edv-textarea:focus {
+.adm-editev-input:focus,
+.adm-editev-textarea:focus {
   border-color: var(--au-primary, #3b82f6) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.edv-actions {
+.adm-editev-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px dashed var(--au-border);
-  display: flex;
-  justify-content: flex-end;
   gap: 1rem;
   grid-column: 1 / -1;
 }
 
-.edv-btn {
+.adm-editev-btn {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
@@ -155,76 +197,58 @@
   border: 1px solid transparent;
   transition: all 0.2s;
 }
-.edv-btn:hover {
+
+.adm-editev-btn:hover {
   filter: brightness(0.95);
   transform: translateY(-1px);
 }
 
-.edv-btn-primary {
+.adm-editev-btn-primary {
   background: var(--au-primary, #3b82f6);
   color: white;
   border-color: var(--au-primary);
 }
-
-.edv-btn-secondary {
+.adm-editev-btn-secondary {
   background-color: transparent;
 }
-.au-light .edv-btn-secondary {
+
+.au-light .adm-editev-btn-secondary {
   background-color: #ffffff;
   border-color: #cbd5e1;
   color: #475569;
 }
-.au-light .edv-btn-secondary:hover {
+.au-light .adm-editev-btn-secondary:hover {
   background-color: #f1f5f9;
   border-color: #94a3b8;
   color: #1e293b;
 }
-.au-dark .edv-btn-secondary {
+
+.au-dark .adm-editev-btn-secondary {
   background-color: rgba(255, 255, 255, 0.05);
   border-color: #475569;
   color: #e2e8f0;
 }
-.au-dark .edv-btn-secondary:hover {
+.au-dark .adm-editev-btn-secondary:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-color: #94a3b8;
   color: #ffffff;
 }
 
-.edv-btn-danger {
+.adm-editev-btn-danger {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border-color: rgba(239, 68, 68, 0.3);
 }
-.edv-btn-danger:hover {
+.adm-editev-btn-danger:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
 }
 
-@media (max-width: 768px) {
-  .edv-container {
-    padding: 1rem;
-  }
-  .edv-grid {
-    grid-template-columns: 1fr;
-  }
-  .edv-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  .edv-actions {
-    flex-direction: column-reverse;
-  }
-  .edv-btn {
-    width: 100%;
-  }
-}
-
-.custom-datepicker-wrapper {
+.adm-editev-datepicker-wrap {
   position: relative;
   width: 100%;
 }
-.calendar-icon {
+.adm-editev-cal-icon {
   position: absolute;
   left: 12px;
   top: 50%;
@@ -236,7 +260,7 @@
   color: var(--au-text-sec);
   pointer-events: none;
 }
-.date-input-field {
+.adm-editev-date-field {
   padding-left: 2.5rem !important;
   cursor: pointer;
 }
@@ -250,12 +274,10 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   font-size: 0.95rem !important;
-
   background-color: rgba(255, 255, 255, 0.98) !important;
   backdrop-filter: blur(12px);
   color: #1e293b !important;
 }
-
 .react-datepicker__month-container {
   background: transparent !important;
   float: none !important;
@@ -265,7 +287,6 @@
   border-bottom: 1px solid var(--au-border) !important;
   padding-top: 1rem !important;
 }
-
 .react-datepicker__time-container {
   float: none !important;
   border-left: 1px solid var(--au-border) !important;
@@ -294,7 +315,6 @@
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
 }
-
 .react-datepicker__current-month,
 .react-datepicker-time__header,
 .react-datepicker__day-name,
@@ -317,6 +337,9 @@
 .react-datepicker__day--today {
   font-weight: bold;
   color: var(--au-primary, #3b82f6) !important;
+}
+.react-datepicker__triangle {
+  display: none;
 }
 
 .au-dark .react-datepicker {
@@ -363,6 +386,108 @@
 .au-dark .react-datepicker__day--today {
   color: #60a5fa !important;
 }
-.react-datepicker__triangle {
-  display: none;
+
+@keyframes admEditEvScaleUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes admEditEvSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .adm-editev-grid {
+    grid-template-columns: 1fr;
+  }
+  .adm-editev-card {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .adm-editev-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .adm-editev-content {
+    border-radius: 20px 20px 0 0;
+    max-height: 80vh;
+    padding: 1.5rem 1rem;
+    animation: admEditEvSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+
+  .adm-editev-content .adm-editev-header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    padding-bottom: 0.5rem;
+  }
+
+  .adm-editev-close-btn {
+    position: static !important;
+    margin: 0 !important;
+    margin-right: -0.5rem !important;
+    background-color: transparent !important;
+  }
+
+  .adm-editev-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .adm-editev-btn {
+    width: 100%;
+    padding: 0.875rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .react-datepicker {
+    display: flex !important;
+    flex-direction: row !important;
+    max-width: 100%;
+    font-size: 0.8rem !important;
+  }
+  .react-datepicker__month-container {
+    width: auto !important;
+    flex-grow: 1;
+  }
+  .react-datepicker__day-name,
+  .react-datepicker__day,
+  .react-datepicker__time-name {
+    width: 1.7rem !important;
+    line-height: 1.7rem !important;
+    margin: 0.1rem !important;
+  }
+  .react-datepicker__time-container {
+    width: 70px !important;
+  }
+  .react-datepicker__header {
+    padding-top: 0.5rem !important;
+  }
+  .react-datepicker__time-container .react-datepicker__time {
+    height: 240px !important;
+  }
 }

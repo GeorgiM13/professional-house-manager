@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -22,6 +21,7 @@ import {
   Trash2,
   Circle,
   CheckCircle2,
+  X,
 } from "lucide-react";
 
 import "./styles/EditEvent.css";
@@ -52,12 +52,12 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
     (context === "value" || (iconName !== "building" && iconName !== "user"));
 
   return (
-    <div className="edv-select-item">
+    <div className="adm-editev-select-item">
       {shouldShowIcon && (
         <IconComponent
           size={16}
           strokeWidth={2.5}
-          className="edv-select-icon"
+          className="adm-editev-select-icon"
           style={{ color: color || "inherit" }}
         />
       )}
@@ -66,9 +66,7 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
   );
 };
 
-function EditEvent() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function EditEvent({ isOpen, onClose, eventId, onSuccess }) {
   const { isDarkMode } = useTheme();
 
   const { user: currentUser } = useLocalUser();
@@ -102,11 +100,14 @@ function EditEvent() {
   }, []);
 
   useEffect(() => {
+    if (!isOpen || !eventId) return;
+
     async function fetchEvent() {
+      setLoading(true);
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .eq("id", id)
+        .eq("id", eventId)
         .single();
 
       if (error) {
@@ -116,6 +117,7 @@ function EditEvent() {
           title: "Грешка",
           text: "Неуспешно зареждане.",
         });
+        onClose();
       } else if (data) {
         setFormData({
           status: data.status || "ново",
@@ -131,7 +133,7 @@ function EditEvent() {
       setLoading(false);
     }
     fetchEvent();
-  }, [id]);
+  }, [isOpen, eventId, onClose]);
 
   const buildingOptions = useMemo(() => {
     return buildings.map((b) => ({
@@ -150,6 +152,16 @@ function EditEvent() {
   }, [users]);
 
   const selectStyles = {
+    container: (base) => ({
+      ...base,
+      width: "100%",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 1050,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
     control: (base, state) => ({
       ...base,
       background: isDarkMode ? "#0f172a" : "#f8fafc",
@@ -162,11 +174,12 @@ function EditEvent() {
       minHeight: "42px",
       borderRadius: "8px",
       boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+      fontFamily: "system-ui, -apple-system, sans-serif",
     }),
     menu: (base) => ({
       ...base,
       background: isDarkMode ? "#1e293b" : "white",
-      zIndex: 9999,
+      zIndex: 1050,
       border: "1px solid var(--au-border)",
     }),
     option: (base, state) => {
@@ -227,7 +240,7 @@ function EditEvent() {
     const { error } = await supabase
       .from("events")
       .update(updateData)
-      .eq("id", id);
+      .eq("id", eventId);
 
     if (error) {
       Swal.fire({ icon: "error", title: "Грешка", text: error.message });
@@ -240,13 +253,15 @@ function EditEvent() {
         timer: 1500,
         showConfirmButton: false,
       });
-      navigate("/admin/adminevents");
+      setSaving(false);
+      if (onSuccess) onSuccess();
+      onClose();
     }
   };
 
   const handleDeleteConfirmed = async () => {
     setSaving(true);
-    const { error } = await supabase.from("events").delete().eq("id", id);
+    const { error } = await supabase.from("events").delete().eq("id", eventId);
 
     if (error) {
       Swal.fire({ icon: "error", title: "Грешка", text: error.message });
@@ -254,202 +269,249 @@ function EditEvent() {
     } else {
       await Swal.fire({
         icon: "success",
-        title: "Изтрит!",
+        title: "Изтрито!",
         text: "Събитието е премахнато.",
         timer: 1500,
         showConfirmButton: false,
       });
-      navigate("/admin/adminevents");
+      setSaving(false);
+      if (onSuccess) onSuccess();
+      onClose();
     }
     setShowConfirm(false);
   };
 
-  const goBack = () => navigate("/admin/adminevents");
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("adm-editev-overlay")) {
+      onClose();
+    }
+  };
 
-  if (loading)
-    return (
-      <div className={`edv-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-        <div style={{ textAlign: "center", padding: "4rem" }}>Зареждане...</div>
-      </div>
-    );
+  if (!isOpen) return null;
 
   return (
-    <div className={`edv-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="edv-header">
-        <div>
-          <h1>Редакция на събитие</h1>
-          <p>Промяна на параметри и статус</p>
-        </div>
-        <button className="edv-btn edv-btn-secondary" onClick={goBack}>
-          Назад
-        </button>
-      </div>
-
-      <div className="edv-grid">
-        <div className="edv-card">
-          <div className="edv-section-title">
-            <FileText
-              size={20}
-              strokeWidth={2.5}
-              className="edv-section-icon"
-            />
-            Описание на задачата
+    <div
+      className={`adm-editev-overlay ${isDarkMode ? "au-dark" : "au-light"}`}
+      onClick={handleOverlayClick}
+    >
+      <div className="adm-editev-content">
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "4rem" }}>
+            Зареждане...
           </div>
-
-          <div className="edv-form-group">
-            <label>Относно</label>
-            <input
-              className="edv-input"
-              value={formData.subject}
-              onChange={(e) => handleChange("subject", e.target.value)}
-            />
-          </div>
-
-          <div className="edv-form-group">
-            <label>Описание</label>
-            <textarea
-              className="edv-textarea"
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="edv-card" style={{ height: "fit-content" }}>
-          <div className="edv-section-title">
-            <Settings
-              size={20}
-              strokeWidth={2.5}
-              className="edv-section-icon"
-            />
-            Детайли
-          </div>
-
-          <div className="edv-form-group">
-            <label>Сграда</label>
-            <Select
-              options={buildingOptions}
-              isLoading={loadingBuildings}
-              value={buildingOptions.find(
-                (op) => op.value === formData.building_id,
-              )}
-              onChange={(opt) => handleChange("building_id", opt?.value)}
-              placeholder={
-                <div className="edv-select-item">
-                  <Building
-                    size={16}
-                    strokeWidth={2.5}
-                    className="edv-select-icon"
-                  />
-                  <span>Избери сграда...</span>
-                </div>
-              }
-              styles={selectStyles}
-              noOptionsMessage={() => "Няма намерени"}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-          </div>
-
-          <div className="edv-form-group" style={{ marginTop: "1rem" }}>
-            <label>Статус</label>
-            <Select
-              options={STATUS_OPTIONS}
-              value={STATUS_OPTIONS.find((s) => s.value === formData.status)}
-              onChange={(opt) => handleChange("status", opt?.value)}
-              styles={selectStyles}
-              isSearchable={false}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-          </div>
-
-          <div className="edv-form-group" style={{ marginTop: "1rem" }}>
-            <label>Дата и час на изпълнение</label>
-            <div className="custom-datepicker-wrapper">
-              <span className="calendar-icon">
-                <CalendarDays size={18} strokeWidth={2.5} />
-              </span>
-              <DatePicker
-                selected={formData.completion_date}
-                onChange={(date) => handleChange("completion_date", date)}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={15}
-                timeCaption="Час"
-                dateFormat="dd MMMM yyyy, HH:mm"
-                placeholderText="Изберете дата..."
-                className="edv-input date-input-field"
-                locale="bg"
-                autoComplete="off"
-                isClearable
-              />
+        ) : (
+          <>
+            <div className="adm-editev-header">
+              <div>
+                <h1 style={{ fontSize: "1.5rem", margin: 0, lineHeight: 1.2 }}>
+                  Редакция на събитие
+                </h1>
+                <p
+                  style={{
+                    margin: 0,
+                    marginTop: "0.25rem",
+                    color: "var(--au-text-sec)",
+                  }}
+                >
+                  Промяна на параметри и статус
+                </p>
+              </div>
+              <button
+                className="adm-editev-close-btn"
+                onClick={onClose}
+                title="Затвори"
+              >
+                <X size={24} strokeWidth={2.5} />
+              </button>
             </div>
-          </div>
 
-          <div className="edv-form-group" style={{ marginTop: "1rem" }}>
-            <label>Възложено на</label>
-            <Select
-              options={assignedOptions}
-              value={assignedOptions.find(
-                (u) => u.value === formData.assigned_to,
-              )}
-              onChange={(opt) => handleChange("assigned_to", opt?.value)}
-              placeholder={
-                <div className="edv-select-item">
-                  <User
-                    size={16}
+            <div className="adm-editev-grid">
+              <div className="adm-editev-card">
+                <div className="adm-editev-section-title">
+                  <FileText
+                    size={20}
                     strokeWidth={2.5}
-                    className="edv-select-icon"
+                    className="adm-editev-section-icon"
                   />
-                  <span>Избери служител...</span>
+                  Описание на задачата
                 </div>
-              }
-              styles={selectStyles}
-              isSearchable={false}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-          </div>
-        </div>
 
-        <div className="edv-actions">
-          <button
-            type="button"
-            className="edv-btn edv-btn-danger"
-            onClick={() => setShowConfirm(true)}
-            disabled={saving}
-            style={{
-              marginRight: "auto",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <Trash2 size={18} strokeWidth={2.5} /> Изтрий
-          </button>
-          <button
-            className="edv-btn edv-btn-secondary"
-            onClick={goBack}
-            disabled={saving}
-          >
-            Отказ
-          </button>
-          <button
-            className="edv-btn edv-btn-primary"
-            onClick={handleUpdate}
-            disabled={saving}
-          >
-            {saving ? "Запазване..." : "Запази промените"}
-          </button>
-        </div>
+                <div className="adm-editev-form-group">
+                  <label>Относно</label>
+                  <input
+                    className="adm-editev-input"
+                    value={formData.subject}
+                    onChange={(e) => handleChange("subject", e.target.value)}
+                  />
+                </div>
+
+                <div className="adm-editev-form-group">
+                  <label>Описание</label>
+                  <textarea
+                    className="adm-editev-textarea"
+                    value={formData.description}
+                    onChange={(e) =>
+                      handleChange("description", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div
+                className="adm-editev-card"
+                style={{ height: "fit-content" }}
+              >
+                <div className="adm-editev-section-title">
+                  <Settings
+                    size={20}
+                    strokeWidth={2.5}
+                    className="adm-editev-section-icon"
+                  />
+                  Детайли
+                </div>
+
+                <div className="adm-editev-form-group">
+                  <label>Сграда</label>
+                  <Select
+                    options={buildingOptions}
+                    isLoading={loadingBuildings}
+                    value={buildingOptions.find(
+                      (op) => op.value === formData.building_id,
+                    )}
+                    onChange={(opt) => handleChange("building_id", opt?.value)}
+                    menuPortalTarget={document.body}
+                    placeholder={
+                      <div className="adm-editev-select-item">
+                        <Building
+                          size={16}
+                          strokeWidth={2.5}
+                          className="adm-editev-select-icon"
+                        />
+                        <span>Избери сграда...</span>
+                      </div>
+                    }
+                    styles={selectStyles}
+                    noOptionsMessage={() => "Няма намерени"}
+                    formatOptionLabel={customFormatOptionLabel}
+                  />
+                </div>
+
+                <div
+                  className="adm-editev-form-group"
+                  style={{ marginTop: "1rem" }}
+                >
+                  <label>Статус</label>
+                  <Select
+                    options={STATUS_OPTIONS}
+                    value={STATUS_OPTIONS.find(
+                      (s) => s.value === formData.status,
+                    )}
+                    onChange={(opt) => handleChange("status", opt?.value)}
+                    menuPortalTarget={document.body}
+                    styles={selectStyles}
+                    isSearchable={false}
+                    formatOptionLabel={customFormatOptionLabel}
+                  />
+                </div>
+
+                <div
+                  className="adm-editev-form-group"
+                  style={{ marginTop: "1rem" }}
+                >
+                  <label>Дата и час на изпълнение</label>
+                  <div className="adm-editev-datepicker-wrap">
+                    <span className="adm-editev-cal-icon">
+                      <CalendarDays size={18} strokeWidth={2.5} />
+                    </span>
+                    <DatePicker
+                      selected={formData.completion_date}
+                      onChange={(date) => handleChange("completion_date", date)}
+                      showTimeSelect
+                      timeFormat="HH:mm"
+                      timeIntervals={15}
+                      timeCaption="Час"
+                      dateFormat="dd MMMM yyyy, HH:mm"
+                      placeholderText="Изберете дата..."
+                      className="adm-editev-input adm-editev-date-field"
+                      locale="bg"
+                      autoComplete="off"
+                      isClearable
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className="adm-editev-form-group"
+                  style={{ marginTop: "1rem" }}
+                >
+                  <label>Възложено на</label>
+                  <Select
+                    options={assignedOptions}
+                    value={assignedOptions.find(
+                      (u) => u.value === formData.assigned_to,
+                    )}
+                    onChange={(opt) => handleChange("assigned_to", opt?.value)}
+                    menuPortalTarget={document.body}
+                    placeholder={
+                      <div className="adm-editev-select-item">
+                        <User
+                          size={16}
+                          strokeWidth={2.5}
+                          className="adm-editev-select-icon"
+                        />
+                        <span>Избери служител...</span>
+                      </div>
+                    }
+                    styles={selectStyles}
+                    isSearchable={false}
+                    formatOptionLabel={customFormatOptionLabel}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="adm-editev-actions">
+              <button
+                type="button"
+                className="adm-editev-btn adm-editev-btn-danger"
+                onClick={() => setShowConfirm(true)}
+                disabled={saving}
+                style={{
+                  marginRight: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <Trash2 size={18} strokeWidth={2.5} /> Изтрий
+              </button>
+              <button
+                className="adm-editev-btn adm-editev-btn-secondary"
+                onClick={onClose}
+                disabled={saving}
+              >
+                Отказ
+              </button>
+              <button
+                className="adm-editev-btn adm-editev-btn-primary"
+                onClick={handleUpdate}
+                disabled={saving}
+              >
+                {saving ? "Запазване..." : "Запази промените"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {showConfirm && (
+          <ConfirmModal
+            title="Изтриване на събитие"
+            message="Сигурни ли сте, че искате да премахнете това събитие?"
+            onConfirm={handleDeleteConfirmed}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
       </div>
-
-      {showConfirm && (
-        <ConfirmModal
-          title="Изтриване на събитие"
-          message="Сигурни ли сте, че искате да премахнете това събитие?"
-          onConfirm={handleDeleteConfirmed}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
     </div>
   );
 }

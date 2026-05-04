@@ -6,6 +6,9 @@ import { useUserBuildings } from "./hooks/UseUserBuildings";
 import { useLocalUser } from "./hooks/UseLocalUser";
 import { useTheme } from "../components/ThemeContext";
 import { generateDOCX } from "./utils/eventNotices";
+import AddEvent from "./subpages/AddEvent";
+import EventDetails from "./subpages/EventDetails";
+import EditEvent from "./subpages/EditEvent";
 import "./styles/AdminEvents.css";
 
 import {
@@ -20,6 +23,7 @@ import {
   Circle,
   Loader2,
   User,
+  Plus,
 } from "lucide-react";
 
 const CountUp = ({ value, duration = 800, decimals = 0 }) => {
@@ -170,6 +174,11 @@ export default function AdminEvents() {
   const { buildings, loading: loadingBuildings } = useUserBuildings(userId);
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const [selectedBuilding, setSelectedBuilding] = useState("all");
   const [filterYear, setFilterYear] = useState("all");
@@ -274,6 +283,7 @@ export default function AdminEvents() {
     buildings,
     userId,
     loadingBuildings,
+    refreshTrigger,
   ]);
 
   const calculateStats = (data) => {
@@ -384,9 +394,10 @@ export default function AdminEvents() {
           </div>
           <button
             className="adev-add-btn"
-            onClick={() => navigate("/admin/addevent")}
+            onClick={() => setIsAddEventOpen(true)}
           >
-            + Нова задача
+            <Plus size={18} strokeWidth={2.5} />
+            <span className="btn-text">Добави събитие</span>
           </button>
         </div>
       </div>
@@ -512,8 +523,11 @@ export default function AdminEvents() {
                   return (
                     <tr
                       key={event.id}
-                      onClick={() => navigate(`/admin/event/${event.id}`)}
                       className="adev-row"
+                      onClick={() => {
+                        setSelectedEventId(event.id);
+                        setIsDetailsOpen(true);
+                      }}
                     >
                       <td className="adev-idx">
                         {(currentPage - 1) * pageSize + idx + 1}
@@ -619,6 +633,30 @@ export default function AdminEvents() {
           )}
         </>
       )}
+
+      <AddEvent
+        isOpen={isAddEventOpen}
+        onClose={() => setIsAddEventOpen(false)}
+        onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
+      />
+
+      <EventDetails
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        eventId={selectedEventId}
+        onEditClick={(id) => {
+          setIsDetailsOpen(false);
+          setSelectedEventId(id);
+          setIsEditOpen(true);
+        }}
+      />
+
+      <EditEvent
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        eventId={selectedEventId}
+        onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
+      />
     </div>
   );
 }

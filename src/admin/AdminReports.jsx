@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Select from "react-select";
 import { supabase } from "../supabaseClient";
 import { useUserBuildings } from "./hooks/UseUserBuildings";
@@ -15,6 +14,8 @@ import {
   Inbox,
 } from "lucide-react";
 import "./styles/AdminReports.css";
+import ReportDetails from "./subpages/ReportDetails";
+import EditReport from "./subpages/EditReport";
 
 const getStatusClass = (status) => {
   if (!status) return "st-default";
@@ -26,8 +27,31 @@ const getStatusClass = (status) => {
   return "rst-default";
 };
 
+const reactSelectStyles = {
+  menuPortal: (base) => ({ ...base, zIndex: 1050 }),
+  control: (base) => ({
+    ...base,
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  }),
+  option: (base) => ({
+    ...base,
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  }),
+  input: (base) => ({
+    ...base,
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  }),
+};
+
 function AdminReports() {
-  const navigate = useNavigate();
   const { userId } = useLocalUser();
   const { isDarkMode } = useTheme();
 
@@ -39,6 +63,10 @@ function AdminReports() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loadingReports, setLoadingReports] = useState(false);
+
+  const [selectedReportId, setSelectedReportId] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const pageSize = 20;
 
@@ -69,57 +97,53 @@ function AdminReports() {
     );
   };
 
-  useEffect(() => {
-    async function fetchReports() {
-      if (loadingBuildings) return;
+  const fetchReports = useCallback(async () => {
+    if (loadingBuildings) return;
 
-      setLoadingReports(true);
-      try {
-        const from = (currentPage - 1) * pageSize;
-        const to = from + pageSize - 1;
+    setLoadingReports(true);
+    try {
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
 
-        let query = supabase
-          .from("reports")
-          .select(
-            `
+      let query = supabase
+        .from("reports")
+        .select(
+          `
             id, status, subject, updated_at, created_at,
             building:building_id(name,address),
             submitted_by(first_name,second_name,last_name)
             `,
-            { count: "exact" },
-          )
-          .order("created_at", { ascending: false })
-          .range(from, to);
+          { count: "exact" },
+        )
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
-        if (!showPastReports) {
-          query = query.in("status", ["ново", "работи се"]);
-        }
-
-        if (selectedBuilding !== "all") {
-          query = query.eq("building_id", selectedBuilding);
-        } else if (buildings.length > 0) {
-          query = query.in(
-            "building_id",
-            buildings.map((b) => b.id),
-          );
-        }
-
-        const { data, error, count } = await query;
-
-        if (error) {
-          console.error("Supabase error:", error);
-        } else {
-          setReports(data || []);
-          setTotalCount(count || 0);
-        }
-      } catch (err) {
-        console.error("System error:", err);
-      } finally {
-        setLoadingReports(false);
+      if (!showPastReports) {
+        query = query.in("status", ["ново", "работи се"]);
       }
-    }
 
-    fetchReports();
+      if (selectedBuilding !== "all") {
+        query = query.eq("building_id", selectedBuilding);
+      } else if (buildings.length > 0) {
+        query = query.in(
+          "building_id",
+          buildings.map((b) => b.id),
+        );
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error("Supabase error:", error);
+      } else {
+        setReports(data || []);
+        setTotalCount(count || 0);
+      }
+    } catch (err) {
+      console.error("System error:", err);
+    } finally {
+      setLoadingReports(false);
+    }
   }, [
     selectedBuilding,
     currentPage,
@@ -128,6 +152,10 @@ function AdminReports() {
     buildings,
     loadingBuildings,
   ]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -147,6 +175,27 @@ function AdminReports() {
     });
   }
 
+  const handleOpenDetails = (id) => {
+    setSelectedReportId(id);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleOpenEdit = (id) => {
+    setSelectedReportId(id);
+    setIsDetailsModalOpen(false);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseModals = () => {
+    setIsDetailsModalOpen(false);
+    setIsEditModalOpen(false);
+    setTimeout(() => setSelectedReportId(null), 300);
+  };
+
+  const handleReportUpdated = () => {
+    fetchReports();
+  };
+
   return (
     <div className={`arep-page ${isDarkMode ? "arep-dark" : "arep-light"}`}>
       <div className="arep-header">
@@ -165,6 +214,8 @@ function AdminReports() {
               formatOptionLabel={customFormatOptionLabel}
               className="react-select-container"
               classNamePrefix="react-select"
+              menuPortalTarget={document.body}
+              styles={reactSelectStyles}
             />
           </div>
         </div>
@@ -221,7 +272,7 @@ function AdminReports() {
                   reports.map((report, idx) => (
                     <tr
                       key={report.id}
-                      onClick={() => navigate(`/admin/report/${report.id}`)}
+                      onClick={() => handleOpenDetails(report.id)}
                       className="arep-row"
                     >
                       <td className="arep-idx">
@@ -303,6 +354,26 @@ function AdminReports() {
           </>
         )}
       </div>
+
+      {isDetailsModalOpen && selectedReportId && (
+        <ReportDetails
+          reportId={selectedReportId}
+          onClose={handleCloseModals}
+          onEdit={() => handleOpenEdit(selectedReportId)}
+          onUpdate={handleReportUpdated}
+        />
+      )}
+
+      {isEditModalOpen && selectedReportId && (
+        <EditReport
+          reportId={selectedReportId}
+          onClose={handleCloseModals}
+          onSuccess={() => {
+            handleReportUpdated();
+            handleCloseModals();
+          }}
+        />
+      )}
     </div>
   );
 }

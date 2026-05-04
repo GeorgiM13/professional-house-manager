@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { supabase } from "../supabaseClient";
 import { useTheme } from "../components/ThemeContext";
@@ -9,12 +8,15 @@ import {
   TrendingUp,
   User,
   Phone,
-  Eye,
   Loader2,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+
+import FormDetails from "./subpages/FormDetails";
 import "./styles/AdminContactForms.css";
+
+
 
 const CountUp = ({ value, duration = 800, decimals = 0 }) => {
   const [displayValue, setDisplayValue] = useState(0);
@@ -48,7 +50,6 @@ const PERIOD_OPTIONS = [
 ];
 
 export default function AdminContactForms() {
-  const navigate = useNavigate();
   const { isDarkMode } = useTheme();
 
   const [messages, setMessages] = useState([]);
@@ -58,6 +59,9 @@ export default function AdminContactForms() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
+
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchMessages() {
@@ -162,6 +166,32 @@ export default function AdminContactForms() {
     </div>
   );
 
+  const reactSelectStyles = {
+    menuPortal: (base) => ({ ...base, zIndex: 1050 }),
+    control: (base) => ({
+      ...base,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
+    option: (base) => ({
+      ...base,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
+  };
+
+  const handleOpenModal = (id) => {
+    setSelectedMessageId(id);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedMessageId(null), 300);
+  };
+
   return (
     <div className={`acf-page ${isDarkMode ? "acf-dark" : "acf-light"}`}>
       <div className="acf-header">
@@ -219,6 +249,8 @@ export default function AdminContactForms() {
             formatOptionLabel={customFormatOptionLabel}
             isSearchable={false}
             placeholder="Период"
+            menuPortalTarget={document.body}
+            styles={reactSelectStyles}
           />
         </div>
       </div>
@@ -252,7 +284,7 @@ export default function AdminContactForms() {
                   paginatedMessages.map((msg, idx) => (
                     <tr
                       key={msg.id}
-                      onClick={() => navigate(`/admin/message/${msg.id}`)}
+                      onClick={() => handleOpenModal(msg.id)}
                       className="acf-row"
                     >
                       <td className="acf-idx">
@@ -308,7 +340,7 @@ export default function AdminContactForms() {
               <div
                 key={msg.id}
                 className="acf-mobile-card"
-                onClick={() => navigate(`/admin/message/${msg.id}`)}
+                onClick={() => handleOpenModal(msg.id)}
               >
                 <div className="acf-card-header">
                   <div className="acf-card-title">
@@ -378,6 +410,10 @@ export default function AdminContactForms() {
             </div>
           )}
         </>
+      )}
+
+      {isModalOpen && selectedMessageId && (
+        <FormDetails messageId={selectedMessageId} onClose={handleCloseModal} />
       )}
     </div>
   );

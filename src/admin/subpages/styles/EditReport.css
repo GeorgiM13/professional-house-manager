@@ -1,76 +1,126 @@
-.edr-container {
+.adm-editrep-light {
+  --adm-editrep-bg-page: #f8fafc;
+  --adm-editrep-bg-card: #ffffff;
+  --adm-editrep-text-main: #1e293b;
+  --adm-editrep-text-sec: #64748b;
+  --adm-editrep-border: #e2e8f0;
+  --adm-editrep-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --adm-editrep-primary: #3b82f6;
+  --adm-editrep-primary-hover: #2563eb;
+  --adm-editrep-bg-hover: #f1f5f9;
+}
+
+.adm-editrep-dark {
+  --adm-editrep-bg-page: #0f172a;
+  --adm-editrep-bg-card: #1e293b;
+  --adm-editrep-text-main: #f1f5f9;
+  --adm-editrep-text-sec: #94a3b8;
+  --adm-editrep-border: #334155;
+  --adm-editrep-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --adm-editrep-primary: #3b82f6;
+  --adm-editrep-primary-hover: #60a5fa;
+  --adm-editrep-bg-hover: #334155;
+}
+
+.adm-editrep-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.adm-editrep-modal {
   padding: 2rem;
   max-width: 900px;
-  margin: 0 auto;
   width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-sizing: border-box;
-  background-color: var(--au-bg-page, #f8fafc);
-  color: var(--au-text-main, #1e293b);
-  transition:
-    background-color 0.3s,
-    color 0.3s;
+  background-color: var(--adm-editrep-bg-page);
+  color: var(--adm-editrep-text-main);
+  border-radius: 16px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  scrollbar-width: thin;
 }
 
-.edr-container.au-dark {
-  --au-bg-page: #0f172a;
-  --au-bg-card: #1e293b;
-  --au-text-main: #f1f5f9;
-  --au-text-sec: #94a3b8;
-  --au-border: #334155;
-  --au-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.edr-loading {
-  text-align: center;
-  padding: 4rem;
-}
-
-.edr-header {
+.adm-editrep-header {
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.edr-header h1 {
+.adm-editrep-header h1 {
   margin: 0;
   font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--au-text-main);
+  font-weight: 800;
+  color: var(--adm-editrep-text-main);
 }
 
-.edr-header p {
-  color: var(--au-text-sec);
+.adm-editrep-header p {
+  color: var(--adm-editrep-text-sec);
   margin-top: 5px;
   font-size: 0.95rem;
 }
 
-.edr-grid {
+.adm-editrep-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--adm-editrep-text-sec);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.adm-editrep-close-btn:hover {
+  background-color: var(--adm-editrep-bg-hover);
+  color: var(--adm-editrep-text-main);
+}
+
+.adm-editrep-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
 }
 
-.edr-card {
-  background: var(--au-bg-card, #ffffff);
-  border: 1px solid var(--au-border, #e2e8f0);
+.adm-editrep-card {
+  background: var(--adm-editrep-bg-card);
+  border: 1px solid var(--adm-editrep-border);
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: var(--au-shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  box-shadow: var(--adm-editrep-shadow);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.edr-card-fit {
+.adm-editrep-card-fit {
   height: fit-content;
 }
 
-.edr-section-title {
+.adm-editrep-section-title {
   font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--au-text-main);
-  border-bottom: 1px solid var(--au-border);
+  font-weight: 700;
+  color: var(--adm-editrep-text-main);
+  border-bottom: 1px solid var(--adm-editrep-border);
   padding-bottom: 0.8rem;
   margin-bottom: 0.5rem;
   display: flex;
@@ -78,20 +128,20 @@
   gap: 8px;
 }
 
-.edr-section-title .section-icon {
-  color: var(--au-primary, #3b82f6);
+.adm-editrep-section-icon {
+  color: var(--adm-editrep-primary);
 }
 
-.edr-form-group {
+.adm-editrep-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.edr-form-group label {
+.adm-editrep-form-group label {
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--au-text-sec);
+  font-weight: 700;
+  color: var(--adm-editrep-text-sec);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: flex;
@@ -99,81 +149,69 @@
   gap: 6px;
 }
 
-.edr-admin-label {
+.adm-editrep-admin-label {
   color: #d97706 !important;
 }
 
-.edr-building-name {
+.adm-editrep-building-name {
   padding: 0.5rem 0;
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-.edr-divider {
+.adm-editrep-divider {
   margin: 0.5rem 0;
   border: 0;
-  border-top: 1px dashed var(--au-border);
+  border-top: 1px dashed var(--adm-editrep-border);
 }
 
-.edr-input,
-.edr-textarea {
+.adm-editrep-input,
+.adm-editrep-textarea {
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  border: 1px solid;
+  border: 1px solid var(--adm-editrep-border);
   font-size: 1rem;
   transition: all 0.2s;
   outline: none;
   width: 100%;
   box-sizing: border-box;
-}
-
-.edr-textarea {
-  min-height: 150px;
-  resize: vertical;
+  background-color: var(--adm-editrep-bg-page);
+  color: var(--adm-editrep-text-main);
   font-family: inherit;
 }
 
-.edr-notes-textarea {
+.adm-editrep-textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.adm-editrep-notes-textarea {
   min-height: 100px;
 }
 
-.au-light .edr-input,
-.au-light .edr-textarea {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1e293b;
-}
-
-.au-dark .edr-input,
-.au-dark .edr-textarea {
-  background-color: #0f172a;
-  border-color: #334155;
-  color: #f1f5f9;
-}
-
-.edr-input:focus,
-.edr-textarea:focus {
-  border-color: var(--au-primary, #3b82f6) !important;
+.adm-editrep-input:focus,
+.adm-editrep-textarea:focus {
+  border-color: var(--adm-editrep-primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.select-option-label {
+.adm-editrep-select-option {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.edr-actions {
-  margin-top: 2rem;
+.adm-editrep-actions {
+  margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed var(--au-border);
+  border-top: 1px dashed var(--adm-editrep-border);
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
   grid-column: 1 / -1;
 }
 
-.edr-btn {
+.adm-editrep-btn {
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
@@ -184,78 +222,142 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  font-family: inherit;
 }
 
-.edr-btn-left {
+.adm-editrep-btn-left {
   margin-right: auto;
 }
 
-.edr-btn:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
+.adm-editrep-btn:active {
+  transform: scale(0.98);
 }
 
-.edr-btn-primary {
-  background: var(--au-primary, #3b82f6);
+.adm-editrep-btn-primary {
+  background: var(--adm-editrep-primary);
   color: white;
-  border-color: var(--au-primary);
+  border-color: var(--adm-editrep-primary);
 }
 
-.edr-btn-danger {
+.adm-editrep-btn-primary:hover {
+  background: var(--adm-editrep-primary-hover);
+}
+
+.adm-editrep-btn-danger {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-.edr-btn-danger:hover {
+.adm-editrep-btn-danger:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: #ef4444;
 }
 
-.edr-btn-secondary {
-  background-color: transparent;
+.adm-editrep-btn-secondary {
+  background-color: var(--adm-editrep-bg-card);
+  border-color: var(--adm-editrep-border);
+  color: var(--adm-editrep-text-sec);
 }
 
-.au-light .edr-btn-secondary {
-  background-color: #ffffff;
-  border-color: #cbd5e1;
-  color: #475569;
+.adm-editrep-btn-secondary:hover {
+  background-color: var(--adm-editrep-bg-hover);
+  color: var(--adm-editrep-text-main);
 }
 
-.au-light .edr-btn-secondary:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
-  color: #1e293b;
+.adm-editrep-fade-in {
+  animation: adm-editrep-modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+@keyframes adm-editrep-modalScaleUp {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.au-dark .edr-btn-secondary {
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: #475569;
-  color: #e2e8f0;
+.adm-editrep-loading-box {
+  background: var(--adm-editrep-bg-card);
+  padding: 3rem;
+  border-radius: 16px;
+  text-align: center;
+  color: var(--adm-editrep-text-sec);
+  box-shadow: var(--adm-editrep-shadow);
 }
 
-.au-dark .edr-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: #94a3b8;
-  color: #ffffff;
+.adm-editrep-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--adm-editrep-border);
+  border-top-color: var(--adm-editrep-primary);
+  border-radius: 50%;
+  animation: adm-editrep-spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+@keyframes adm-editrep-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
-  .edr-container {
-    padding: 1rem;
+  .adm-editrep-overlay {
+    align-items: flex-end;
+    padding: 0;
   }
-  .edr-grid {
+
+  .adm-editrep-modal {
+    padding: 1.5rem;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .adm-editrep-fade-in {
+    animation: adm-editrep-slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1)
+      forwards;
+    transform: translateY(100%);
+  }
+
+  @keyframes adm-editrep-slideUpMobile {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .adm-editrep-grid {
     grid-template-columns: 1fr;
   }
-  .edr-header {
-    flex-direction: column;
+
+  .adm-editrep-header {
+    flex-direction: row;
+    justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
   }
-  .edr-actions {
+
+  .adm-editrep-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .adm-editrep-actions {
     flex-direction: column-reverse;
   }
-  .edr-btn {
+
+  .adm-editrep-btn {
     width: 100%;
+  }
+
+  .adm-editrep-btn-left {
+    margin-right: 0;
   }
 }

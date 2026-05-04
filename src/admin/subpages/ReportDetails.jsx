@@ -1,26 +1,30 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import {
-  Megaphone,
-  Clock,
-  Lock,
+  Building2,
   CalendarDays,
-  Hash,
-  Pencil,
+  AlignLeft,
+  MessageSquare,
+  RefreshCw,
+  Loader2,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import "./styles/ReportDetails.css";
 
-function ReportDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+function ReportDetails({ reportId, onClose, onEdit }) {
   const { isDarkMode } = useTheme();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchReport() {
+      if (!reportId) return;
+
+      setLoading(true);
+      setReport(null);
+
       const { data, error } = await supabase
         .from("reports")
         .select(
@@ -30,12 +34,13 @@ function ReportDetails() {
             subject,
             description,
             notes,
-            updated_at,
             created_at,
+            updated_at,
+            building_id,
             building:building_id(name,address)
           `,
         )
-        .eq("id", id)
+        .eq("id", reportId)
         .single();
 
       if (error) {
@@ -46,7 +51,7 @@ function ReportDetails() {
       setLoading(false);
     }
     fetchReport();
-  }, [id]);
+  }, [reportId]);
 
   function formatDateTime(dateString) {
     if (!dateString) return "-";
@@ -62,132 +67,154 @@ function ReportDetails() {
 
   const getStatusClass = (status) => {
     const s = status ? status.toLowerCase() : "";
-    if (s.includes("нов") || s.includes("new")) return "status-new";
-    if (s.includes("работ") || s.includes("progress")) return "status-progress";
-    if (s.includes("приключ") || s.includes("done") || s.includes("closed"))
-      return "status-done";
-    if (s.includes("отказ") || s.includes("reject")) return "status-reject";
-    return "status-default";
+    if (s.includes("ново") || s.includes("new")) return "adm-repdet-status-new";
+    if (s.includes("изпълнено") || s.includes("done"))
+      return "adm-repdet-status-done";
+    if (s.includes("работ") || s.includes("progress"))
+      return "adm-repdet-status-working";
+    if (s.includes("отхвърлено") || s.includes("reject"))
+      return "adm-repdet-status-rejected";
+    return "adm-repdet-status-default";
   };
 
-  const goBack = () => navigate("/admin/reports");
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("adm-repdet-modal-overlay")) {
+      onClose();
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className={`rpd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-        <div className="rpd-loading">
-          <div className="spinner"></div>
-          <p>Зареждане на сигнала...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!report) {
-    return (
-      <div className={`rpd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-        <div className="rpd-error">
-          Сигналът не е намерен.
-          <br />
-          <br />
-          <button className="rpd-back-link" onClick={goBack}>
-            ← Назад
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const statusClass = getStatusClass(report.status);
+  if (!reportId) return null;
 
   return (
-    <div className={`rpd-wrapper ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="rpd-page-header">
-        <button className="rpd-back-link" onClick={goBack}>
-          ← Назад към списъка
-        </button>
-        <div className={`rpd-status-pill ${statusClass}`}>
-          {report.status || "Няма статус"}
-        </div>
-      </div>
-
-      <div className="rpd-main-card fade-in">
-        <div className="rpd-card-header">
-          <div className="rpd-location-badge">
-            <span className="icon">
-              <Megaphone size={28} strokeWidth={2.5} />
-            </span>
-            <div>
-              <h3>{report.building?.name || "Неизвестна сграда"}</h3>
-              <small>{report.building?.address || "Няма адрес"}</small>
-            </div>
+    <div
+      className={`adm-repdet-modal-overlay ${isDarkMode ? "adm-repdet-dark" : "adm-repdet-light"}`}
+      onClick={handleOverlayClick}
+    >
+      <div className="adm-repdet-modal-content adm-repdet-fade-in">
+        {loading ? (
+          <div className="adm-repdet-loading adm-repdet-flex-col adm-repdet-flex-center">
+            <Loader2
+              size={40}
+              strokeWidth={2.5}
+              className="adm-repdet-spinner-icon"
+            />
+            <p>Зареждане на детайли...</p>
           </div>
-          <div className="rpd-dates">
-            <div className="date-item">
-              <span className="rpd-date-label">
-                <Clock size={16} strokeWidth={2.5} /> Последна промяна:
-              </span>
-              <strong>{formatDateTime(report.updated_at)}</strong>
-            </div>
+        ) : !report ? (
+          <div className="adm-repdet-error adm-repdet-flex-col adm-repdet-flex-center">
+            <AlertCircle size={48} strokeWidth={2} />
+            <p>Сигналът не е намерен.</p>
+            <button className="adm-repdet-close-btn-error" onClick={onClose}>
+              Затвори
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="adm-repdet-card-header">
+              <div className="adm-repdet-header-top adm-repdet-flex-align">
+                <div
+                  className={`adm-repdet-status-pill ${getStatusClass(report.status)}`}
+                >
+                  {report.status || "Няма статус"}
+                </div>
+                <button
+                  className="adm-repdet-close-btn"
+                  onClick={onClose}
+                  title="Затвори"
+                >
+                  <X size={24} strokeWidth={2.5} />
+                </button>
+              </div>
 
-        <div className="rpd-divider"></div>
+              <div className="adm-repdet-title-section">
+                <h1 className="adm-repdet-title">{report.subject}</h1>
+              </div>
 
-        <div className="rpd-body">
-          <h1 className="rpd-title">{report.subject}</h1>
-
-          <div className="rpd-description-container">
-            <span className="rpd-section-label">Описание на проблема</span>
-            <div className="rpd-description-content">
-              {report.description || (
-                <em className="text-muted">Няма въведено описание.</em>
-              )}
+              <div className="adm-repdet-location-badge adm-repdet-flex-align">
+                <div className="adm-repdet-icon-wrapper">
+                  <Building2 size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h3>{report.building?.name || "Неизвестна сграда"}</h3>
+                  <small>{report.building?.address || "Няма адрес"}</small>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {report.notes && (
-            <div className="rpd-notes-box">
-              <span className="rpd-notes-label">
-                <Lock size={16} strokeWidth={2.5} /> Административни бележки
-              </span>
-              <div className="rpd-notes-content">{report.notes}</div>
-            </div>
-          )}
+            <div className="adm-repdet-divider"></div>
 
-          <div className="rpd-meta-grid">
-            <div className="meta-box">
-              <span className="meta-icon">
-                <CalendarDays size={24} strokeWidth={2.5} />
-              </span>
-              <div className="meta-info">
-                <span className="meta-label">Дата на създаване</span>
-                <span className="meta-value">
-                  {formatDateTime(report.created_at)}
+            <div className="adm-repdet-body">
+              <div className="adm-repdet-description-container">
+                <span className="adm-repdet-section-label adm-repdet-flex-align">
+                  <AlignLeft size={16} strokeWidth={2.5} /> Описание на проблема
                 </span>
+                <div className="adm-repdet-description-content">
+                  {report.description || (
+                    <em className="adm-repdet-text-muted">
+                      Няма въведено описание.
+                    </em>
+                  )}
+                </div>
+              </div>
+
+              <div className="adm-repdet-description-container">
+                <span className="adm-repdet-section-label adm-repdet-flex-align">
+                  <MessageSquare size={16} strokeWidth={2.5} /> Административни
+                  бележки
+                </span>
+                <div
+                  className={`adm-repdet-description-content ${
+                    !report.notes
+                      ? "adm-repdet-empty-notes"
+                      : "adm-repdet-admin-notes"
+                  }`}
+                >
+                  {report.notes ? (
+                    report.notes
+                  ) : (
+                    <em className="adm-repdet-text-muted">
+                      Все още няма добавен отговор/бележки.
+                    </em>
+                  )}
+                </div>
+              </div>
+
+              <div className="adm-repdet-meta-grid">
+                <div className="adm-repdet-meta-box">
+                  <div className="adm-repdet-meta-icon">
+                    <CalendarDays size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="adm-repdet-meta-info">
+                    <span className="adm-repdet-meta-label">Подаден на</span>
+                    <span className="adm-repdet-meta-value adm-repdet-primary-text">
+                      {formatDateTime(report.created_at)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="adm-repdet-meta-box">
+                  <div className="adm-repdet-meta-icon">
+                    <RefreshCw size={20} strokeWidth={2.5} />
+                  </div>
+                  <div className="adm-repdet-meta-info">
+                    <span className="adm-repdet-meta-label">
+                      Последна промяна
+                    </span>
+                    <span className="adm-repdet-meta-value">
+                      {formatDateTime(report.updated_at)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="meta-box">
-              <span className="meta-icon">
-                <Hash size={24} strokeWidth={2.5} />
-              </span>
-              <div className="meta-info">
-                <span className="meta-label">ID на сигнала</span>
-                <span className="meta-value mono">#{report.id}</span>
-              </div>
+            <div className="adm-repdet-footer">
+              <button className="adm-repdet-edit-btn" onClick={onEdit}>
+                Редактирай сигнала
+              </button>
             </div>
-          </div>
-        </div>
-
-        <div className="rpd-footer">
-          <button
-            className="rpd-btn rpd-btn-primary"
-            onClick={() => navigate(`/admin/editreport/${report.id}`)}
-          >
-            <Pencil size={18} strokeWidth={2.5} /> Редактирай сигнала
-          </button>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -8,6 +8,9 @@ import { useUserBuildings } from "./hooks/UseUserBuildings";
 import { useLocalUser } from "./hooks/UseLocalUser";
 import "./styles/AdminExpenses.css";
 
+import AddExpense from "./subpages/AddExpense";
+import EditExpense from "./subpages/EditExpense";
+
 import {
   Zap,
   ArrowUpDown,
@@ -28,6 +31,8 @@ import {
   Flame,
   MapPin,
 } from "lucide-react";
+
+const EXCHANGE_RATE = 1.95583;
 
 const CountUp = ({ value, duration = 800, decimals = 2 }) => {
   const [displayValue, setDisplayValue] = useState(0);
@@ -105,9 +110,7 @@ const MONTH_OPTIONS = [
 
 const getExpenseIcon = (type) => {
   if (!type) return <Package size={18} strokeWidth={2.5} />;
-
   const t = type.toLowerCase();
-
   if (t.includes("electricity") || t.includes("tok"))
     return <Zap size={18} strokeWidth={2.5} />;
   if (t.includes("lift") || t.includes("asansyor"))
@@ -125,16 +128,13 @@ const getExpenseIcon = (type) => {
     return <KeyRound size={18} strokeWidth={2.5} />;
   if (t.includes("pest") || t.includes("дезинсекция"))
     return <Bug size={18} strokeWidth={2.5} />;
-
   return <Package size={18} strokeWidth={2.5} />;
 };
 
 const checkIfPaid = (paidValue) => {
   if (paidValue === true) return true;
   if (!paidValue) return false;
-
   const s = String(paidValue).trim().toLowerCase();
-
   return ["yes", "true", "да", "paid", "y", "1"].includes(s);
 };
 
@@ -159,10 +159,14 @@ function AdminExpenses() {
 
   const [expenses, setExpenses] = useState([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
+
   const [buildingStats, setBuildingStats] = useState({
-    total: 0,
+    totalEur: 0,
+    totalBgn: 0,
     count: 0,
-    maxExpense: null,
+    maxExpenseEur: 0,
+    maxExpenseBgn: 0,
+    maxExpenseType: null,
   });
   const [loadingStats, setLoadingStats] = useState(false);
 
@@ -173,6 +177,12 @@ function AdminExpenses() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedExpenseId, setSelectedExpenseId] = useState(null);
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const buildingOptions = useMemo(() => {
     const opts = buildings.map((b) => ({
@@ -187,6 +197,7 @@ function AdminExpenses() {
 
   const selectStyles = useMemo(
     () => ({
+      menuPortal: (base) => ({ ...base, zIndex: 1050 }),
       control: (base, state) => ({
         ...base,
         backgroundColor: isDarkMode ? "#1e293b" : "white",
@@ -201,12 +212,13 @@ function AdminExpenses() {
         boxShadow: state.isFocused
           ? "0 0 0 3px rgba(59, 130, 246, 0.1)"
           : "none",
+        fontFamily: "system-ui, -apple-system, sans-serif",
       }),
       menu: (base) => ({
         ...base,
         backgroundColor: isDarkMode ? "#1e293b" : "white",
         border: isDarkMode ? "1px solid #334155" : "none",
-        zIndex: 9999,
+        zIndex: 1050,
       }),
       option: (base, state) => ({
         ...base,
@@ -219,15 +231,22 @@ function AdminExpenses() {
             : "transparent",
         color: state.isSelected ? "white" : isDarkMode ? "#f1f5f9" : "#4a5568",
         cursor: "pointer",
+        fontFamily: "system-ui, -apple-system, sans-serif",
       }),
       singleValue: (base) => ({
         ...base,
         color: isDarkMode ? "#f1f5f9" : "#4a5568",
+        fontFamily: "system-ui, -apple-system, sans-serif",
       }),
-      input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#4a5568" }),
+      input: (base) => ({
+        ...base,
+        color: isDarkMode ? "#f1f5f9" : "#4a5568",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }),
       placeholder: (base) => ({
         ...base,
         color: isDarkMode ? "#94a3b8" : "#a0aec0",
+        fontFamily: "system-ui, -apple-system, sans-serif",
       }),
     }),
     [isDarkMode],
@@ -266,39 +285,83 @@ function AdminExpenses() {
       }
     }
     fetchExpenses();
-  }, [selectedBuilding, filterYear, filterMonth, currentPage]);
+  }, [selectedBuilding, filterYear, filterMonth, currentPage, refreshTrigger]);
 
   useEffect(() => {
     async function fetchStats() {
       setLoadingStats(true);
       try {
         const { data, error, count } = await buildBaseQuery(
-          "current_month, type",
+          "current_month, type, year",
           { count: "exact" },
         );
         if (error) throw error;
 
         const rows = data || [];
         if (rows.length === 0) {
-          setBuildingStats({ total: 0, count: 0, maxExpense: null });
+          setBuildingStats({
+            totalEur: 0,
+            totalBgn: 0,
+            count: 0,
+            maxExpenseEur: 0,
+            maxExpenseBgn: 0,
+            maxExpenseType: null,
+          });
           return;
         }
-        const total = rows.reduce(
-          (sum, r) => sum + Number(r.current_month || 0),
-          0,
-        );
-        const maxExpense = rows.reduce((prev, curr) =>
-          Number(prev.current_month) > Number(curr.current_month) ? prev : curr,
-        );
-        setBuildingStats({ total, count: count || rows.length, maxExpense });
+
+        let totalEur = 0;
+        let totalBgn = 0;
+        let maxEur = 0;
+        let maxBgn = 0;
+        let maxType = null;
+
+        rows.forEach((r) => {
+          const amt = Number(r.current_month || 0);
+          const y = Number(r.year);
+          let rowEur, rowBgn;
+
+          if (y < 2026) {
+            rowBgn = amt;
+            rowEur = amt / EXCHANGE_RATE;
+          } else {
+            rowEur = amt;
+            rowBgn = amt * EXCHANGE_RATE;
+          }
+
+          totalEur += rowEur;
+          totalBgn += rowBgn;
+
+          if (rowEur > maxEur) {
+            maxEur = rowEur;
+            maxBgn = rowBgn;
+            maxType = r.type;
+          }
+        });
+
+        setBuildingStats({
+          totalEur,
+          totalBgn,
+          count: count || rows.length,
+          maxExpenseEur: maxEur,
+          maxExpenseBgn: maxBgn,
+          maxExpenseType: maxType,
+        });
       } catch (err) {
-        setBuildingStats({ total: 0, count: 0, maxExpense: null });
+        setBuildingStats({
+          totalEur: 0,
+          totalBgn: 0,
+          count: 0,
+          maxExpenseEur: 0,
+          maxExpenseBgn: 0,
+          maxExpenseType: null,
+        });
       } finally {
         setLoadingStats(false);
       }
     }
     fetchStats();
-  }, [selectedBuilding, filterYear, filterMonth]);
+  }, [selectedBuilding, filterYear, filterMonth, refreshTrigger]);
 
   const yearOptions = getYearOptions();
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -308,6 +371,21 @@ function AdminExpenses() {
   const handleFilterChange = (setter, val) => {
     setter(val);
     setCurrentPage(1);
+  };
+
+  const formatDualCurrency = (amount, year) => {
+    const numericAmount = Number(amount) || 0;
+    let eurValue, bgnValue;
+
+    if (Number(year) < 2026) {
+      bgnValue = numericAmount;
+      eurValue = numericAmount / EXCHANGE_RATE;
+    } else {
+      eurValue = numericAmount;
+      bgnValue = numericAmount * EXCHANGE_RATE;
+    }
+
+    return `${eurValue.toFixed(2)} € / ${bgnValue.toFixed(2)} лв.`;
   };
 
   return (
@@ -335,11 +413,12 @@ function AdminExpenses() {
               styles={selectStyles}
               isLoading={loadingBuildings}
               formatOptionLabel={customFormatOptionLabel}
+              menuPortalTarget={document.body}
             />
           </div>
           <button
             className="admin-add-expense-btn"
-            onClick={() => navigate("/admin/addexpense")}
+            onClick={() => setIsAddModalOpen(true)}
           >
             + Добави
           </button>
@@ -359,8 +438,10 @@ function AdminExpenses() {
           </div>
           <div className="admin-stat-content">
             <span className="admin-stat-label">Общо разходи</span>
-            <span className="admin-stat-value">
-              <CountUp value={buildingStats.total} decimals={2} />
+            <span className="admin-stat-value" style={{ fontSize: "1.2rem" }}>
+              <CountUp value={buildingStats.totalEur} decimals={2} />{" "}
+              <small>€ /</small>{" "}
+              <CountUp value={buildingStats.totalBgn} decimals={2} />{" "}
               <small>лв.</small>
             </span>
           </div>
@@ -387,21 +468,16 @@ function AdminExpenses() {
           </div>
           <div className="admin-stat-content">
             <span className="admin-stat-label">Най-голям разход</span>
-            <span className="admin-stat-value">
-              <CountUp
-                value={
-                  buildingStats.maxExpense
-                    ? Number(buildingStats.maxExpense.current_month)
-                    : 0
-                }
-                decimals={2}
-              />
+            <span className="admin-stat-value" style={{ fontSize: "1.2rem" }}>
+              <CountUp value={buildingStats.maxExpenseEur} decimals={2} />{" "}
+              <small>€ /</small>{" "}
+              <CountUp value={buildingStats.maxExpenseBgn} decimals={2} />{" "}
               <small>лв.</small>
             </span>
             <span className="admin-stat-subtext">
-              {buildingStats.maxExpense
-                ? EXPENSE_TYPES[buildingStats.maxExpense.type] ||
-                  buildingStats.maxExpense.type
+              {buildingStats.maxExpenseType
+                ? EXPENSE_TYPES[buildingStats.maxExpenseType] ||
+                  buildingStats.maxExpenseType
                 : "-"}
             </span>
           </div>
@@ -424,6 +500,7 @@ function AdminExpenses() {
               isSearchable={false}
               placeholder="Година"
               formatOptionLabel={customFormatOptionLabel}
+              menuPortalTarget={document.body}
             />
           </div>
           <div className="admin-select-wrapper">
@@ -437,6 +514,7 @@ function AdminExpenses() {
               isSearchable={false}
               placeholder="Месец"
               formatOptionLabel={customFormatOptionLabel}
+              menuPortalTarget={document.body}
             />
           </div>
         </div>
@@ -448,73 +526,78 @@ function AdminExpenses() {
         </div>
       ) : (
         <>
-          <table className="admin-expenses-table desktop-view">
-            <thead>
-              <tr>
-                <th>№</th>
-                <th>Вид Разход</th>
-                <th>Адрес</th>
-                <th>Период</th>
-                <th>Статус</th>
-                <th>Бележка</th>
-                <th>Сума</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expenses.length === 0 ? (
+          <div className="ae-table-responsive">
+            <table className="admin-expenses-table desktop-view">
+              <thead>
                 <tr>
-                  <td colSpan="7" className="admin-no-expenses">
-                    Няма намерени записи.
-                  </td>
+                  <th>№</th>
+                  <th>Вид Разход</th>
+                  <th>Адрес</th>
+                  <th>Период</th>
+                  <th>Статус</th>
+                  <th>Бележка</th>
+                  <th>Сума</th>
                 </tr>
-              ) : (
-                expenses.map((exp, idx) => {
-                  const isPaid = checkIfPaid(exp.paid);
+              </thead>
+              <tbody>
+                {expenses.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="admin-no-expenses">
+                      Няма намерени записи.
+                    </td>
+                  </tr>
+                ) : (
+                  expenses.map((exp, idx) => {
+                    const isPaid = checkIfPaid(exp.paid);
 
-                  return (
-                    <tr
-                      key={exp.id}
-                      onClick={() => navigate(`/admin/editexpense/${exp.id}`)}
-                      className="admin-clickable-row"
-                    >
-                      <td className="admin-table-index">
-                        {(currentPage - 1) * pageSize + idx + 1}
-                      </td>
-                      <td data-label="Вид">
-                        <span className="admin-expense-icon">
-                          {getExpenseIcon(exp.type)}
-                        </span>
-                        {EXPENSE_TYPES[exp.type] || exp.type}
-                      </td>
-                      <td data-label="Адрес" className="admin-table-address">
-                        {exp.building?.name}, {exp.building?.address}
-                      </td>
-                      <td data-label="Период">
-                        {MONTH_NAMES[exp.month]} {exp.year}
-                      </td>
-                      <td data-label="Платено">
-                        <span
-                          className={`admin-status-badge ${isPaid ? "paid" : "unpaid"}`}
-                        >
-                          {isPaid ? "Платено" : "Неплатено"}
-                        </span>
-                      </td>
-                      <td className="admin-table-notes">
-                        {exp.notes
-                          ? exp.notes.length > 25
-                            ? exp.notes.substring(0, 25) + "..."
-                            : exp.notes
-                          : "-"}
-                      </td>
-                      <td data-label="Сума" className="admin-amount-cell">
-                        {Number(exp.current_month).toFixed(2)} лв.
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                    return (
+                      <tr
+                        key={exp.id}
+                        onClick={() => {
+                          setSelectedExpenseId(exp.id);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="admin-clickable-row"
+                      >
+                        <td className="admin-table-index">
+                          {(currentPage - 1) * pageSize + idx + 1}
+                        </td>
+                        <td data-label="Вид">
+                          <span className="admin-expense-icon">
+                            {getExpenseIcon(exp.type)}
+                          </span>
+                          {EXPENSE_TYPES[exp.type] || exp.type}
+                        </td>
+                        <td data-label="Адрес" className="admin-table-address">
+                          {exp.building?.name}, {exp.building?.address}
+                        </td>
+                        <td data-label="Период">
+                          {MONTH_NAMES[exp.month]} {exp.year}
+                        </td>
+                        <td data-label="Платено">
+                          <span
+                            className={`admin-status-badge ${isPaid ? "paid" : "unpaid"}`}
+                          >
+                            {isPaid ? "Платено" : "Неплатено"}
+                          </span>
+                        </td>
+                        <td className="admin-table-notes">
+                          {exp.notes
+                            ? exp.notes.length > 25
+                              ? exp.notes.substring(0, 25) + "..."
+                              : exp.notes
+                            : "-"}
+                        </td>
+                        <td data-label="Сума" className="admin-amount-cell">
+                          {formatDualCurrency(exp.current_month, exp.year)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <div className="admin-mobile-list mobile-view">
             {expenses.length === 0 ? (
@@ -527,7 +610,10 @@ function AdminExpenses() {
                   <div
                     key={exp.id}
                     className="admin-mobile-card admin-clickable-row"
-                    onClick={() => navigate(`/admin/editexpense/${exp.id}`)}
+                    onClick={() => {
+                      setSelectedExpenseId(exp.id);
+                      setIsEditModalOpen(true);
+                    }}
                   >
                     <div className="admin-card-header">
                       <div className="admin-card-type">
@@ -557,7 +643,7 @@ function AdminExpenses() {
                         {MONTH_NAMES[exp.month]} {exp.year}
                       </span>
                       <span className="admin-card-amount">
-                        {Number(exp.current_month).toFixed(2)} лв.
+                        {formatDualCurrency(exp.current_month, exp.year)}
                       </span>
                     </div>
                   </div>
@@ -586,6 +672,31 @@ function AdminExpenses() {
             </div>
           )}
         </>
+      )}
+
+      {isAddModalOpen && (
+        <AddExpense
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            setIsAddModalOpen(false);
+            setRefreshTrigger((prev) => prev + 1);
+          }}
+        />
+      )}
+
+      {isEditModalOpen && selectedExpenseId && (
+        <EditExpense
+          expenseId={selectedExpenseId}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setTimeout(() => setSelectedExpenseId(null), 300);
+          }}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            setTimeout(() => setSelectedExpenseId(null), 300);
+            setRefreshTrigger((prev) => prev + 1);
+          }}
+        />
       )}
     </div>
   );

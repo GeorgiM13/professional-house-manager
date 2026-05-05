@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
-import { User, Lock, Trash2 } from "lucide-react";
+import { User, Lock, Trash2, X } from "lucide-react";
 import "./styles/EditGlobalUser.css";
 
-function EditGlobalUser() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
+function EditGlobalUser({ userId, onClose, onSuccess }) {
   const { isDarkMode } = useTheme();
 
   const [formData, setFormData] = useState({
@@ -41,7 +37,7 @@ function EditGlobalUser() {
         const { data, error } = await supabase
           .from("users")
           .select("*")
-          .eq("id", id)
+          .eq("id", userId)
           .single();
 
         if (error) throw error;
@@ -70,8 +66,10 @@ function EditGlobalUser() {
       }
     };
 
-    fetchUser();
-  }, [id]);
+    if (userId) {
+      fetchUser();
+    }
+  }, [userId]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -117,7 +115,7 @@ function EditGlobalUser() {
           company_name: formData.company_name,
           role: formData.role,
         })
-        .eq("id", id);
+        .eq("id", userId);
 
       if (error) throw error;
 
@@ -128,7 +126,7 @@ function EditGlobalUser() {
       });
 
       setTimeout(() => {
-        goBack();
+        if (onSuccess) onSuccess();
       }, 1500);
     } catch (err) {
       console.error("Update error:", err);
@@ -150,7 +148,7 @@ function EditGlobalUser() {
     setLoading(true);
     setShowConfirm(false);
     try {
-      const { error } = await supabase.from("users").delete().eq("id", id);
+      const { error } = await supabase.from("users").delete().eq("id", userId);
       if (error) throw error;
 
       setAlert({
@@ -158,7 +156,9 @@ function EditGlobalUser() {
         message: "Потребителят е изтрит.",
         type: "success",
       });
-      setTimeout(() => navigate("/admin/users"), 1500);
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+      }, 1500);
     } catch (err) {
       console.error("Delete error:", err);
       setAlert({
@@ -172,166 +172,178 @@ function EditGlobalUser() {
     }
   };
 
-  const goBack = () => {
-    navigate("/admin/users", {
-      state: {
-        search: location.state?.search,
-        page: location.state?.page,
-      },
-    });
-  };
-
-  if (fetching) return <div className="egu-loading-state">Зареждане...</div>;
+  if (fetching)
+    return (
+      <div className="adm-editguser-overlay">
+        <div className={`adm-editguser-modal ${isDarkMode ? "dark" : "light"}`}>
+          <div className="adm-editguser-loading-state">Зареждане...</div>
+        </div>
+      </div>
+    );
 
   return (
-    <div className={`egu-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="egu-header">
-        <div>
-          <h1>Редакция на профил</h1>
-          <p>Промяна на лични данни и контакти</p>
-        </div>
-        <button className="egu-btn egu-btn-secondary" onClick={goBack}>
-          Назад
+    <div className="adm-editguser-overlay" onClick={onClose}>
+      <div
+        className={`adm-editguser-modal ${isDarkMode ? "dark" : "light"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="adm-editguser-close" onClick={onClose}>
+          <X size={24} />
         </button>
-      </div>
 
-      <div className="egu-grid">
-        <div className="egu-card">
-          <div className="egu-card-title">
-            <User size={20} strokeWidth={2.5} className="egu-card-icon" /> Лични
-            данни
+        <div className="adm-editguser-header">
+          <div>
+            <h1>Редакция на профил</h1>
+            <p>Промяна на лични данни и контакти</p>
+          </div>
+        </div>
+
+        <div className="adm-editguser-grid">
+          <div className="adm-editguser-card">
+            <div className="adm-editguser-card-title">
+              <User
+                size={20}
+                strokeWidth={2.5}
+                className="adm-editguser-card-icon"
+              />{" "}
+              Лични данни
+            </div>
+
+            <div className="adm-editguser-row">
+              <div className="adm-editguser-form-group">
+                <label>Име *</label>
+                <input
+                  name="first_name"
+                  className="adm-editguser-input"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="adm-editguser-form-group">
+                <label>Презиме</label>
+                <input
+                  name="second_name"
+                  className="adm-editguser-input"
+                  value={formData.second_name}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="adm-editguser-row">
+              <div className="adm-editguser-form-group">
+                <label>Фамилия *</label>
+                <input
+                  name="last_name"
+                  className="adm-editguser-input"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="adm-editguser-form-group">
+                <label>Фирма</label>
+                <input
+                  name="company_name"
+                  className="adm-editguser-input"
+                  value={formData.company_name}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="adm-editguser-row">
+              <div className="adm-editguser-form-group">
+                <label>Телефон</label>
+                <input
+                  name="phone"
+                  className="adm-editguser-input"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="adm-editguser-form-group">
+                <label>Email адрес (Вход)</label>
+                <input
+                  name="email"
+                  type="email"
+                  className="adm-editguser-input"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="egu-row">
-            <div className="egu-form-group">
-              <label>Име *</label>
-              <input
-                name="first_name"
-                className="egu-input"
-                value={formData.first_name}
-                onChange={handleChange}
-              />
+          <div className="adm-editguser-card">
+            <div className="adm-editguser-card-title">
+              <Lock
+                size={20}
+                strokeWidth={2.5}
+                className="adm-editguser-card-icon"
+              />{" "}
+              Настройки и Роля
             </div>
 
-            <div className="egu-form-group">
-              <label>Презиме</label>
-              <input
-                name="second_name"
-                className="egu-input"
-                value={formData.second_name}
+            <div className="adm-editguser-form-group">
+              <label>Роля в системата</label>
+              <select
+                name="role"
+                className="adm-editguser-select"
+                value={formData.role}
                 onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="egu-row">
-            <div className="egu-form-group">
-              <label>Фамилия *</label>
-              <input
-                name="last_name"
-                className="egu-input"
-                value={formData.last_name}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="egu-form-group">
-              <label>Фирма</label>
-              <input
-                name="company_name"
-                className="egu-input"
-                value={formData.company_name}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="egu-row">
-            <div className="egu-form-group">
-              <label>Телефон</label>
-              <input
-                name="phone"
-                className="egu-input"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="egu-form-group">
-              <label>Email адрес (Вход)</label>
-              <input
-                name="email"
-                type="email"
-                className="egu-input"
-                value={formData.email}
-                onChange={handleChange}
-              />
+              >
+                <option value="user">Потребител</option>
+                <option value="admin">Администратор</option>
+              </select>
             </div>
           </div>
         </div>
 
-        <div className="egu-card">
-          <div className="egu-card-title">
-            <Lock size={20} strokeWidth={2.5} className="egu-card-icon" />{" "}
-            Настройки и Роля
-          </div>
+        <div className="adm-editguser-actions-container">
+          <button
+            className="adm-editguser-btn adm-editguser-btn-danger"
+            onClick={() => setShowConfirm(true)}
+            disabled={loading}
+          >
+            <Trash2 size={18} strokeWidth={2.5} /> Изтрий
+          </button>
 
-          <div className="egu-form-group">
-            <label>Роля в системата</label>
-            <select
-              name="role"
-              className="egu-select"
-              value={formData.role}
-              onChange={handleChange}
+          <div className="adm-editguser-actions-right">
+            <button
+              className="adm-editguser-btn adm-editguser-btn-secondary"
+              onClick={onClose}
+              disabled={loading}
             >
-              <option value="user">Потребител</option>
-              <option value="admin">Администратор</option>
-            </select>
+              Отказ
+            </button>
+            <button
+              className="adm-editguser-btn adm-editguser-btn-primary"
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? "Запазване..." : "Запази промените"}
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="egu-actions-container">
-        <button
-          className="egu-btn egu-btn-danger"
-          onClick={() => setShowConfirm(true)}
-          disabled={loading}
-        >
-          <Trash2 size={18} strokeWidth={2.5} /> Изтрий
-        </button>
-
-        <div className="egu-actions-right">
-          <button
-            className="egu-btn egu-btn-secondary"
-            onClick={goBack}
-            disabled={loading}
-          >
-            Отказ
-          </button>
-          <button
-            className="egu-btn egu-btn-primary"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "Запазване..." : "Запази промените"}
-          </button>
-        </div>
-      </div>
-
-      <CustomAlert
-        message={alert.message}
-        type={alert.type}
-        onClose={() => setAlert({ ...alert, show: false })}
-        visible={alert.show}
-      />
-
-      {showConfirm && (
-        <ConfirmModal
-          title="Изтриване на потребител"
-          message="Сигурни ли сте? Това действие е необратимо."
-          onConfirm={handleDelete}
-          onCancel={() => setShowConfirm(false)}
+        <CustomAlert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert({ ...alert, show: false })}
+          visible={alert.show}
         />
-      )}
+
+        {showConfirm && (
+          <ConfirmModal
+            title="Изтриване на потребител"
+            message="Сигурни ли сте? Това действие е необратимо."
+            onConfirm={handleDelete}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }

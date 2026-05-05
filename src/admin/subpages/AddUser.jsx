@@ -1,15 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import bcrypt from "bcryptjs";
 import Swal from "sweetalert2";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
-import { User, Lock, Info } from "lucide-react";
+import { User, Lock, Info, X } from "lucide-react";
 import "./styles/AddUser.css";
 
-function AddUser() {
+function AddUser({ onClose, onSuccess }) {
   const { isDarkMode } = useTheme();
-  const navigate = useNavigate();
 
   const [firstName, setFirstName] = useState("");
   const [secondName, setSecondName] = useState("");
@@ -95,7 +93,6 @@ function AddUser() {
 
       const password = generateSecurePassword(10);
       const passwordHash = await bcrypt.hash(password, 10);
-      const displayName = `${firstName} ${secondName} ${lastName}`.trim();
 
       const { data, error } = await supabase.functions.invoke("create-user", {
         body: {
@@ -147,7 +144,7 @@ function AddUser() {
         },
       });
 
-      navigate("/admin/users");
+      if (onSuccess) onSuccess();
     } catch (err) {
       console.error("Грешка:", err);
       await Swal.fire({
@@ -161,145 +158,170 @@ function AddUser() {
     }
   };
 
-  const goBack = () => {
-    navigate("/admin/users");
-  };
-
   return (
-    <div className={`adu-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="adu-header">
-        <div>
-          <h1>Добавяне на потребител</h1>
-          <p>Създаване на нов профил в системата</p>
-        </div>
-        <button className="adu-btn adu-btn-secondary" onClick={goBack}>
-          Назад
+    <div className="adm-adduser-overlay" onClick={onClose}>
+      <div
+        className={`adm-adduser-modal ${isDarkMode ? "dark" : "light"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="adm-adduser-close" onClick={onClose}>
+          <X size={24} />
         </button>
-      </div>
 
-      <div className="adu-grid">
-        <div className="adu-card">
-          <div className="adu-card-title">
-            <User size={20} strokeWidth={2.5} className="adu-card-icon" /> Лични
-            данни
-          </div>
-
-          <div className="adu-row">
-            <div className="adu-form-group">
-              <label>Първо име *</label>
-              <input
-                className={`adu-input ${errors.firstName ? "has-error" : ""}`}
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
-              {errors.firstName && (
-                <span className="error-msg">{errors.firstName}</span>
-              )}
-            </div>
-
-            <div className="adu-form-group">
-              <label>Презиме</label>
-              <input
-                className="adu-input"
-                value={secondName}
-                onChange={(e) => setSecondName(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="adu-row">
-            <div className="adu-form-group">
-              <label>Фамилия *</label>
-              <input
-                className={`adu-input ${errors.lastName ? "has-error" : ""}`}
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-              {errors.lastName && (
-                <span className="error-msg">{errors.lastName}</span>
-              )}
-            </div>
-
-            <div className="adu-form-group">
-              <label>Фирма</label>
-              <input
-                className="adu-input"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="adu-row">
-            <div className="adu-form-group">
-              <label>Телефон</label>
-              <input
-                className="adu-input"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-            <div className="adu-form-group">
-              <label>Имейл</label>
-              <input
-                type="email"
-                className="adu-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Авт. генериране ако е празно"
-              />
-            </div>
+        <div className="adm-adduser-header">
+          <div>
+            <h1>Добавяне на потребител</h1>
+            <p>Създаване на нов профил в системата</p>
           </div>
         </div>
 
-        <div className="adu-card">
-          <div className="adu-card-title">
-            <Lock size={20} strokeWidth={2.5} className="adu-card-icon" />{" "}
-            Настройки и Роля
-          </div>
-
-          <div className="adu-form-group">
-            <label>Роля в системата</label>
-            <select
-              className="adu-select"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="user">Потребител</option>
-              <option value="admin">Администратор</option>
-            </select>
-          </div>
-
-          <div className="adu-info-box">
-            <div className="adu-info-item">
-              <Info size={16} strokeWidth={2.5} className="adu-info-icon" />
-              <span>
-                <strong>Потребител:</strong> Достъп само до своите имоти и
-                сметки.
-              </span>
+        <div className="adm-adduser-grid">
+          <div className="adm-adduser-card">
+            <div className="adm-adduser-card-title">
+              <User
+                size={20}
+                strokeWidth={2.5}
+                className="adm-adduser-card-icon"
+              />{" "}
+              Лични данни
             </div>
-            <div className="adu-info-item">
-              <Info size={16} strokeWidth={2.5} className="adu-info-icon" />
-              <span>
-                <strong>Администратор:</strong> Пълен достъп до всички настройки
-                на системата.
-              </span>
+
+            <div className="adm-adduser-row">
+              <div className="adm-adduser-form-group">
+                <label>Първо име *</label>
+                <input
+                  className={`adm-adduser-input ${errors.firstName ? "has-error" : ""}`}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+                {errors.firstName && (
+                  <span className="adm-adduser-error-msg">
+                    {errors.firstName}
+                  </span>
+                )}
+              </div>
+
+              <div className="adm-adduser-form-group">
+                <label>Презиме</label>
+                <input
+                  className="adm-adduser-input"
+                  value={secondName}
+                  onChange={(e) => setSecondName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="adm-adduser-row">
+              <div className="adm-adduser-form-group">
+                <label>Фамилия *</label>
+                <input
+                  className={`adm-adduser-input ${errors.lastName ? "has-error" : ""}`}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+                {errors.lastName && (
+                  <span className="adm-adduser-error-msg">
+                    {errors.lastName}
+                  </span>
+                )}
+              </div>
+
+              <div className="adm-adduser-form-group">
+                <label>Фирма</label>
+                <input
+                  className="adm-adduser-input"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="adm-adduser-row">
+              <div className="adm-adduser-form-group">
+                <label>Телефон</label>
+                <input
+                  className="adm-adduser-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <div className="adm-adduser-form-group">
+                <label>Имейл</label>
+                <input
+                  type="email"
+                  className="adm-adduser-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Авт. генериране ако е празно"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="adm-adduser-card">
+            <div className="adm-adduser-card-title">
+              <Lock
+                size={20}
+                strokeWidth={2.5}
+                className="adm-adduser-card-icon"
+              />{" "}
+              Настройки и Роля
+            </div>
+
+            <div className="adm-adduser-form-group">
+              <label>Роля в системата</label>
+              <select
+                className="adm-adduser-select"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                <option value="user">Потребител</option>
+                <option value="admin">Администратор</option>
+              </select>
+            </div>
+
+            <div className="adm-adduser-info-box">
+              <div className="adm-adduser-info-item">
+                <Info
+                  size={16}
+                  strokeWidth={2.5}
+                  className="adm-adduser-info-icon"
+                />
+                <span>
+                  <strong>Потребител:</strong> Достъп само до своите имоти и
+                  сметки.
+                </span>
+              </div>
+              <div className="adm-adduser-info-item">
+                <Info
+                  size={16}
+                  strokeWidth={2.5}
+                  className="adm-adduser-info-icon"
+                />
+                <span>
+                  <strong>Администратор:</strong> Пълен достъп до всички
+                  настройки на системата.
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="adu-actions">
-        <button className="adu-btn adu-btn-secondary" onClick={goBack}>
-          Отказ
-        </button>
-        <button
-          className="adu-btn adu-btn-primary"
-          onClick={handleSave}
-          disabled={loading}
-        >
-          {loading ? "Създаване..." : "Запази потребителя"}
-        </button>
+        <div className="adm-adduser-actions">
+          <button
+            className="adm-adduser-btn adm-adduser-btn-secondary"
+            onClick={onClose}
+          >
+            Отказ
+          </button>
+          <button
+            className="adm-adduser-btn adm-adduser-btn-primary"
+            onClick={handleSave}
+            disabled={loading}
+          >
+            {loading ? "Създаване..." : "Запази потребителя"}
+          </button>
+        </div>
       </div>
     </div>
   );

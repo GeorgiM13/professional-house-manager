@@ -17,6 +17,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+
+import AddUser from "./AddUser";
+import EditGlobalUser from "./EditGlobalUser";
 import "./styles/Users.css";
 
 const CountUp = ({ value, duration = 800 }) => {
@@ -51,6 +54,14 @@ function GlobalUsers() {
 
   const [stats, setStats] = useState({ total: 0, admins: 0, withPhone: 0 });
 
+  // --- Стейт за управление на модалите ---
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // Тригер за рефреш след успешен запис
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const PAGE_SIZE = 20;
 
   useEffect(() => {
@@ -82,7 +93,7 @@ function GlobalUsers() {
     };
 
     fetchStats();
-  }, []);
+  }, [refreshTrigger]); // Добавяме refreshTrigger и тук, за да се обновява и статистиката
 
   const fetchUsers = async (pageArg, searchArg) => {
     setLoading(true);
@@ -122,7 +133,7 @@ function GlobalUsers() {
   useEffect(() => {
     debouncedFetch(page, searchTerm);
     return () => debouncedFetch.cancel();
-  }, [page, searchTerm]);
+  }, [page, searchTerm, refreshTrigger]); // Добавен refreshTrigger
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -136,7 +147,7 @@ function GlobalUsers() {
         <div className="au-header-right">
           <button
             className="au-btn-primary"
-            onClick={() => navigate("/admin/add-user")}
+            onClick={() => setIsAddModalOpen(true)}
           >
             <Plus size={18} strokeWidth={2.5} /> Нов Потребител
           </button>
@@ -178,6 +189,7 @@ function GlobalUsers() {
           </div>
         </div>
       </div>
+
       <div className="au-toolbar">
         <div className="au-search-wrapper">
           <Search className="au-search-icon" size={18} strokeWidth={2.5} />
@@ -221,9 +233,10 @@ function GlobalUsers() {
                 users.map((user) => (
                   <tr
                     key={user.id}
-                    onClick={() =>
-                      navigate(`/admin/edit-global-user/${user.id}`)
-                    }
+                    onClick={() => {
+                      setSelectedUserId(user.id);
+                      setIsEditModalOpen(true);
+                    }}
                   >
                     <td className="au-table-name-cell">
                       {user.first_name} {user.second_name} {user.last_name}
@@ -242,7 +255,10 @@ function GlobalUsers() {
               <div
                 key={user.id}
                 className="au-mobile-card"
-                onClick={() => navigate(`/admin/edit-global-user/${user.id}`)}
+                onClick={() => {
+                  setSelectedUserId(user.id);
+                  setIsEditModalOpen(true);
+                }}
               >
                 <div className="au-card-header">
                   <span className="au-card-title">
@@ -310,6 +326,32 @@ function GlobalUsers() {
             </div>
           )}
         </>
+      )}
+
+      {/* --- Рендериране на Модалните прозорци --- */}
+      {isAddModalOpen && (
+        <AddUser
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            setIsAddModalOpen(false);
+            setRefreshTrigger((prev) => prev + 1);
+          }}
+        />
+      )}
+
+      {isEditModalOpen && selectedUserId && (
+        <EditGlobalUser
+          userId={selectedUserId}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setTimeout(() => setSelectedUserId(null), 300);
+          }}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            setTimeout(() => setSelectedUserId(null), 300);
+            setRefreshTrigger((prev) => prev + 1);
+          }}
+        />
       )}
     </div>
   );

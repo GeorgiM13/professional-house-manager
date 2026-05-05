@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import { supabase } from "../../supabaseClient";
@@ -25,6 +24,8 @@ import {
   FileText,
   CalendarDays,
   Building,
+  X,
+  Layers,
 } from "lucide-react";
 
 import "./styles/AddExpense.css";
@@ -109,12 +110,12 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
       (iconName !== "calendar" && iconName !== "building"));
 
   return (
-    <div className="ade-select-item">
+    <div className="adm-addexp-select-item">
       {shouldShowIcon && (
         <IconComponent
           size={16}
           strokeWidth={2.5}
-          className="ade-select-icon"
+          className="adm-addexp-select-icon"
           style={{ color: color || "inherit" }}
         />
       )}
@@ -122,23 +123,34 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
     </div>
   );
 };
-function AddExpense() {
-  const { isDarkMode } = useTheme();
-  const navigate = useNavigate();
 
+function AddExpense({ onClose, onSuccess }) {
+  const { isDarkMode } = useTheme();
   const { user: currentUser } = useLocalUser();
   const { buildings, loading: loadingBuildings } = useUserBuildings(
     currentUser?.id,
   );
 
+  const [addMode, setAddMode] = useState("single");
+
   const [formData, setFormData] = useState({
     type: "",
+    current_month: "",
     month: "",
     year: new Date().getFullYear(),
-    current_month: "",
     paid: "не",
     building_id: "",
     notes: "",
+  });
+
+  const [multiAmounts, setMultiAmounts] = useState({
+    electricity_light: "",
+    electricity_lift: "",
+    fee_lift: "",
+    cleaner: "",
+    manager: "",
+    custom_type: "",
+    custom_amount: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -174,6 +186,7 @@ function AddExpense() {
   }, [buildings]);
 
   const selectStyles = {
+    menuPortal: (base) => ({ ...base, zIndex: 1050 }),
     control: (base, state) => ({
       ...base,
       background: isDarkMode ? "#0f172a" : "#f8fafc",
@@ -186,6 +199,7 @@ function AddExpense() {
       minHeight: "42px",
       borderRadius: "8px",
       boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
+      fontFamily: "system-ui, -apple-system, sans-serif",
     }),
     menu: (base) => ({
       ...base,
@@ -194,27 +208,20 @@ function AddExpense() {
       border: isDarkMode ? "1px solid #334155" : "1px solid #e2e8f0",
     }),
     option: (base, state) => {
+      let bgColor = "transparent";
+      let color = isDarkMode ? "#f1f5f9" : "#1e293b";
       if (state.isSelected) {
-        return {
-          ...base,
-          backgroundColor: "#3b82f6",
-          color: "white",
-          cursor: "pointer",
-        };
-      }
-      if (state.isFocused) {
-        return {
-          ...base,
-          backgroundColor: isDarkMode ? "#334155" : "#eff6ff",
-          color: isDarkMode ? "#f1f5f9" : "#1e293b",
-          cursor: "pointer",
-        };
+        bgColor = "#3b82f6";
+        color = "white";
+      } else if (state.isFocused) {
+        bgColor = isDarkMode ? "#334155" : "#eff6ff";
       }
       return {
         ...base,
-        backgroundColor: "transparent",
-        color: isDarkMode ? "#f1f5f9" : "#1e293b",
+        backgroundColor: bgColor,
+        color: color,
         cursor: "pointer",
+        fontFamily: "system-ui, -apple-system, sans-serif",
       };
     },
     singleValue: (base, state) => ({
@@ -222,9 +229,18 @@ function AddExpense() {
       color:
         state.selectProps.value?.color || (isDarkMode ? "#f1f5f9" : "#1e293b"),
       fontWeight: state.selectProps.value?.color ? 600 : 400,
+      fontFamily: "system-ui, -apple-system, sans-serif",
     }),
-    input: (base) => ({ ...base, color: isDarkMode ? "#f1f5f9" : "#1e293b" }),
-    placeholder: (base) => ({ ...base, color: "var(--au-text-sec)" }),
+    input: (base) => ({
+      ...base,
+      color: isDarkMode ? "#f1f5f9" : "#1e293b",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "var(--adm-addexp-text-sec)",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+    }),
   };
 
   const handleChange = (name, value) => {
@@ -232,233 +248,458 @@ function AddExpense() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  const handleMultiChange = (name, value) => {
+    setMultiAmounts((prev) => ({ ...prev, [name]: value }));
+    if (errors.multiple) setErrors((prev) => ({ ...prev, multiple: "" }));
+  };
+
+  const handleModeSwitch = (mode) => {
+    setAddMode(mode);
+    setErrors({});
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const newErrors = {};
-    if (!formData.type) newErrors.type = "Моля въведете вид разход";
-    if (!formData.month) newErrors.month = "Моля изберете месец";
-    if (!formData.year) newErrors.year = "Моля въведете година";
-    if (!formData.building_id) newErrors.building_id = "Моля изберете сграда";
+
+    if (!formData.month) newErrors.month = "Изберете месец";
+    if (!formData.year) newErrors.year = "Въведете година";
+    if (!formData.building_id) newErrors.building_id = "Изберете сграда";
+
+    if (addMode === "single") {
+      if (!formData.type) newErrors.type = "Изберете вид разход";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
+    let expensesToInsert = [];
+    const baseContext = {
+      month: parseInt(formData.month),
+      year: parseInt(formData.year),
+      paid: formData.paid,
+      building_id: parseInt(formData.building_id),
+      notes: formData.notes || "",
+    };
+
+    if (addMode === "single") {
+      expensesToInsert.push({
+        ...baseContext,
+        type: formData.type,
+        current_month: parseFloat(formData.current_month) || 0,
+      });
+    } else {
+      const predefinedTypes = [
+        "electricity_light",
+        "electricity_lift",
+        "fee_lift",
+        "cleaner",
+        "manager",
+      ];
+
+      predefinedTypes.forEach((type) => {
+        if (multiAmounts[type] !== "" && multiAmounts[type] !== null) {
+          expensesToInsert.push({
+            ...baseContext,
+            type: type,
+            current_month: parseFloat(multiAmounts[type]) || 0,
+          });
+        }
+      });
+
+      if (multiAmounts.custom_type && multiAmounts.custom_amount !== "") {
+        expensesToInsert.push({
+          ...baseContext,
+          type: multiAmounts.custom_type,
+          current_month: parseFloat(multiAmounts.custom_amount) || 0,
+        });
+      }
+
+      if (expensesToInsert.length === 0) {
+        setErrors({ multiple: "Моля, въведете сума за поне един разход." });
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("expenses").insert([
-        {
-          type: formData.type,
-          month: parseInt(formData.month),
-          year: parseInt(formData.year),
-          current_month: parseFloat(formData.current_month) || 0,
-          paid: formData.paid,
-          building_id: parseInt(formData.building_id),
-          notes: formData.notes,
-        },
-      ]);
-
+      const { error } = await supabase
+        .from("expenses")
+        .insert(expensesToInsert);
       if (error) throw error;
 
       await Swal.fire({
         icon: "success",
         title: "Успех!",
-        text: "Разходът е добавен успешно.",
+        text:
+          addMode === "single"
+            ? "Разходът е добавен."
+            : "Разходите са добавени.",
         timer: 1500,
         showConfirmButton: false,
       });
-      navigate("/admin/expenses");
+      if (onSuccess) onSuccess();
     } catch (err) {
-      console.error("Грешка при добавяне на разход:", err.message);
+      console.error("Грешка при добавяне:", err.message);
       Swal.fire({ icon: "error", title: "Грешка", text: err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const goBack = () => navigate("/admin/expenses");
+  const handleOverlayClick = (e) => {
+    if (e.target.classList.contains("adm-addexp-overlay")) {
+      onClose();
+    }
+  };
 
   return (
-    <div className={`ade-container ${isDarkMode ? "au-dark" : "au-light"}`}>
-      <div className="ade-header">
-        <div>
-          <h1>Добавяне на разход</h1>
-          <p>Въведете детайли за новото плащане</p>
-        </div>
-        <button className="ade-btn ade-btn-secondary" onClick={goBack}>
-          Назад
-        </button>
-      </div>
-
-      <div className="ade-grid">
-        <div className="ade-card">
-          <div className="ade-section-title">
-            <FileText
-              size={20}
-              strokeWidth={2.5}
-              className="ade-section-icon"
-            />
-            Основна информация
+    <div
+      className={`adm-addexp-overlay ${isDarkMode ? "adm-addexp-dark" : "adm-addexp-light"}`}
+      onClick={handleOverlayClick}
+    >
+      <div className="adm-addexp-modal adm-addexp-fade-in">
+        <div className="adm-addexp-header">
+          <div>
+            <h1>Добавяне на разход(и)</h1>
+            <p>Въведете детайли за ново плащане</p>
           </div>
-
-          <div className="ade-form-group">
-            <label>Вид разход *</label>
-            <Select
-              options={EXPENSE_TYPES}
-              onChange={(opt) => handleChange("type", opt?.value)}
-              placeholder={
-                <div
-                  className="ade-select-item"
-                  style={{ color: "var(--au-text-sec)" }}
-                >
-                  <FileText
-                    size={16}
-                    strokeWidth={2.5}
-                    className="ade-select-icon"
-                  />
-                  <span>Избери вид...</span>
-                </div>
-              }
-              styles={selectStyles}
-              isSearchable={false}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-            {errors.type && <span className="error-msg">{errors.type}</span>}
-          </div>
-
-          <div className="ade-form-group">
-            <label>Сума (лв)</label>
-            <input
-              type="number"
-              step="0.01"
-              name="current_month"
-              className="ade-input"
-              value={formData.current_month}
-              onChange={(e) => handleChange("current_month", e.target.value)}
-            />
-          </div>
-
-          <div className="ade-form-group">
-            <label>Бележки</label>
-            <textarea
-              name="notes"
-              className="ade-textarea"
-              value={formData.notes}
-              onChange={(e) => handleChange("notes", e.target.value)}
-              placeholder="Допълнителна информация..."
-            />
-          </div>
+          <button
+            className="adm-addexp-close-btn"
+            onClick={onClose}
+            title="Затвори"
+          >
+            <X size={24} strokeWidth={2.5} />
+          </button>
         </div>
 
-        <div className="ade-card" style={{ height: "fit-content" }}>
-          <div className="ade-section-title">
-            <CalendarDays
-              size={20}
-              strokeWidth={2.5}
-              className="ade-section-icon"
-            />
-            Контекст
-          </div>
+        <div className="adm-addexp-grid">
+          <div className="adm-addexp-card">
+            <div className="adm-addexp-mode-toggle">
+              <button
+                className={`adm-addexp-mode-btn ${addMode === "single" ? "active" : ""}`}
+                onClick={() => handleModeSwitch("single")}
+              >
+                <FileText size={18} strokeWidth={2.5} /> Единичен
+              </button>
+              <button
+                className={`adm-addexp-mode-btn ${addMode === "multiple" ? "active" : ""}`}
+                onClick={() => handleModeSwitch("multiple")}
+              >
+                <Layers size={18} strokeWidth={2.5} /> Няколко наведнъж
+              </button>
+            </div>
 
-          <div className="ade-form-group">
-            <label>Сграда *</label>
-            <Select
-              options={buildingOptions}
-              isLoading={loadingBuildings}
-              onChange={(opt) => handleChange("building_id", opt?.value)}
-              placeholder={
-                <div
-                  className="ade-select-item"
-                  style={{ color: "var(--au-text-sec)" }}
-                >
-                  <Building
-                    size={16}
-                    strokeWidth={2.5}
-                    className="ade-select-icon"
+            {addMode === "single" ? (
+              <>
+                <div className="adm-addexp-form-group">
+                  <label>Вид разход *</label>
+                  <Select
+                    options={EXPENSE_TYPES}
+                    onChange={(opt) => handleChange("type", opt?.value)}
+                    placeholder={
+                      <div
+                        className="adm-addexp-select-item"
+                        style={{ color: "var(--adm-addexp-text-sec)" }}
+                      >
+                        <FileText
+                          size={16}
+                          strokeWidth={2.5}
+                          className="adm-addexp-select-icon"
+                        />
+                        <span>Избери вид...</span>
+                      </div>
+                    }
+                    styles={selectStyles}
+                    isSearchable={false}
+                    formatOptionLabel={customFormatOptionLabel}
+                    menuPortalTarget={document.body}
                   />
-                  <span>Избери сграда...</span>
+                  {errors.type && (
+                    <span className="adm-addexp-error-msg">{errors.type}</span>
+                  )}
                 </div>
-              }
-              styles={selectStyles}
-              noOptionsMessage={() => "Няма намерени"}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-            {errors.building_id && (
-              <span className="error-msg">{errors.building_id}</span>
+
+                <div className="adm-addexp-form-group">
+                  <label>Сума (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="adm-addexp-input"
+                    value={formData.current_month}
+                    onChange={(e) =>
+                      handleChange("current_month", e.target.value)
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="adm-addexp-multi-grid">
+                <div className="adm-addexp-form-group">
+                  <label>
+                    <Lightbulb size={14} /> Ток стълбище (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="adm-addexp-input"
+                    placeholder="0.00"
+                    value={multiAmounts.electricity_light}
+                    onChange={(e) =>
+                      handleMultiChange("electricity_light", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="adm-addexp-form-group">
+                  <label>
+                    <Zap size={14} /> Ток асансьор (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="adm-addexp-input"
+                    placeholder="0.00"
+                    value={multiAmounts.electricity_lift}
+                    onChange={(e) =>
+                      handleMultiChange("electricity_lift", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="adm-addexp-form-group">
+                  <label>
+                    <ArrowUpDown size={14} /> Сервиз асансьор (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="adm-addexp-input"
+                    placeholder="0.00"
+                    value={multiAmounts.fee_lift}
+                    onChange={(e) =>
+                      handleMultiChange("fee_lift", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="adm-addexp-form-group">
+                  <label>
+                    <Sparkles size={14} /> Хигиенист (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="adm-addexp-input"
+                    placeholder="0.00"
+                    value={multiAmounts.cleaner}
+                    onChange={(e) =>
+                      handleMultiChange("cleaner", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="adm-addexp-form-group">
+                  <label>
+                    <UserCog size={14} /> Домоуправител (€)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="adm-addexp-input"
+                    placeholder="0.00"
+                    value={multiAmounts.manager}
+                    onChange={(e) =>
+                      handleMultiChange("manager", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="adm-addexp-form-group adm-addexp-custom-multi">
+                  <label>Допълнителен разход (Избери вид и въведи сума)</label>
+                  <div className="adm-addexp-multi-custom-row">
+                    <Select
+                      className="adm-addexp-multi-select"
+                      options={EXPENSE_TYPES.filter(
+                        (t) =>
+                          ![
+                            "electricity_light",
+                            "electricity_lift",
+                            "fee_lift",
+                            "cleaner",
+                            "manager",
+                          ].includes(t.value),
+                      )}
+                      onChange={(opt) =>
+                        handleMultiChange("custom_type", opt?.value)
+                      }
+                      placeholder="Вид разход..."
+                      styles={selectStyles}
+                      isSearchable={false}
+                      formatOptionLabel={customFormatOptionLabel}
+                      menuPortalTarget={document.body}
+                    />
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="adm-addexp-input"
+                      placeholder="Сума..."
+                      value={multiAmounts.custom_amount}
+                      onChange={(e) =>
+                        handleMultiChange("custom_amount", e.target.value)
+                      }
+                      disabled={!multiAmounts.custom_type}
+                    />
+                  </div>
+                </div>
+
+                {errors.multiple && (
+                  <span
+                    className="adm-addexp-error-msg"
+                    style={{ gridColumn: "1 / -1" }}
+                  >
+                    {errors.multiple}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
-          <div className="ade-dates-grid">
-            <div className="ade-form-group">
-              <label>Месец *</label>
+          <div className="adm-addexp-card adm-addexp-card-fit">
+            <div className="adm-addexp-section-title">
+              <CalendarDays
+                size={20}
+                strokeWidth={2.5}
+                className="adm-addexp-section-icon"
+              />
+              Контекст
+            </div>
+
+            <div className="adm-addexp-form-group">
+              <label>Сграда *</label>
               <Select
-                options={monthOptions}
-                onChange={(opt) => handleChange("month", opt?.value)}
-                styles={selectStyles}
-                isSearchable={false}
+                options={buildingOptions}
+                isLoading={loadingBuildings}
+                onChange={(opt) => handleChange("building_id", opt?.value)}
                 placeholder={
                   <div
-                    className="ade-select-item"
-                    style={{ color: "var(--au-text-sec)" }}
+                    className="adm-addexp-select-item"
+                    style={{ color: "var(--adm-addexp-text-sec)" }}
                   >
-                    <CalendarDays
+                    <Building
                       size={16}
                       strokeWidth={2.5}
-                      className="ade-select-icon"
+                      className="adm-addexp-select-icon"
                     />
-                    <span>--</span>
+                    <span>Избери сграда...</span>
                   </div>
                 }
-                menuPlacement="auto"
+                styles={selectStyles}
+                noOptionsMessage={() => "Няма намерени"}
                 formatOptionLabel={customFormatOptionLabel}
+                menuPortalTarget={document.body}
               />
-              {errors.month && (
-                <span className="error-msg">{errors.month}</span>
+              {errors.building_id && (
+                <span className="adm-addexp-error-msg">
+                  {errors.building_id}
+                </span>
               )}
             </div>
 
-            <div className="ade-form-group">
-              <label>Година</label>
+            <div className="adm-addexp-dates-grid">
+              <div className="adm-addexp-form-group">
+                <label>Месец *</label>
+                <Select
+                  options={monthOptions}
+                  onChange={(opt) => handleChange("month", opt?.value)}
+                  styles={selectStyles}
+                  isSearchable={false}
+                  placeholder={
+                    <div
+                      className="adm-addexp-select-item"
+                      style={{ color: "var(--adm-addexp-text-sec)" }}
+                    >
+                      <CalendarDays
+                        size={16}
+                        strokeWidth={2.5}
+                        className="adm-addexp-select-icon"
+                      />
+                      <span>--</span>
+                    </div>
+                  }
+                  menuPlacement="auto"
+                  formatOptionLabel={customFormatOptionLabel}
+                  menuPortalTarget={document.body}
+                />
+                {errors.month && (
+                  <span className="adm-addexp-error-msg">{errors.month}</span>
+                )}
+              </div>
+
+              <div className="adm-addexp-form-group">
+                <label>Година</label>
+                <Select
+                  options={yearOptions}
+                  defaultValue={yearOptions[0]}
+                  onChange={(opt) => handleChange("year", opt?.value)}
+                  styles={selectStyles}
+                  isSearchable={false}
+                  menuPlacement="auto"
+                  formatOptionLabel={customFormatOptionLabel}
+                  menuPortalTarget={document.body}
+                />
+              </div>
+            </div>
+
+            <hr className="adm-addexp-divider" />
+
+            <div className="adm-addexp-form-group">
+              <label>Статус на плащане</label>
               <Select
-                options={yearOptions}
-                defaultValue={yearOptions[0]}
-                onChange={(opt) => handleChange("year", opt?.value)}
+                options={PAID_OPTIONS}
+                defaultValue={PAID_OPTIONS[0]}
+                onChange={(opt) => handleChange("paid", opt?.value)}
                 styles={selectStyles}
                 isSearchable={false}
-                menuPlacement="auto"
                 formatOptionLabel={customFormatOptionLabel}
+                menuPortalTarget={document.body}
+              />
+            </div>
+
+            <div
+              className="adm-addexp-form-group"
+              style={{ marginTop: "0.5rem" }}
+            >
+              <label>Общи Бележки</label>
+              <textarea
+                name="notes"
+                className="adm-addexp-textarea adm-addexp-notes-textarea"
+                value={formData.notes}
+                onChange={(e) => handleChange("notes", e.target.value)}
+                placeholder="Приложени за всички разходи..."
               />
             </div>
           </div>
-
-          <hr className="ade-divider" />
-
-          <div className="ade-form-group">
-            <label>Статус на плащане</label>
-            <Select
-              options={PAID_OPTIONS}
-              defaultValue={PAID_OPTIONS[0]}
-              onChange={(opt) => handleChange("paid", opt?.value)}
-              styles={selectStyles}
-              isSearchable={false}
-              formatOptionLabel={customFormatOptionLabel}
-            />
-          </div>
         </div>
 
-        <div className="ade-actions">
-          <button className="ade-btn ade-btn-secondary" onClick={goBack}>
+        <div className="adm-addexp-actions">
+          <button
+            className="adm-addexp-btn adm-addexp-btn-secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
             Отказ
           </button>
           <button
-            className="ade-btn ade-btn-primary"
+            className="adm-addexp-btn adm-addexp-btn-primary"
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading ? "Запазване..." : "Добави разход"}
+            {loading
+              ? "Запазване..."
+              : addMode === "single"
+                ? "Добави разход"
+                : "Добави разходите"}
           </button>
         </div>
       </div>

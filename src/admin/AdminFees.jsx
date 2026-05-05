@@ -7,7 +7,7 @@ import { useUserBuildings } from "./hooks/UseUserBuildings";
 import { useLocalUser } from "./hooks/UseLocalUser";
 import { useTheme } from "../components/ThemeContext";
 import {
-  Building2,
+  Building,
   Zap,
   Users,
   CheckCircle2,
@@ -64,7 +64,7 @@ const AnimatedCounter = ({ value, duration = 800 }) => {
 
 const customFormatOptionLabel = ({ label, iconType }, { context }) => {
   let Icon = null;
-  if (iconType === "building") Icon = Building2;
+  if (iconType === "building") Icon = Building;
 
   const shouldShowIcon = Icon && context === "value";
 

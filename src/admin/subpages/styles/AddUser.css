@@ -259,6 +259,12 @@
   font-weight: bold;
 }
 
+.adm-adduser-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 @keyframes slideUpAddUser {
   from {
     transform: translateY(100%);

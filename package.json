@@ -21,6 +21,7 @@
     "dotenv": "^17.2.3",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.38.0",
+    "jspdf-autotable": "^5.0.7",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^1.8.0",
     "qrcode": "^1.5.4",

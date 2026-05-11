@@ -54,12 +54,10 @@ function GlobalUsers() {
 
   const [stats, setStats] = useState({ total: 0, admins: 0, withPhone: 0 });
 
-  // --- Стейт за управление на модалите ---
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
-  // Тригер за рефреш след успешен запис
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const PAGE_SIZE = 20;
@@ -93,7 +91,7 @@ function GlobalUsers() {
     };
 
     fetchStats();
-  }, [refreshTrigger]); // Добавяме refreshTrigger и тук, за да се обновява и статистиката
+  }, [refreshTrigger]);
 
   const fetchUsers = async (pageArg, searchArg) => {
     setLoading(true);
@@ -133,7 +131,7 @@ function GlobalUsers() {
   useEffect(() => {
     debouncedFetch(page, searchTerm);
     return () => debouncedFetch.cancel();
-  }, [page, searchTerm, refreshTrigger]); // Добавен refreshTrigger
+  }, [page, searchTerm, refreshTrigger]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -328,7 +326,6 @@ function GlobalUsers() {
         </>
       )}
 
-      {/* --- Рендериране на Модалните прозорци --- */}
       {isAddModalOpen && (
         <AddUser
           onClose={() => setIsAddModalOpen(false)}

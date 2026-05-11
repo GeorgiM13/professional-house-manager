@@ -376,6 +376,7 @@ input:checked + .af-slider:before {
   align-items: center;
   gap: 10px;
   font-weight: 700;
+  width: 100%;
 }
 .af-text-sec {
   color: var(--af-text-sec);
@@ -456,6 +457,30 @@ input:checked + .af-slider:before {
 
 .mobile-view {
   display: none !important;
+}
+
+.invoice-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--af-bg-card);
+}
+
+.invoice-btn:hover {
+  background-color: var(--af-primary);
+  color: white;
+  border-color: var(--af-primary);
+}
+
+.group-right-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group-total-text {
+  color: var(--red-text);
 }
 
 @media (max-width: 768px) {

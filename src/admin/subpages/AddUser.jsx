@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import Swal from "sweetalert2";
 import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
-import { User, Lock, Info, X } from "lucide-react";
+import { User, Lock, Info, X, Briefcase } from "lucide-react";
 import "./styles/AddUser.css";
 
 function AddUser({ onClose, onSuccess }) {
@@ -12,9 +12,14 @@ function AddUser({ onClose, onSuccess }) {
   const [firstName, setFirstName] = useState("");
   const [secondName, setSecondName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [companyName, setCompanyName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+
+  const [companyName, setCompanyName] = useState("");
+  const [companyEik, setCompanyEik] = useState("");
+  const [companyMol, setCompanyMol] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+
   const [role, setRole] = useState("user");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -102,8 +107,11 @@ function AddUser({ onClose, onSuccess }) {
             first_name: firstName,
             second_name: secondName,
             last_name: lastName,
-            company_name: companyName,
             phone: phone,
+            company_name: companyName,
+            company_eik: companyEik,
+            company_mol: companyMol,
+            company_address: companyAddress,
             role: role,
             username: username,
             password_hash: passwordHash,
@@ -176,75 +184,67 @@ function AddUser({ onClose, onSuccess }) {
         </div>
 
         <div className="adm-adduser-grid">
-          <div className="adm-adduser-card">
-            <div className="adm-adduser-card-title">
-              <User
-                size={20}
-                strokeWidth={2.5}
-                className="adm-adduser-card-icon"
-              />{" "}
-              Лични данни
-            </div>
-
-            <div className="adm-adduser-row">
-              <div className="adm-adduser-form-group">
-                <label>Първо име *</label>
-                <input
-                  className={`adm-adduser-input ${errors.firstName ? "has-error" : ""}`}
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-                {errors.firstName && (
-                  <span className="adm-adduser-error-msg">
-                    {errors.firstName}
-                  </span>
-                )}
+          <div className="adm-adduser-col">
+            <div className="adm-adduser-card">
+              <div className="adm-adduser-card-title">
+                <User
+                  size={20}
+                  strokeWidth={2.5}
+                  className="adm-adduser-card-icon"
+                />{" "}
+                Лични данни
               </div>
 
-              <div className="adm-adduser-form-group">
-                <label>Презиме</label>
-                <input
-                  className="adm-adduser-input"
-                  value={secondName}
-                  onChange={(e) => setSecondName(e.target.value)}
-                />
-              </div>
-            </div>
+              <div className="adm-adduser-row">
+                <div className="adm-adduser-form-group">
+                  <label>Първо име *</label>
+                  <input
+                    className={`adm-adduser-input ${errors.firstName ? "has-error" : ""}`}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                  {errors.firstName && (
+                    <span className="adm-adduser-error-msg">
+                      {errors.firstName}
+                    </span>
+                  )}
+                </div>
 
-            <div className="adm-adduser-row">
-              <div className="adm-adduser-form-group">
-                <label>Фамилия *</label>
-                <input
-                  className={`adm-adduser-input ${errors.lastName ? "has-error" : ""}`}
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-                {errors.lastName && (
-                  <span className="adm-adduser-error-msg">
-                    {errors.lastName}
-                  </span>
-                )}
+                <div className="adm-adduser-form-group">
+                  <label>Презиме</label>
+                  <input
+                    className="adm-adduser-input"
+                    value={secondName}
+                    onChange={(e) => setSecondName(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div className="adm-adduser-form-group">
-                <label>Фирма</label>
-                <input
-                  className="adm-adduser-input"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-              </div>
-            </div>
+              <div className="adm-adduser-row">
+                <div className="adm-adduser-form-group">
+                  <label>Фамилия *</label>
+                  <input
+                    className={`adm-adduser-input ${errors.lastName ? "has-error" : ""}`}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                  {errors.lastName && (
+                    <span className="adm-adduser-error-msg">
+                      {errors.lastName}
+                    </span>
+                  )}
+                </div>
 
-            <div className="adm-adduser-row">
-              <div className="adm-adduser-form-group">
-                <label>Телефон</label>
-                <input
-                  className="adm-adduser-input"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+                <div className="adm-adduser-form-group">
+                  <label>Телефон</label>
+                  <input
+                    className="adm-adduser-input"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
               </div>
+
               <div className="adm-adduser-form-group">
                 <label>Имейл</label>
                 <input
@@ -256,52 +256,104 @@ function AddUser({ onClose, onSuccess }) {
                 />
               </div>
             </div>
+
+            <div className="adm-adduser-card">
+              <div className="adm-adduser-card-title">
+                <Briefcase
+                  size={20}
+                  strokeWidth={2.5}
+                  className="adm-adduser-card-icon"
+                />{" "}
+                Данни за фактура (Фирма - Опционално)
+              </div>
+
+              <div className="adm-adduser-row">
+                <div className="adm-adduser-form-group">
+                  <label>Име на фирма</label>
+                  <input
+                    className="adm-adduser-input"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Напр. ЕООД..."
+                  />
+                </div>
+                <div className="adm-adduser-form-group">
+                  <label>ЕИК / БУЛСТАТ</label>
+                  <input
+                    className="adm-adduser-input"
+                    value={companyEik}
+                    onChange={(e) => setCompanyEik(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="adm-adduser-row">
+                <div className="adm-adduser-form-group">
+                  <label>МОЛ</label>
+                  <input
+                    className="adm-adduser-input"
+                    value={companyMol}
+                    onChange={(e) => setCompanyMol(e.target.value)}
+                  />
+                </div>
+                <div className="adm-adduser-form-group">
+                  <label>Адрес на регистрация</label>
+                  <input
+                    className="adm-adduser-input"
+                    value={companyAddress}
+                    onChange={(e) => setCompanyAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="adm-adduser-card">
-            <div className="adm-adduser-card-title">
-              <Lock
-                size={20}
-                strokeWidth={2.5}
-                className="adm-adduser-card-icon"
-              />{" "}
-              Настройки и Роля
-            </div>
-
-            <div className="adm-adduser-form-group">
-              <label>Роля в системата</label>
-              <select
-                className="adm-adduser-select"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="user">Потребител</option>
-                <option value="admin">Администратор</option>
-              </select>
-            </div>
-
-            <div className="adm-adduser-info-box">
-              <div className="adm-adduser-info-item">
-                <Info
-                  size={16}
+          <div className="adm-adduser-col">
+            <div className="adm-adduser-card">
+              <div className="adm-adduser-card-title">
+                <Lock
+                  size={20}
                   strokeWidth={2.5}
-                  className="adm-adduser-info-icon"
-                />
-                <span>
-                  <strong>Потребител:</strong> Достъп само до своите имоти и
-                  сметки.
-                </span>
+                  className="adm-adduser-card-icon"
+                />{" "}
+                Настройки и Роля
               </div>
-              <div className="adm-adduser-info-item">
-                <Info
-                  size={16}
-                  strokeWidth={2.5}
-                  className="adm-adduser-info-icon"
-                />
-                <span>
-                  <strong>Администратор:</strong> Пълен достъп до всички
-                  настройки на системата.
-                </span>
+
+              <div className="adm-adduser-form-group">
+                <label>Роля в системата</label>
+                <select
+                  className="adm-adduser-select"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <option value="user">Потребител</option>
+                  <option value="admin">Администратор</option>
+                </select>
+              </div>
+
+              <div className="adm-adduser-info-box">
+                <div className="adm-adduser-info-item">
+                  <Info
+                    size={16}
+                    strokeWidth={2.5}
+                    className="adm-adduser-info-icon"
+                  />
+                  <span>
+                    <strong>Потребител:</strong> Достъп само до своите имоти и
+                    сметки.
+                  </span>
+                </div>
+                <div className="adm-adduser-info-item">
+                  <Info
+                    size={16}
+                    strokeWidth={2.5}
+                    className="adm-adduser-info-icon"
+                  />
+                  <span>
+                    <strong>Администратор:</strong> Пълен достъп до всички
+                    настройки на системата.
+                  </span>
+                </div>
               </div>
             </div>
           </div>

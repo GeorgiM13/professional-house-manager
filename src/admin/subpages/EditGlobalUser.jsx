@@ -3,7 +3,7 @@ import { supabase } from "../../supabaseClient";
 import { useTheme } from "../../components/ThemeContext";
 import CustomAlert from "../../components/CustomAlert";
 import ConfirmModal from "../../components/ConfirmModal";
-import { User, Lock, Trash2, X } from "lucide-react";
+import { User, Lock, Trash2, X, Briefcase } from "lucide-react";
 import "./styles/EditGlobalUser.css";
 
 function EditGlobalUser({ userId, onClose, onSuccess }) {
@@ -16,6 +16,9 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
     phone: "",
     email: "",
     company_name: "",
+    company_eik: "",
+    company_mol: "",
+    company_address: "",
     role: "user",
   });
 
@@ -49,6 +52,9 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
           phone: data.phone || "",
           email: data.email || "",
           company_name: data.company_name || "",
+          company_eik: data.company_eik || "",
+          company_mol: data.company_mol || "",
+          company_address: data.company_address || "",
           role: data.role || "user",
         });
 
@@ -92,15 +98,7 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
           });
 
         if (funcError) {
-          console.error("Auth update error:", funcError);
-          let msg = "Неуспешна смяна на Auth имейл.";
-          try {
-            if (funcError && typeof funcError === "object") {
-              msg = funcError.message || JSON.stringify(funcError);
-            }
-          } catch (e) {}
-
-          throw new Error(msg);
+          throw new Error("Неуспешна смяна на Auth имейл.");
         }
       }
 
@@ -113,6 +111,9 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
           phone: formData.phone,
           email: formData.email,
           company_name: formData.company_name,
+          company_eik: formData.company_eik,
+          company_mol: formData.company_mol,
+          company_address: formData.company_address,
           role: formData.role,
         })
         .eq("id", userId);
@@ -121,7 +122,7 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
 
       setAlert({
         show: true,
-        message: "Профилът и данните за вход са обновени успешно!",
+        message: "Профилът е обновен успешно!",
         type: "success",
       });
 
@@ -130,15 +131,11 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
       }, 1500);
     } catch (err) {
       console.error("Update error:", err);
-      let displayMsg = err.message;
-      if (displayMsg.includes('{"error":')) {
-        try {
-          const parsed = JSON.parse(displayMsg);
-          if (parsed.error) displayMsg = parsed.error;
-        } catch (e) {}
-      }
-
-      setAlert({ show: true, message: "Грешка: " + displayMsg, type: "error" });
+      setAlert({
+        show: true,
+        message: "Грешка: " + err.message,
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -160,11 +157,9 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
         if (onSuccess) onSuccess();
       }, 1500);
     } catch (err) {
-      console.error("Delete error:", err);
       setAlert({
         show: true,
-        message:
-          "Не може да бъде изтрит. Вероятно притежава имоти или има свързани данни.",
+        message: "Не може да бъде изтрит. Има свързани данни.",
         type: "error",
       });
     } finally {
@@ -199,70 +194,61 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
         </div>
 
         <div className="adm-editguser-grid">
-          <div className="adm-editguser-card">
-            <div className="adm-editguser-card-title">
-              <User
-                size={20}
-                strokeWidth={2.5}
-                className="adm-editguser-card-icon"
-              />{" "}
-              Лични данни
-            </div>
-
-            <div className="adm-editguser-row">
-              <div className="adm-editguser-form-group">
-                <label>Име *</label>
-                <input
-                  name="first_name"
-                  className="adm-editguser-input"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                />
+          <div className="adm-editguser-col">
+            <div className="adm-editguser-card">
+              <div className="adm-editguser-card-title">
+                <User
+                  size={20}
+                  strokeWidth={2.5}
+                  className="adm-editguser-card-icon"
+                />{" "}
+                Лични данни
               </div>
 
-              <div className="adm-editguser-form-group">
-                <label>Презиме</label>
-                <input
-                  name="second_name"
-                  className="adm-editguser-input"
-                  value={formData.second_name}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+              <div className="adm-editguser-row">
+                <div className="adm-editguser-form-group">
+                  <label>Име *</label>
+                  <input
+                    name="first_name"
+                    className="adm-editguser-input"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                  />
+                </div>
 
-            <div className="adm-editguser-row">
-              <div className="adm-editguser-form-group">
-                <label>Фамилия *</label>
-                <input
-                  name="last_name"
-                  className="adm-editguser-input"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                />
+                <div className="adm-editguser-form-group">
+                  <label>Презиме</label>
+                  <input
+                    name="second_name"
+                    className="adm-editguser-input"
+                    value={formData.second_name}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
 
-              <div className="adm-editguser-form-group">
-                <label>Фирма</label>
-                <input
-                  name="company_name"
-                  className="adm-editguser-input"
-                  value={formData.company_name}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+              <div className="adm-editguser-row">
+                <div className="adm-editguser-form-group">
+                  <label>Фамилия *</label>
+                  <input
+                    name="last_name"
+                    className="adm-editguser-input"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                  />
+                </div>
 
-            <div className="adm-editguser-row">
-              <div className="adm-editguser-form-group">
-                <label>Телефон</label>
-                <input
-                  name="phone"
-                  className="adm-editguser-input"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
+                <div className="adm-editguser-form-group">
+                  <label>Телефон</label>
+                  <input
+                    name="phone"
+                    className="adm-editguser-input"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
+
               <div className="adm-editguser-form-group">
                 <label>Email адрес (Вход)</label>
                 <input
@@ -274,29 +260,84 @@ function EditGlobalUser({ userId, onClose, onSuccess }) {
                 />
               </div>
             </div>
+
+            <div className="adm-editguser-card">
+              <div className="adm-editguser-card-title">
+                <Briefcase
+                  size={20}
+                  strokeWidth={2.5}
+                  className="adm-editguser-card-icon"
+                />{" "}
+                Данни за фактура (Фирма)
+              </div>
+
+              <div className="adm-editguser-row">
+                <div className="adm-editguser-form-group">
+                  <label>Име на фирма</label>
+                  <input
+                    name="company_name"
+                    className="adm-editguser-input"
+                    value={formData.company_name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="adm-editguser-form-group">
+                  <label>ЕИК / БУЛСТАТ</label>
+                  <input
+                    name="company_eik"
+                    className="adm-editguser-input"
+                    value={formData.company_eik}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="adm-editguser-row">
+                <div className="adm-editguser-form-group">
+                  <label>МОЛ</label>
+                  <input
+                    name="company_mol"
+                    className="adm-editguser-input"
+                    value={formData.company_mol}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="adm-editguser-form-group">
+                  <label>Адрес на регистрация</label>
+                  <input
+                    name="company_address"
+                    className="adm-editguser-input"
+                    value={formData.company_address}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="adm-editguser-card">
-            <div className="adm-editguser-card-title">
-              <Lock
-                size={20}
-                strokeWidth={2.5}
-                className="adm-editguser-card-icon"
-              />{" "}
-              Настройки и Роля
-            </div>
+          <div className="adm-editguser-col">
+            <div className="adm-editguser-card">
+              <div className="adm-editguser-card-title">
+                <Lock
+                  size={20}
+                  strokeWidth={2.5}
+                  className="adm-editguser-card-icon"
+                />{" "}
+                Настройки и Роля
+              </div>
 
-            <div className="adm-editguser-form-group">
-              <label>Роля в системата</label>
-              <select
-                name="role"
-                className="adm-editguser-select"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="user">Потребител</option>
-                <option value="admin">Администратор</option>
-              </select>
+              <div className="adm-editguser-form-group">
+                <label>Роля в системата</label>
+                <select
+                  name="role"
+                  className="adm-editguser-select"
+                  value={formData.role}
+                  onChange={handleChange}
+                >
+                  <option value="user">Потребител</option>
+                  <option value="admin">Администратор</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>

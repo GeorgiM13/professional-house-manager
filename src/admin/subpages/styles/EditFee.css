@@ -1,0 +1,455 @@
+.edit-fee-light {
+  --edit-fee-bg-overlay: rgba(0, 0, 0, 0.5);
+  --edit-fee-bg-main: #ffffff;
+  --edit-fee-bg-sec: #f8fafc;
+  --edit-fee-border: #e2e8f0;
+  --edit-fee-text-main: #0f172a;
+  --edit-fee-text-sec: #64748b;
+  --edit-fee-primary: #3b82f6;
+  --edit-fee-primary-hover: #2563eb;
+  --edit-fee-danger: #ef4444;
+  --edit-fee-danger-bg: #fef2f2;
+}
+
+.edit-fee-dark {
+  --edit-fee-bg-overlay: rgba(0, 0, 0, 0.7);
+  --edit-fee-bg-main: #1e293b;
+  --edit-fee-bg-sec: #0f172a;
+  --edit-fee-border: #334155;
+  --edit-fee-text-main: #f1f5f9;
+  --edit-fee-text-sec: #94a3b8;
+  --edit-fee-primary: #60a5fa;
+  --edit-fee-primary-hover: #3b82f6;
+  --edit-fee-danger: #f87171;
+  --edit-fee-danger-bg: rgba(239, 68, 68, 0.1);
+}
+
+.edit-fee-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--edit-fee-bg-overlay);
+  backdrop-filter: blur(4px);
+  z-index: 106000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.edit-fee-content {
+  background-color: var(--edit-fee-bg-main);
+  color: var(--edit-fee-text-main);
+  width: 100%;
+  max-width: 900px;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: editFeeSlideUp 0.3s ease-out forwards;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+@keyframes editFeeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.edit-fee-header {
+  background-color: var(--edit-fee-bg-sec);
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--edit-fee-border);
+  flex-shrink: 0;
+}
+
+.edit-fee-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.edit-fee-badge {
+  background-color: var(--edit-fee-primary);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.edit-fee-close {
+  background: transparent;
+  border: none;
+  color: var(--edit-fee-text-sec);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.edit-fee-close:hover {
+  color: var(--edit-fee-danger);
+}
+
+.edit-fee-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.edit-fee-icon-main {
+  color: var(--edit-fee-primary);
+}
+
+.edit-fee-body {
+  padding: 24px;
+  display: flex;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.edit-fee-form-section {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.edit-fee-breakdown-section {
+  flex: 2;
+  background-color: var(--edit-fee-bg-sec);
+  border: 1px solid var(--edit-fee-border);
+  border-radius: 16px;
+  padding: 20px;
+  height: fit-content;
+}
+
+.edit-fee-info-panel {
+  display: flex;
+  background-color: var(--edit-fee-bg-sec);
+  border: 1px solid var(--edit-fee-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.edit-fee-info-col {
+  flex: 1;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-fee-border-left {
+  border-left: 1px solid var(--edit-fee-border);
+}
+
+.edit-fee-info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--edit-fee-text-sec);
+  margin-bottom: 4px;
+}
+
+.edit-fee-info-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-fee-info-value svg {
+  color: var(--edit-fee-primary);
+}
+
+.edit-fee-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.edit-fee-row {
+  display: flex;
+  gap: 16px;
+}
+
+.edit-fee-field-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-fee-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--edit-fee-text-main);
+  margin-bottom: 6px;
+}
+
+.edit-fee-margin-bottom {
+  margin-bottom: 12px;
+  display: block;
+}
+
+.edit-fee-input {
+  background-color: var(--edit-fee-bg-main);
+  border: 1px solid var(--edit-fee-border);
+  color: var(--edit-fee-text-main);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.edit-fee-input:focus {
+  outline: none;
+  border-color: var(--edit-fee-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-fee-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-fee-input[type="number"]::-webkit-outer-spin-button,
+.edit-fee-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.edit-fee-input[type="number"] {
+  appearance: textfield;
+}
+
+.edit-fee-radio-cards {
+  display: flex;
+  gap: 12px;
+}
+
+.edit-fee-radio-card {
+  flex: 1;
+  border: 2px solid var(--edit-fee-border);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--edit-fee-bg-main);
+  user-select: none;
+}
+
+.edit-fee-radio-card:hover {
+  border-color: var(--edit-fee-text-sec);
+}
+
+.edit-fee-radio-card.active {
+  border-color: var(--edit-fee-primary);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.edit-fee-radio-card.danger.active {
+  border-color: var(--edit-fee-danger);
+  background-color: var(--edit-fee-danger-bg);
+}
+
+.radio-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.radio-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--edit-fee-text-sec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.edit-fee-radio-card.active .radio-circle {
+  border-color: var(--edit-fee-primary);
+  color: var(--edit-fee-primary);
+}
+
+.edit-fee-radio-card.danger.active .radio-circle {
+  border-color: var(--edit-fee-danger);
+  color: var(--edit-fee-danger);
+}
+
+.radio-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--edit-fee-text-main);
+}
+.edit-fee-radio-card.danger.active .radio-title {
+  color: var(--edit-fee-danger);
+}
+
+.radio-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--edit-fee-text-sec);
+  padding-left: 26px;
+}
+
+.edit-fee-warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--edit-fee-danger-bg);
+  color: var(--edit-fee-danger);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.edit-fee-submit-btn {
+  background-color: var(--edit-fee-primary);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+}
+
+.edit-fee-submit-btn:hover:not(:disabled) {
+  background-color: var(--edit-fee-primary-hover);
+}
+
+.edit-fee-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.edit-fee-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.edit-fee-spin {
+  animation: editFeeSpinner 1s linear infinite;
+}
+
+.edit-fee-swal-container {
+  z-index: 106005 !important;
+}
+
+
+
+@keyframes editFeeSpinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.edit-fee-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--edit-fee-text-sec);
+  margin-bottom: 16px;
+}
+
+.edit-fee-math-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.math-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--edit-fee-text-sec);
+}
+.math-row span:last-child {
+  font-weight: 600;
+  color: var(--edit-fee-text-main);
+  font-variant-numeric: tabular-nums;
+}
+.math-row.rounding {
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+.math-divider {
+  height: 1px;
+  background-color: var(--edit-fee-border);
+  margin: 6px 0;
+}
+.math-row.total {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--edit-fee-text-main);
+}
+.math-row.total span:last-child {
+  color: var(--edit-fee-primary);
+}
+
+@media (max-width: 768px) {
+  .edit-fee-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .edit-fee-content {
+    border-radius: 24px 24px 0 0;
+    max-height: 90vh;
+  }
+  .edit-fee-body {
+    flex-direction: column;
+  }
+  .edit-fee-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .edit-fee-info-panel {
+    flex-direction: column;
+  }
+  .edit-fee-border-left {
+    border-left: none;
+    border-top: 1px solid var(--edit-fee-border);
+  }
+  .edit-fee-radio-cards {
+    flex-direction: column;
+  }
+}

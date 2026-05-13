@@ -292,11 +292,100 @@ input[type="number"] {
   transform: scale(0.95) translateY(10px);
 }
 
+.adm-editexp-mode-toggle {
+  display: flex;
+  background-color: var(--adm-editexp-bg-page);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--adm-editexp-border);
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.adm-editexp-mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--adm-editexp-text-sec);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.adm-editexp-mode-btn:hover {
+  color: var(--adm-editexp-text-main);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.adm-editexp-mode-btn.active {
+  background-color: var(--adm-editexp-bg-card);
+  color: var(--adm-editexp-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 @keyframes adm-editexp-modalScaleUp {
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+.adm-editexp-category-wrapper {
+  background-color: var(--adm-editexp-bg-page);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--adm-editexp-border);
+  margin-bottom: 1.5rem;
+}
+
+.adm-editexp-label-small {
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: block;
+  color: var(--adm-editexp-primary);
+}
+
+.adm-editexp-category-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 6px;
+}
+
+.adm-editexp-cat-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--adm-editexp-border);
+  background: var(--adm-editexp-bg-card);
+  color: var(--adm-editexp-text-sec);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.adm-editexp-cat-btn:hover {
+  border-color: var(--adm-editexp-primary);
+  color: var(--adm-editexp-text-main);
+  background-color: var(--adm-editexp-bg-page);
+}
+
+.adm-editexp-cat-btn.active {
+  background-color: var(--adm-editexp-primary);
+  color: white;
+  border-color: var(--adm-editexp-primary);
 }
 
 @media (max-width: 768px) {
@@ -355,5 +444,15 @@ input[type="number"] {
 
   .adm-editexp-btn-left {
     margin-right: 0;
+  }
+  .adm-editexp-mode-toggle {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .adm-editexp-mode-btn {
+    min-width: calc(50% - 4px);
+    font-size: 0.85rem;
+    padding: 8px;
   }
 }

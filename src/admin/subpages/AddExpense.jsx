@@ -26,9 +26,12 @@ import {
   Building,
   X,
   Layers,
+  LayoutGrid,
 } from "lucide-react";
 
 import "./styles/AddExpense.css";
+
+const SPECIAL_BUILDING_ID = 7;
 
 const MONTH_NAMES = {
   1: "Януари",
@@ -76,6 +79,19 @@ const EXPENSE_TYPES = [
   { value: "access_control", label: "Контрол достъп", iconName: "key-round" },
   { value: "pest_control", label: "Дезинсекция", iconName: "bug" },
   { value: "other", label: "Други", iconName: "package" },
+  {
+    value: "electricity_ventilation",
+    label: "Ток вентилация",
+    iconName: "zap",
+  },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "common", label: "Общи", Icon: Layers },
+  { value: "apartments", label: "Апартаменти", Icon: Building },
+  { value: "offices", label: "Офиси", Icon: UserCog },
+  { value: "garages", label: "Гаражи", Icon: Package },
+  { value: "retails", label: "Ритейл", Icon: LayoutGrid },
 ];
 
 const PAID_OPTIONS = [
@@ -141,6 +157,7 @@ function AddExpense({ onClose, onSuccess }) {
     paid: "не",
     building_id: "",
     notes: "",
+    cost_category: "common",
   });
 
   const [multiAmounts, setMultiAmounts] = useState({
@@ -155,6 +172,9 @@ function AddExpense({ onClose, onSuccess }) {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const isSpecialBuilding =
+    Number(formData.building_id) === SPECIAL_BUILDING_ID;
 
   const currentYear = new Date().getFullYear();
   const yearOptions = useMemo(
@@ -282,6 +302,7 @@ function AddExpense({ onClose, onSuccess }) {
       paid: formData.paid,
       building_id: parseInt(formData.building_id),
       notes: formData.notes || "",
+      cost_category: isSpecialBuilding ? formData.cost_category : "common",
     };
 
     if (addMode === "single") {
@@ -392,6 +413,26 @@ function AddExpense({ onClose, onSuccess }) {
                 <Layers size={18} strokeWidth={2.5} /> Няколко наведнъж
               </button>
             </div>
+
+            {isSpecialBuilding && (
+              <div
+                className="adm-addexp-mode-toggle"
+                style={{ marginTop: "0", flexWrap: "wrap", gap: "4px" }}
+              >
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    className={`adm-addexp-mode-btn ${formData.cost_category === cat.value ? "active" : ""}`}
+                    onClick={() => handleChange("cost_category", cat.value)}
+                    style={{ fontSize: "0.85rem", padding: "8px 4px" }}
+                  >
+                    <cat.Icon size={16} strokeWidth={2.5} />
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {addMode === "single" ? (
               <>

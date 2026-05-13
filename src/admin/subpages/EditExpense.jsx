@@ -27,9 +27,13 @@ import {
   Building,
   Trash2,
   X,
+  Layers,
+  LayoutGrid,
 } from "lucide-react";
 
 import "./styles/EditExpense.css";
+
+const SPECIAL_BUILDING_ID = 7;
 
 const MONTH_NAMES = {
   1: "Януари",
@@ -54,6 +58,11 @@ const EXPENSE_TYPES = [
     label: "Ток осветление",
     iconName: "lightbulb",
   },
+  {
+    value: "electricity_ventilation",
+    label: "Ток вентилация",
+    iconName: "zap",
+  },
   { value: "cleaner", label: "Хигиенист", iconName: "sparkles" },
   { value: "repair", label: "Ремонт", iconName: "wrench" },
   { value: "manager", label: "Домоуправител", iconName: "user-cog" },
@@ -76,7 +85,20 @@ const EXPENSE_TYPES = [
   { value: "internet_video", label: "Интернет / Видео", iconName: "wifi" },
   { value: "access_control", label: "Контрол достъп", iconName: "key-round" },
   { value: "pest_control", label: "Дезинсекция", iconName: "bug" },
+  {
+    value: "rounding_correction",
+    label: "Корекция от закръгляне",
+    iconName: "package",
+  },
   { value: "other", label: "Други", iconName: "package" },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "common", label: "Общи", Icon: Layers },
+  { value: "apartments", label: "Апартаменти", Icon: Building },
+  { value: "offices", label: "Офиси", Icon: UserCog },
+  { value: "garages", label: "Гаражи", Icon: Package },
+  { value: "retails", label: "Ритейл", Icon: LayoutGrid },
 ];
 
 const PAID_OPTIONS = [
@@ -109,7 +131,6 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
     IconComponent &&
     (context === "value" ||
       (iconName !== "calendar" && iconName !== "building"));
-
   return (
     <div className="adm-editexp-select-item">
       {shouldShowIcon && (
@@ -127,7 +148,6 @@ const customFormatOptionLabel = ({ label, iconName, color }, { context }) => {
 
 function EditExpense({ expenseId, onClose, onSuccess }) {
   const { isDarkMode } = useTheme();
-
   const { user: currentUser } = useLocalUser();
   const { buildings, loading: loadingBuildings } = useUserBuildings(
     currentUser?.id,
@@ -141,12 +161,16 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
     paid: "не",
     building_id: "",
     notes: "",
+    cost_category: "common",
   });
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [errors, setErrors] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const isSpecialBuilding =
+    Number(formData.building_id) === SPECIAL_BUILDING_ID;
 
   const currentYear = new Date().getFullYear();
   const yearOptions = useMemo(
@@ -158,7 +182,6 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
       })),
     [currentYear],
   );
-
   const monthOptions = useMemo(
     () =>
       Object.entries(MONTH_NAMES).map(([k, v]) => ({
@@ -168,78 +191,75 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
       })),
     [],
   );
+  const buildingOptions = useMemo(
+    () =>
+      buildings.map((b) => ({
+        value: b.id,
+        label: `${b.name}, ${b.address}`,
+        iconName: "building",
+      })),
+    [buildings],
+  );
 
-  const buildingOptions = useMemo(() => {
-    return buildings.map((b) => ({
-      value: b.id,
-      label: `${b.name}, ${b.address}`,
-      iconName: "building",
-    }));
-  }, [buildings]);
-
-  const selectStyles = {
-    menuPortal: (base) => ({ ...base, zIndex: 1050 }),
-    control: (base, state) => ({
-      ...base,
-      background: isDarkMode ? "#0f172a" : "#f8fafc",
-      borderColor: state.isFocused
-        ? "#3b82f6"
-        : isDarkMode
-          ? "#334155"
-          : "#cbd5e1",
-      color: isDarkMode ? "#f1f5f9" : "#1e293b",
-      minHeight: "42px",
-      borderRadius: "8px",
-      boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-    }),
-    menu: (base) => ({
-      ...base,
-      background: isDarkMode ? "#1e293b" : "white",
-      zIndex: 9999,
-      border: isDarkMode ? "1px solid #334155" : "1px solid #e2e8f0",
-    }),
-    option: (base, state) => {
-      let bgColor = "transparent";
-      let color = isDarkMode ? "#f1f5f9" : "#1e293b";
-
-      if (state.isSelected) {
-        bgColor = "#3b82f6";
-        color = "white";
-      } else if (state.isFocused) {
-        bgColor = isDarkMode ? "#334155" : "#eff6ff";
-      }
-
-      return {
+  const selectStyles = useMemo(
+    () => ({
+      menuPortal: (base) => ({ ...base, zIndex: 1050 }),
+      control: (base, state) => ({
         ...base,
-        backgroundColor: bgColor,
-        color: color,
+        backgroundColor: isDarkMode ? "#1e293b" : "white",
+        borderColor: state.isFocused
+          ? "#3b82f6"
+          : isDarkMode
+            ? "#334155"
+            : "#e2e8f0",
+        color: isDarkMode ? "#f1f5f9" : "#4a5568",
+        borderRadius: "8px",
+        minHeight: "42px",
+        boxShadow: state.isFocused
+          ? "0 0 0 3px rgba(59, 130, 246, 0.1)"
+          : "none",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }),
+      menu: (base) => ({
+        ...base,
+        backgroundColor: isDarkMode ? "#1e293b" : "white",
+        border: isDarkMode ? "1px solid #334155" : "none",
+        zIndex: 1050,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#3b82f6"
+          : state.isFocused
+            ? isDarkMode
+              ? "#334155"
+              : "#eff6ff"
+            : "transparent",
+        color: state.isSelected ? "white" : isDarkMode ? "#f1f5f9" : "#4a5568",
         cursor: "pointer",
         fontFamily: "system-ui, -apple-system, sans-serif",
-      };
-    },
-    singleValue: (base, state) => ({
-      ...base,
-      color:
-        state.selectProps.value?.color || (isDarkMode ? "#f1f5f9" : "#1e293b"),
-      fontWeight: state.selectProps.value?.color ? 600 : 400,
-      fontFamily: "system-ui, -apple-system, sans-serif",
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: isDarkMode ? "#f1f5f9" : "#4a5568",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }),
+      input: (base) => ({
+        ...base,
+        color: isDarkMode ? "#f1f5f9" : "#4a5568",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }),
+      placeholder: (base) => ({
+        ...base,
+        color: isDarkMode ? "#94a3b8" : "#a0aec0",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }),
     }),
-    input: (base) => ({
-      ...base,
-      color: isDarkMode ? "#f1f5f9" : "#1e293b",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: "var(--adm-editexp-text-sec)",
-      fontFamily: "system-ui, -apple-system, sans-serif",
-    }),
-  };
+    [isDarkMode],
+  );
 
   useEffect(() => {
     if (!expenseId) return;
-
     async function fetchExpense() {
       try {
         const { data: expense, error } = await supabase
@@ -248,7 +268,6 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
           .eq("id", expenseId)
           .single();
         if (error) throw error;
-
         setFormData({
           type: expense.type,
           month: expense.month,
@@ -257,9 +276,9 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
           paid: expense.paid,
           building_id: expense.building_id,
           notes: expense.notes || "",
+          cost_category: expense.cost_category || "common",
         });
       } catch (err) {
-        console.error(err);
         Swal.fire({
           icon: "error",
           title: "Грешка",
@@ -301,15 +320,14 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
           paid: formData.paid,
           building_id: parseInt(formData.building_id),
           notes: formData.notes,
+          cost_category: isSpecialBuilding ? formData.cost_category : "common",
         })
         .eq("id", expenseId);
 
       if (error) throw error;
-
-      await Swal.fire({
+      Swal.fire({
         icon: "success",
         title: "Запазено!",
-        text: "Промените са отразени успешно.",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -329,10 +347,9 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
         .delete()
         .eq("id", expenseId);
       if (error) throw error;
-      await Swal.fire({
+      Swal.fire({
         icon: "success",
         title: "Изтрит!",
-        text: "Разходът е премахнат успешно.",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -345,17 +362,11 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
     }
   };
 
-  const handleOverlayClick = (e) => {
-    if (e.target.classList.contains("adm-editexp-overlay")) {
-      onClose();
-    }
-  };
-
   if (fetching) {
     return (
       <div
         className={`adm-editexp-overlay ${isDarkMode ? "adm-editexp-dark" : "adm-editexp-light"}`}
-        onClick={handleOverlayClick}
+        onClick={onClose}
       >
         <div className="adm-editexp-loading-box">Зареждане на данните...</div>
       </div>
@@ -365,7 +376,9 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
   return (
     <div
       className={`adm-editexp-overlay ${isDarkMode ? "adm-editexp-dark" : "adm-editexp-light"}`}
-      onClick={handleOverlayClick}
+      onClick={(e) =>
+        e.target.classList.contains("adm-editexp-overlay") && onClose()
+      }
     >
       <div className="adm-editexp-modal adm-editexp-fade-in">
         <div className="adm-editexp-header">
@@ -373,11 +386,7 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
             <h1>Редакция на разход</h1>
             <p>Промяна на детайли и статус</p>
           </div>
-          <button
-            className="adm-editexp-close-btn"
-            onClick={onClose}
-            title="Затвори"
-          >
+          <button className="adm-editexp-close-btn" onClick={onClose}>
             <X size={24} strokeWidth={2.5} />
           </button>
         </div>
@@ -385,13 +394,29 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
         <div className="adm-editexp-grid">
           <div className="adm-editexp-card">
             <div className="adm-editexp-section-title">
-              <FileText
-                size={20}
-                strokeWidth={2.5}
-                className="adm-editexp-section-icon"
-              />
+              <FileText size={20} className="adm-editexp-section-icon" />{" "}
               Основна информация
             </div>
+
+            {isSpecialBuilding && (
+              <div
+                className="adm-editexp-mode-toggle"
+                style={{ marginBottom: "1.5rem", flexWrap: "wrap", gap: "4px" }}
+              >
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    className={`adm-editexp-mode-btn ${formData.cost_category === cat.value ? "active" : ""}`}
+                    onClick={() => handleChange("cost_category", cat.value)}
+                    style={{ fontSize: "0.85rem", padding: "8px 4px" }}
+                  >
+                    <cat.Icon size={16} strokeWidth={2.5} />
+                    <span>{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="adm-editexp-form-group">
               <label>Вид разход *</label>
@@ -399,18 +424,7 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
                 options={EXPENSE_TYPES}
                 value={EXPENSE_TYPES.find((t) => t.value === formData.type)}
                 onChange={(opt) => handleChange("type", opt?.value)}
-                placeholder={
-                  <div className="adm-editexp-select-item">
-                    <FileText
-                      size={16}
-                      strokeWidth={2.5}
-                      className="adm-editexp-select-icon"
-                    />
-                    <span>Избери вид...</span>
-                  </div>
-                }
                 styles={selectStyles}
-                isSearchable={false}
                 formatOptionLabel={customFormatOptionLabel}
                 menuPortalTarget={document.body}
               />
@@ -443,14 +457,9 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
 
           <div className="adm-editexp-card adm-editexp-card-fit">
             <div className="adm-editexp-section-title">
-              <CalendarDays
-                size={20}
-                strokeWidth={2.5}
-                className="adm-editexp-section-icon"
-              />
+              <CalendarDays size={20} className="adm-editexp-section-icon" />{" "}
               Контекст
             </div>
-
             <div className="adm-editexp-form-group">
               <label>Сграда *</label>
               <Select
@@ -460,18 +469,7 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
                   (op) => op.value === formData.building_id,
                 )}
                 onChange={(opt) => handleChange("building_id", opt?.value)}
-                placeholder={
-                  <div className="adm-editexp-select-item">
-                    <Building
-                      size={16}
-                      strokeWidth={2.5}
-                      className="adm-editexp-select-icon"
-                    />
-                    <span>Избери сграда...</span>
-                  </div>
-                }
                 styles={selectStyles}
-                noOptionsMessage={() => "Няма намерени"}
                 formatOptionLabel={customFormatOptionLabel}
                 menuPortalTarget={document.body}
               />
@@ -481,7 +479,6 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
                 </span>
               )}
             </div>
-
             <div className="adm-editexp-dates-grid">
               <div className="adm-editexp-form-group">
                 <label>Месец *</label>
@@ -490,26 +487,9 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
                   value={monthOptions.find((m) => m.value === formData.month)}
                   onChange={(opt) => handleChange("month", opt?.value)}
                   styles={selectStyles}
-                  isSearchable={false}
-                  placeholder={
-                    <div className="adm-editexp-select-item">
-                      <CalendarDays
-                        size={16}
-                        strokeWidth={2.5}
-                        className="adm-editexp-select-icon"
-                      />
-                      <span>--</span>
-                    </div>
-                  }
-                  menuPlacement="auto"
-                  formatOptionLabel={customFormatOptionLabel}
                   menuPortalTarget={document.body}
                 />
-                {errors.month && (
-                  <span className="adm-editexp-error-msg">{errors.month}</span>
-                )}
               </div>
-
               <div className="adm-editexp-form-group">
                 <label>Година</label>
                 <Select
@@ -517,16 +497,11 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
                   value={yearOptions.find((y) => y.value === formData.year)}
                   onChange={(opt) => handleChange("year", opt?.value)}
                   styles={selectStyles}
-                  isSearchable={false}
-                  menuPlacement="auto"
-                  formatOptionLabel={customFormatOptionLabel}
                   menuPortalTarget={document.body}
                 />
               </div>
             </div>
-
             <hr className="adm-editexp-divider" />
-
             <div className="adm-editexp-form-group">
               <label>Статус на плащане</label>
               <Select
@@ -534,7 +509,6 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
                 value={PAID_OPTIONS.find((p) => p.value === formData.paid)}
                 onChange={(opt) => handleChange("paid", opt?.value)}
                 styles={selectStyles}
-                isSearchable={false}
                 formatOptionLabel={customFormatOptionLabel}
                 menuPortalTarget={document.body}
               />
@@ -549,13 +523,12 @@ function EditExpense({ expenseId, onClose, onSuccess }) {
             onClick={() => setShowConfirm(true)}
             disabled={loading}
           >
-            <Trash2 size={18} strokeWidth={2.5} /> Изтрий
+            <Trash2 size={18} /> Изтрий
           </button>
           <button
             type="button"
             className="adm-editexp-btn adm-editexp-btn-secondary"
             onClick={onClose}
-            disabled={loading}
           >
             Отказ
           </button>

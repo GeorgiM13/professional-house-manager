@@ -85,6 +85,8 @@ const EXPENSE_TYPES = {
   access_control: "Контрол достъп",
   pest_control: "Дезинсекция",
   other: "Други",
+  electricity_ventilation: "Ток вентилация",
+  rounding_correction: "Корекция от закръгляне",
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -111,7 +113,11 @@ const MONTH_OPTIONS = [
 const getExpenseIcon = (type) => {
   if (!type) return <Package size={18} strokeWidth={2.5} />;
   const t = type.toLowerCase();
-  if (t.includes("electricity") || t.includes("tok"))
+  if (
+    t.includes("electricity") ||
+    t.includes("tok") ||
+    t.includes("вентилация")
+  )
     return <Zap size={18} strokeWidth={2.5} />;
   if (t.includes("lift") || t.includes("asansyor"))
     return <ArrowUpDown size={18} strokeWidth={2.5} />;
@@ -149,6 +155,21 @@ const customFormatOptionLabel = ({ label, iconType }) => (
     <span>{label}</span>
   </div>
 );
+
+const renderCategoryBadge = (category) => {
+  if (!category || category === "common") return null;
+
+  const labels = {
+    apartments: "Апартаменти",
+    offices: "Офиси",
+    garages: "Гаражи",
+    retails: "Ритейл",
+  };
+
+  if (!labels[category]) return null;
+
+  return <span className="admin-cat-badge">{labels[category]}</span>;
+};
 
 function AdminExpenses() {
   const navigate = useNavigate();
@@ -266,7 +287,7 @@ function AdminExpenses() {
       setLoadingExpenses(true);
       try {
         let query = buildBaseQuery(
-          "id, type, month, year, current_month, paid, notes, building:building_id(name,address)",
+          "id, type, month, year, current_month, paid, notes, cost_category, building:building_id(name,address)",
           { count: "exact" },
         )
           .order("year", { ascending: false })
@@ -563,10 +584,19 @@ function AdminExpenses() {
                           {(currentPage - 1) * pageSize + idx + 1}
                         </td>
                         <td data-label="Вид">
-                          <span className="admin-expense-icon">
-                            {getExpenseIcon(exp.type)}
-                          </span>
-                          {EXPENSE_TYPES[exp.type] || exp.type}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            <span className="admin-expense-icon">
+                              {getExpenseIcon(exp.type)}
+                            </span>
+                            <span>{EXPENSE_TYPES[exp.type] || exp.type}</span>
+                            {renderCategoryBadge(exp.cost_category)}
+                          </div>
                         </td>
                         <td data-label="Адрес" className="admin-table-address">
                           {exp.building?.name}, {exp.building?.address}
@@ -616,11 +646,20 @@ function AdminExpenses() {
                     }}
                   >
                     <div className="admin-card-header">
-                      <div className="admin-card-type">
+                      <div
+                        className="admin-card-type"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <span className="admin-expense-icon">
                           {getExpenseIcon(exp.type)}
                         </span>
                         <span>{EXPENSE_TYPES[exp.type] || exp.type}</span>
+                        {renderCategoryBadge(exp.cost_category)}
                       </div>
                       <span
                         className={`admin-status-badge small ${isPaid ? "paid" : "unpaid"}`}

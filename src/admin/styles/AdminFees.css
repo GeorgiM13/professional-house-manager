@@ -125,14 +125,12 @@
   gap: 20px;
   flex-wrap: wrap;
 }
-
 .af-toolbar-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: auto;
 }
-
 .af-toolbar-title h1 {
   margin: 0;
   font-size: 1.4rem;
@@ -143,18 +141,15 @@
   font-size: 0.85rem;
   color: var(--af-text-sec);
 }
-
 .af-toolbar-controls {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }
-
 .af-control-item.building-select {
   width: 250px;
 }
-
 .af-date-group {
   display: flex;
   gap: 8px;
@@ -177,54 +172,12 @@
   transform: scale(0.95);
 }
 
-.af-switch {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  margin-left: 15px;
-}
-.af-switch input {
-  display: none;
-}
-.af-slider {
-  position: relative;
-  width: 40px;
-  height: 22px;
-  background-color: var(--af-border);
-  border-radius: 20px;
-  transition: 0.3s;
-}
-.af-slider:before {
-  content: "";
-  position: absolute;
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-input:checked + .af-slider {
-  background-color: var(--af-primary);
-}
-input:checked + .af-slider:before {
-  transform: translateX(18px);
-}
-.switch-text {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
 .af-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .af-stat-card {
   background: var(--af-bg-card);
   padding: 16px;
@@ -255,7 +208,6 @@ input:checked + .af-slider:before {
   color: var(--af-text-sec);
   margin-left: 4px;
 }
-
 .af-stat-icon {
   display: flex;
   align-items: center;
@@ -277,7 +229,6 @@ input:checked + .af-slider:before {
   background-color: rgba(168, 85, 247, 0.15);
   color: #a855f7;
 }
-
 .af-dark .icon-blue {
   background-color: rgba(96, 165, 250, 0.2);
   color: #60a5fa;
@@ -311,6 +262,45 @@ input:checked + .af-slider:before {
   transition: width 1s ease;
 }
 
+.af-view-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  background: var(--af-bg-card);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--af-border);
+}
+.af-view-toggle-group {
+  display: flex !important;
+  background: var(--af-bg-hover);
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+.af-vt-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+  color: var(--af-text-sec);
+  cursor: pointer;
+  transition: 0.2s;
+}
+.af-vt-btn.active {
+  background: var(--af-bg-card);
+  color: var(--af-text-main);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.af-view-info {
+  font-size: 0.8rem;
+  color: var(--af-text-sec);
+  font-weight: 600;
+}
+
 .af-table-wrapper {
   background: var(--af-bg-card);
   width: 100%;
@@ -331,6 +321,9 @@ input:checked + .af-slider:before {
   text-transform: uppercase;
   font-size: 0.75rem;
   border-bottom: 1px solid var(--af-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .af-table td {
   padding: 12px 14px;
@@ -340,6 +333,30 @@ input:checked + .af-slider:before {
 }
 .af-row:hover {
   background-color: var(--af-bg-hover);
+}
+
+.af-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--af-text-sec);
+}
+.af-empty-state svg {
+  margin-bottom: 10px;
+  opacity: 0.4;
+}
+.af-empty-state h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--af-text-main);
+}
+.af-empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.8;
 }
 
 .af-pagination {
@@ -388,9 +405,14 @@ input:checked + .af-slider:before {
   border-radius: 12px;
   font-weight: normal;
 }
-.group-total-right {
-  margin-left: auto;
+.group-total-text {
   color: var(--red-text);
+}
+.group-right-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .text-right {
@@ -455,32 +477,23 @@ input:checked + .af-slider:before {
   color: var(--af-text-sec);
 }
 
-.mobile-view {
-  display: none !important;
-}
-
 .invoice-btn {
   display: flex;
   align-items: center;
   gap: 5px;
   background-color: var(--af-bg-card);
 }
-
 .invoice-btn:hover {
   background-color: var(--af-primary);
   color: white;
   border-color: var(--af-primary);
 }
 
-.group-right-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.mobile-view {
+  display: none !important;
 }
-
-.group-total-text {
-  color: var(--red-text);
+.swal2-container {
+  z-index: 100000 !important;
 }
 
 @media (max-width: 768px) {
@@ -494,14 +507,12 @@ input:checked + .af-slider:before {
   .af-page {
     padding: 12px;
   }
-
   .af-toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
     padding: 16px;
   }
-
   .af-toolbar-top {
     width: 100%;
     justify-content: center;
@@ -509,13 +520,11 @@ input:checked + .af-slider:before {
     padding-bottom: 10px;
     margin-bottom: 5px;
   }
-
   .af-toolbar-controls {
     flex-direction: column;
     width: 100%;
     gap: 12px;
   }
-
   .af-control-item.building-select {
     width: 100%;
   }
@@ -525,7 +534,6 @@ input:checked + .af-slider:before {
     display: flex;
     gap: 8px;
   }
-
   .af-date-select-wrapper.month {
     flex: 3;
   }
@@ -536,49 +544,16 @@ input:checked + .af-slider:before {
   .af-main-btn {
     padding: 0 12px;
   }
-
   .af-stats-grid {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  .af-view-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    background: var(--af-bg-card);
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--af-border);
-  }
-  .af-view-toggle-group {
-    display: flex;
-    background: var(--af-bg-hover);
-    padding: 3px;
-    border-radius: 8px;
-    gap: 2px;
-  }
-  .af-vt-btn {
-    border: none;
-    background: transparent;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border-radius: 6px;
-    color: var(--af-text-sec);
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  .af-vt-btn.active {
-    background: var(--af-bg-card);
-    color: var(--af-text-main);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-  .af-view-info {
-    font-size: 0.8rem;
-    color: var(--af-text-sec);
-    font-weight: 600;
+  .af-mobile-content.mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .af-elevator-view {
@@ -603,12 +578,6 @@ input:checked + .af-slider:before {
     box-sizing: border-box;
   }
 
-  .af-mobile-content.mobile-view {
-    display: flex !important;
-    flex-direction: column;
-    width: 100%;
-    box-sizing: border-box;
-  }
   @media (max-width: 380px) {
     .af-unit-grid {
       grid-template-columns: repeat(3, 1fr);
@@ -632,7 +601,6 @@ input:checked + .af-slider:before {
   .af-unit-btn:active {
     transform: scale(0.96);
   }
-
   .af-unit-btn.clean {
     background: var(--green-bg);
     color: var(--green-text);
@@ -648,7 +616,6 @@ input:checked + .af-slider:before {
     color: var(--orange-text);
     border-color: var(--orange-text);
   }
-
   .u-num {
     font-size: 1.1rem;
     font-weight: 800;
@@ -696,7 +663,6 @@ input:checked + .af-slider:before {
   .af-m-row:active {
     background: var(--af-bg-hover);
   }
-
   .af-m-row-main {
     display: flex;
     align-items: center;
@@ -718,7 +684,6 @@ input:checked + .af-slider:before {
     opacity: 1;
     transform: scale(1.1);
   }
-
   .dot {
     width: 8px;
     height: 8px;
@@ -732,9 +697,6 @@ input:checked + .af-slider:before {
   }
   .dot.pending {
     background: #f59e0b;
-  }
-  .af-m-row-val {
-    font-weight: 600;
   }
 
   .af-pag-text {
@@ -778,7 +740,6 @@ input:checked + .af-slider:before {
       transform: translateY(0);
     }
   }
-
   .af-modal-header {
     display: flex;
     justify-content: space-between;
@@ -790,7 +751,6 @@ input:checked + .af-slider:before {
     color: var(--af-text-sec);
     cursor: pointer;
   }
-
   .debt-box {
     background: var(--af-bg-page);
     padding: 15px;
@@ -839,8 +799,4 @@ input:checked + .af-slider:before {
     background: var(--green-bg);
     border-radius: 12px;
   }
-}
-
-.swal2-container {
-  z-index: 100000 !important;
 }

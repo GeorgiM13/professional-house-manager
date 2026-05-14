@@ -72,29 +72,41 @@ const numberToWordsBg = (amount) => {
 
   if (lv === 0) return `нула евро и ${centsWords} цента.`;
 
-  let words = [];
+  let parts = [];
   let h = Math.floor(lv / 100) % 10;
   let t = Math.floor(lv / 10) % 10;
   let o = lv % 10;
   let th = Math.floor(lv / 1000) % 10;
 
-  if (th > 0)
-    words.push(
+  if (th > 0) {
+    parts.push(
       th === 1 ? "хиляда" : th === 2 ? "две хиляди" : ones[th] + " хиляди",
     );
-  if (h > 0) words.push(hundreds[h]);
+  }
+  if (h > 0) {
+    parts.push(hundreds[h]);
+  }
 
   if (t === 1) {
-    words.push(teens[o]);
+    parts.push(teens[o]);
   } else {
-    if (t > 1) words.push(tens[t]);
+    if (t > 1) {
+      parts.push(tens[t]);
+    }
     if (o > 0) {
       let oWord = o === 1 ? "едно" : o === 2 ? "две" : ones[o];
-      words.push((t > 0 || h > 0 || th > 0 ? "и " : "") + oWord);
+      parts.push(oWord);
     }
   }
 
-  let result = words.join(" ").replace("и и", "и");
+  let result = "";
+  if (parts.length === 1) {
+    result = parts[0];
+  } else if (parts.length > 1) {
+    let lastPart = parts.pop();
+    result = parts.join(" ") + " и " + lastPart;
+  }
+
   return `${result} евро и ${centsWords} цента.`;
 };
 
@@ -270,11 +282,11 @@ export const generatePdfDocument = async ({
     doc.text("ДОСТАВЧИК:", 16, 53);
     doc.setFont("Calibri", "normal");
 
-    doc.text("Име на фирмата: Профи Дом-Русе ЕООД", 16, 59);
+    doc.text('Име: "Профи Дом-Русе" ЕООД', 16, 59);
     doc.text("Адрес: гр.Русе, ул. Петър Берон № 15, вх. 1, ет. 2", 16, 64, {
       maxWidth: 84,
     });
-    doc.text("ДДС №: ", 16, 69);
+    doc.text("ДДС №: -", 16, 69);
     doc.text("ЕИК/ЕГН: 206 808 574", 16, 74);
     doc.text("IBAN: BG 46 UBBS 8002 1029 7087 50", 16, 79);
     doc.text("BIC: UBBSBGSF", 16, 84);
@@ -289,11 +301,13 @@ export const generatePdfDocument = async ({
 
     if (isCompany) {
       doc.text(`ЕИК: ${client.company_eik || "-"}`, 110, 64);
-      doc.text(
-        `ДДС №: ${client.company_eik ? "BG" + client.company_eik : "-"}`,
-        110,
-        69,
-      );
+
+      const vatText =
+        client.is_vat_registered && client.company_eik
+          ? `BG${client.company_eik}`
+          : "-";
+      doc.text(`ДДС №: ${vatText}`, 110, 69);
+
       doc.text(`МОЛ: ${client.company_mol || "-"}`, 110, 74);
       doc.text(`Адрес: ${client.company_address || "-"}`, 110, 79, {
         maxWidth: 84,

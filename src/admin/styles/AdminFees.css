@@ -493,7 +493,7 @@
   display: none !important;
 }
 .swal2-container {
-  z-index: 100000 !important;
+  z-index: 106000 !important;
 }
 
 @media (max-width: 768px) {

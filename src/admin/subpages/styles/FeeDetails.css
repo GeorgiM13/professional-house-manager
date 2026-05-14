@@ -318,7 +318,12 @@
   }
 }
 
-
+.adm-feed-mobile-actions {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 
 .adm-feed-debt-banner {
   background-color: var(--red-bg);
@@ -341,6 +346,8 @@
   font-weight: 800;
 }
 
+
+
 @media (max-width: 600px) {
   .adm-feed-modal-overlay {
     align-items: flex-end;
@@ -353,5 +360,8 @@
   .adm-feed-meta-grid {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+    .adm-feed-mobile-actions {
+    display: flex;
   }
 }

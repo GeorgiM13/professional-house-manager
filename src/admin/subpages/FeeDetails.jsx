@@ -10,12 +10,22 @@ import {
   X,
   Calculator,
   Edit,
+  CreditCard,
+  RotateCcw,
 } from "lucide-react";
 import "./styles/FeeDetails.css";
 
 const EXCHANGE_RATE = 1.95583;
 
-function FeeDetails({ isOpen, onClose, feeId, onEditFeeClick }) {
+function FeeDetails({
+  isOpen,
+  onClose,
+  feeId,
+  onEditFeeClick,
+  onPayCurrent,
+  onPayAll,
+  onRevertPayment,
+}) {
   const { isDarkMode } = useTheme();
   const [fee, setFee] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +102,7 @@ function FeeDetails({ isOpen, onClose, feeId, onEditFeeClick }) {
 
   if (!isOpen) return null;
 
-  const isPaid = fee
+  const isPaidCurrent = fee
     ? Number(fee.paid || 0) >= Number(fee.current_month_due || 0) - 0.01
     : false;
 
@@ -164,7 +174,7 @@ function FeeDetails({ isOpen, onClose, feeId, onEditFeeClick }) {
                 <div
                   className={`adm-feed-status-pill ${getStatusClass(fee.paid, fee.current_month_due)}`}
                 >
-                  {isPaid ? "ПЛАТЕНО" : "НЕПЛАТЕНО"}
+                  {isPaidCurrent ? "ПЛАТЕНО" : "НЕПЛАТЕНО"}
                 </div>
                 <button
                   className="adm-feed-close-btn"
@@ -283,16 +293,67 @@ function FeeDetails({ isOpen, onClose, feeId, onEditFeeClick }) {
               </div>
 
               <div className="adm-feed-section" style={{ marginTop: "2rem" }}>
-                <button
-                  className="adm-feed-btn adm-feed-btn-outline adm-feed-flex-align adm-feed-flex-center"
-                  onClick={() => {
-                    onClose();
-                    if (onEditFeeClick) onEditFeeClick(fee);
+                <div className="adm-feed-mobile-actions">
+                  {!isPaidCurrent && (
+                    <button
+                      className="adm-feed-btn adm-feed-btn-primary adm-feed-flex-align adm-feed-flex-center"
+                      onClick={onPayCurrent}
+                      style={{ padding: "12px", fontSize: "1rem" }}
+                    >
+                      <CreditCard size={18} /> Плати текущо
+                    </button>
+                  )}
+                  {Number(fee.total_due || 0) > Number(fee.paid || 0) && (
+                    <button
+                      className="adm-feed-btn adm-feed-btn-primary adm-feed-flex-align adm-feed-flex-center"
+                      onClick={onPayAll}
+                      style={{
+                        padding: "12px",
+                        fontSize: "1rem",
+                        backgroundColor: "var(--green-text)",
+                        borderColor: "var(--green-text)",
+                      }}
+                    >
+                      <CreditCard size={18} /> Плати всичко
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  className="adm-feed-global-actions"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
                   }}
-                  style={{ width: "100%", padding: "12px", fontSize: "1rem" }}
                 >
-                  <Edit size={18} /> Редактирай таксата
-                </button>
+                  <button
+                    className="adm-feed-btn adm-feed-btn-outline adm-feed-flex-align adm-feed-flex-center"
+                    onClick={() => {
+                      onClose();
+                      if (onEditFeeClick) onEditFeeClick(fee);
+                    }}
+                    style={{ width: "100%", padding: "12px", fontSize: "1rem" }}
+                  >
+                    <Edit size={18} /> Редактирай таксата
+                  </button>
+
+                  {Number(fee.paid || 0) > 0 && (
+                    <button
+                      className="adm-feed-btn adm-feed-btn-secondary adm-feed-flex-align adm-feed-flex-center"
+                      onClick={onRevertPayment}
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        fontSize: "1rem",
+                        color: "var(--red-text)",
+                        borderColor: "rgba(220, 38, 38, 0.3)",
+                      }}
+                    >
+                      <RotateCcw size={18} /> Маркирай като неплатено
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </>

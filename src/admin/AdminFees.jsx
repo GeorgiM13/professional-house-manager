@@ -209,7 +209,7 @@ function AdminFees() {
     let query = supabase.from("fees").select(`
         id, building_id, client_id, object_number, type, floor,
         month, year, current_month_due, total_due, paid, management_fee, previous_debt,
-        users ( id, first_name, second_name, last_name, company_name, company_eik, company_mol, company_address )
+        users ( id, first_name, second_name, last_name, company_name, company_eik, company_mol, company_address, is_vat_registered )
       `);
 
     if (buildingId !== "all") {
@@ -349,7 +349,7 @@ function AdminFees() {
 
     const historyRows = fees.filter((r) => getObjectKey(r) === key);
     const unpaidRows = historyRows.filter(
-      (r) => Number(r.total_due || 0) > Number(r.paid || 0),
+      (r) => Number(r.current_month_due || 0) > Number(r.paid || 0),
     );
 
     if (unpaidRows.length === 0) {
@@ -357,7 +357,8 @@ function AdminFees() {
     }
 
     const totalRem = unpaidRows.reduce(
-      (acc, r) => acc + (Number(r.total_due || 0) - Number(r.paid || 0)),
+      (acc, r) =>
+        acc + (Number(r.current_month_due || 0) - Number(r.paid || 0)),
       0,
     );
     const objectName = formatObjectName(fee.type, fee.object_number);
@@ -378,7 +379,7 @@ function AdminFees() {
     const updates = unpaidRows.map((r) =>
       supabase
         .from("fees")
-        .update({ paid: Number(r.total_due || 0) })
+        .update({ paid: Number(r.current_month_due || 0) })
         .eq("id", r.id),
     );
 
@@ -395,6 +396,43 @@ function AdminFees() {
     } catch (error) {
       console.error(error);
       Swal.fire("Грешка", "Проблем при отразяване на плащането.", "error");
+    }
+  };
+
+  const revertPayment = async (fee) => {
+    if (Number(fee.paid || 0) === 0) return;
+
+    const objectName = formatObjectName(fee.type, fee.object_number);
+
+    const result = await Swal.fire({
+      title: "Отмяна на плащане",
+      text: `Сигурни ли сте, че искате да нулирате плащането за ${objectName}? Записаната платена сума ще бъде премахната.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3b82f6",
+      confirmButtonText: "Да, нулирай",
+      cancelButtonText: "Отказ",
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { error } = await supabase
+      .from("fees")
+      .update({ paid: 0 })
+      .eq("id", fee.id);
+
+    if (!error) {
+      Swal.fire({
+        title: "Успешно!",
+        text: "Плащането е отменено.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      refreshDataAfterPay(fee.id);
+    } else {
+      Swal.fire("Грешка", "Проблем при отмяната на плащането.", "error");
     }
   };
 
@@ -463,14 +501,14 @@ function AdminFees() {
       unpaidRows = fees.filter(
         (f) =>
           f.client_id === group.clientId &&
-          Number(f.total_due || 0) > Number(f.paid || 0),
+          Number(f.current_month_due || 0) > Number(f.paid || 0),
       );
     } else {
       const keys = group.rows.map(getObjectKey);
       unpaidRows = fees.filter(
         (f) =>
           keys.includes(getObjectKey(f)) &&
-          Number(f.total_due || 0) > Number(f.paid || 0),
+          Number(f.current_month_due || 0) > Number(f.paid || 0),
       );
     }
 
@@ -479,7 +517,8 @@ function AdminFees() {
     }
 
     const groupTotal = unpaidRows.reduce(
-      (acc, r) => acc + (Number(r.total_due || 0) - Number(r.paid || 0)),
+      (acc, r) =>
+        acc + (Number(r.current_month_due || 0) - Number(r.paid || 0)),
       0,
     );
 
@@ -499,7 +538,7 @@ function AdminFees() {
     const updates = unpaidRows.map((r) =>
       supabase
         .from("fees")
-        .update({ paid: Number(r.total_due || 0) })
+        .update({ paid: Number(r.current_month_due || 0) })
         .eq("id", r.id),
     );
 
@@ -542,14 +581,17 @@ function AdminFees() {
       if (!historyMap[key]) historyMap[key] = [];
       historyMap[key].push(row);
     });
+
     Object.entries(historyMap).forEach(([key, historyRows]) => {
-      const totalDebt = historyRows.reduce((acc, r) => {
-        const t = Number(r.total_due || 0);
-        const p = Number(r.paid || 0);
-        return acc + Math.max(t - p, 0);
-      }, 0);
-      map[key] = totalDebt;
+      let totalBilled = 0;
+      let totalPaid = 0;
+      historyRows.forEach((r) => {
+        totalBilled += Number(r.current_month_due || 0);
+        totalPaid += Number(r.paid || 0);
+      });
+      map[key] = Math.max(totalBilled - totalPaid, 0);
     });
+
     return map;
   }, [fees]);
 
@@ -650,8 +692,9 @@ function AdminFees() {
   const getFeeStatus = (fee) => {
     const key = getObjectKey(fee);
     const totalRem = remainingByObject[key] || 0;
+
     const rowRem = Math.max(
-      Number(fee.total_due || 0) - Number(fee.paid || 0),
+      Number(fee.current_month_due || 0) - Number(fee.paid || 0),
       0,
     );
 
@@ -988,7 +1031,7 @@ function AdminFees() {
                       0,
                     );
                     const groupTotalDue = group.rows.reduce(
-                      (sum, r) => sum + Number(r.total_due || 0),
+                      (sum, r) => sum + Number(r.current_month_due || 0),
                       0,
                     );
                     const isFullyPaidForMonth =
@@ -1144,7 +1187,7 @@ function AdminFees() {
                 0,
               );
               const groupTotalDue = group.rows.reduce(
-                (sum, r) => sum + Number(r.total_due || 0),
+                (sum, r) => sum + Number(r.current_month_due || 0),
                 0,
               );
               const isFullyPaidForMonth =
@@ -1305,6 +1348,15 @@ function AdminFees() {
         onClose={() => setSelectedFeeForModal(null)}
         feeId={selectedFeeForModal?.id}
         onEditFeeClick={(feeData) => setSelectedFeeForEdit(feeData)}
+        onPayCurrent={() => {
+          if (selectedFeeForModal) payCurrent(selectedFeeForModal);
+        }}
+        onPayAll={() => {
+          if (selectedFeeForModal) payAll(selectedFeeForModal);
+        }}
+        onRevertPayment={() => {
+          if (selectedFeeForModal) revertPayment(selectedFeeForModal);
+        }}
       />
 
       <EditFee

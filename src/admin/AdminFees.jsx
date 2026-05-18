@@ -24,10 +24,12 @@ import {
   Wallet,
   Target,
   FileText,
+  Download,
 } from "lucide-react";
 
 import EditFee from "./subpages/EditFee";
 import FeeDetails from "./subpages/FeeDetails";
+import FeeExportModal from "./subpages/export/FeeExportModal";
 import "./styles/AdminFees.css";
 
 const EXCHANGE_RATE = 1.95583;
@@ -108,6 +110,8 @@ function AdminFees() {
   const [selectedFeeForModal, setSelectedFeeForModal] = useState(null);
   const [selectedFeeForEdit, setSelectedFeeForEdit] = useState(null);
 
+  const [isFeeExportModalOpen, setIsFeeExportModalOpen] = useState(false);
+
   const selectStyles = useMemo(
     () => ({
       menuPortal: (base) => ({ ...base, zIndex: 1050 }),
@@ -132,6 +136,14 @@ function AdminFees() {
         backgroundColor: isDarkMode ? "#1e293b" : "white",
         border: isDarkMode ? "1px solid #334155" : "none",
         zIndex: 1050,
+      }),
+      menuList: (base) => ({
+        ...base,
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+        "::-webkit-scrollbar": {
+          display: "none",
+        },
       }),
       option: (base, state) => ({
         ...base,
@@ -208,7 +220,7 @@ function AdminFees() {
 
     let query = supabase.from("fees").select(`
         id, building_id, client_id, object_number, type, floor,
-        month, year, current_month_due, total_due, paid, management_fee, previous_debt,
+        month, year, current_month_due, total_due, paid, management_fee, previous_debt, advance_payment,
         users ( id, first_name, second_name, last_name, company_name, company_eik, company_mol, company_address, is_vat_registered )
       `);
 
@@ -300,13 +312,17 @@ function AdminFees() {
   const payCurrent = async (fee) => {
     const currentPaid = Number(fee.paid || 0);
     const currentDue = Number(fee.current_month_due || 0);
+    const totalDue = Number(fee.total_due || 0);
 
-    const amountToPay = Math.max(currentDue - currentPaid, 0);
+    const amountNeeded = Math.max(
+      0,
+      Math.min(currentDue, totalDue) - currentPaid,
+    );
 
-    if (amountToPay <= 0) {
+    if (amountNeeded <= 0) {
       return Swal.fire(
         "Информация",
-        "Този месец вече е платен или няма задължение.",
+        "Този месец вече е платен или няма текущо задължение.",
         "info",
       );
     }
@@ -315,7 +331,7 @@ function AdminFees() {
 
     const result = await Swal.fire({
       title: "Плащане на текуща сметка",
-      text: `Потвърждавате ли плащане на сума от ${formatDualCurrency(amountToPay, selectedYear)} за ${objectName}?`,
+      text: `Потвърждавате ли плащане на сума от ${formatDualCurrency(amountNeeded, selectedYear)} за ${objectName}?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3b82f6",
@@ -326,41 +342,40 @@ function AdminFees() {
 
     if (!result.isConfirmed) return;
 
-    const newPaid = currentPaid + amountToPay;
+    const newPaid = currentPaid + amountNeeded;
     const { error } = await supabase
       .from("fees")
       .update({ paid: newPaid })
       .eq("id", fee.id);
 
     if (!error) {
+      setFees((prevFees) =>
+        prevFees.map((f) => (f.id === fee.id ? { ...f, paid: newPaid } : f)),
+      );
+
       Swal.fire({
         title: "Успешно!",
-        text: `Платени са ${formatDualCurrency(amountToPay, selectedYear)}.`,
+        text: `Платени са ${formatDualCurrency(amountNeeded, selectedYear)}.`,
         icon: "success",
         timer: 1500,
         showConfirmButton: false,
       });
-      refreshDataAfterPay(fee.id);
+
+      if (selectedFeeForModal && selectedFeeForModal.id === fee.id) {
+        setSelectedFeeForModal(null);
+      }
     }
   };
 
   const payAll = async (fee) => {
-    const key = getObjectKey(fee);
+    const totalDue = Number(fee.total_due || 0);
+    const paid = Number(fee.paid || 0);
+    const totalRem = Math.max(0, totalDue - paid);
 
-    const historyRows = fees.filter((r) => getObjectKey(r) === key);
-    const unpaidRows = historyRows.filter(
-      (r) => Number(r.current_month_due || 0) > Number(r.paid || 0),
-    );
-
-    if (unpaidRows.length === 0) {
+    if (totalRem <= 0) {
       return Swal.fire("Информация", "Няма задължения за погасяване.", "info");
     }
 
-    const totalRem = unpaidRows.reduce(
-      (acc, r) =>
-        acc + (Number(r.current_month_due || 0) - Number(r.paid || 0)),
-      0,
-    );
     const objectName = formatObjectName(fee.type, fee.object_number);
 
     const result = await Swal.fire({
@@ -376,15 +391,14 @@ function AdminFees() {
 
     if (!result.isConfirmed) return;
 
-    const updates = unpaidRows.map((r) =>
-      supabase
-        .from("fees")
-        .update({ paid: Number(r.current_month_due || 0) })
-        .eq("id", r.id),
-    );
-
     try {
-      await Promise.all(updates);
+      const newPaid = paid + totalRem;
+      await supabase.from("fees").update({ paid: newPaid }).eq("id", fee.id);
+
+      setFees((prevFees) =>
+        prevFees.map((f) => (f.id === fee.id ? { ...f, paid: newPaid } : f)),
+      );
+
       Swal.fire({
         title: "Успешно!",
         text: `Погасени са задължения на стойност ${formatDualCurrency(totalRem, selectedYear)}.`,
@@ -392,7 +406,10 @@ function AdminFees() {
         timer: 1500,
         showConfirmButton: false,
       });
-      refreshDataAfterPay(fee.id);
+
+      if (selectedFeeForModal && selectedFeeForModal.id === fee.id) {
+        setSelectedFeeForModal(null);
+      }
     } catch (error) {
       console.error(error);
       Swal.fire("Грешка", "Проблем при отразяване на плащането.", "error");
@@ -423,6 +440,10 @@ function AdminFees() {
       .eq("id", fee.id);
 
     if (!error) {
+      setFees((prevFees) =>
+        prevFees.map((f) => (f.id === fee.id ? { ...f, paid: 0 } : f)),
+      );
+
       Swal.fire({
         title: "Успешно!",
         text: "Плащането е отменено.",
@@ -430,7 +451,10 @@ function AdminFees() {
         timer: 1500,
         showConfirmButton: false,
       });
-      refreshDataAfterPay(fee.id);
+
+      if (selectedFeeForModal && selectedFeeForModal.id === fee.id) {
+        setSelectedFeeForModal(null);
+      }
     } else {
       Swal.fire("Грешка", "Проблем при отмяната на плащането.", "error");
     }
@@ -439,9 +463,13 @@ function AdminFees() {
   const payGroupCurrent = async (e, group) => {
     e.stopPropagation();
 
-    const rowsToPay = group.rows.filter(
-      (f) => Number(f.current_month_due || 0) > Number(f.paid || 0),
-    );
+    const rowsToPay = group.rows.filter((f) => {
+      const currentDue = Number(f.current_month_due || 0);
+      const totalDue = Number(f.total_due || 0);
+      const paid = Number(f.paid || 0);
+      const amountNeeded = Math.max(0, Math.min(currentDue, totalDue) - paid);
+      return amountNeeded > 0;
+    });
 
     if (rowsToPay.length === 0) {
       return Swal.fire(
@@ -451,11 +479,12 @@ function AdminFees() {
       );
     }
 
-    const totalToPay = rowsToPay.reduce(
-      (acc, f) =>
-        acc + (Number(f.current_month_due || 0) - Number(f.paid || 0)),
-      0,
-    );
+    const totalToPay = rowsToPay.reduce((acc, f) => {
+      const currentDue = Number(f.current_month_due || 0);
+      const totalDue = Number(f.total_due || 0);
+      const paid = Number(f.paid || 0);
+      return acc + Math.max(0, Math.min(currentDue, totalDue) - paid);
+    }, 0);
 
     const result = await Swal.fire({
       title: "Групово плащане (Текущи)",
@@ -471,14 +500,35 @@ function AdminFees() {
     if (!result.isConfirmed) return;
 
     const updates = rowsToPay.map((f) => {
-      const newPaid =
-        Number(f.paid || 0) +
-        (Number(f.current_month_due || 0) - Number(f.paid || 0));
-      return supabase.from("fees").update({ paid: newPaid }).eq("id", f.id);
+      const currentDue = Number(f.current_month_due || 0);
+      const totalDue = Number(f.total_due || 0);
+      const paid = Number(f.paid || 0);
+      const amountNeeded = Math.max(0, Math.min(currentDue, totalDue) - paid);
+      const targetPaid = paid + amountNeeded;
+
+      return supabase.from("fees").update({ paid: targetPaid }).eq("id", f.id);
     });
 
     try {
       await Promise.all(updates);
+
+      const updatedIds = rowsToPay.map((r) => r.id);
+      setFees((prevFees) =>
+        prevFees.map((f) => {
+          if (updatedIds.includes(f.id)) {
+            const currentDue = Number(f.current_month_due || 0);
+            const totalDue = Number(f.total_due || 0);
+            const paid = Number(f.paid || 0);
+            const amountNeeded = Math.max(
+              0,
+              Math.min(currentDue, totalDue) - paid,
+            );
+            return { ...f, paid: paid + amountNeeded };
+          }
+          return f;
+        }),
+      );
+
       Swal.fire({
         title: "Успешно!",
         text: `Успешно са платени ${formatDualCurrency(totalToPay, selectedYear)}.`,
@@ -486,7 +536,6 @@ function AdminFees() {
         timer: 1500,
         showConfirmButton: false,
       });
-      refreshDataAfterPay();
     } catch (err) {
       console.error(err);
       Swal.fire("Грешка", "Проблем при отразяване на плащането.", "error");
@@ -496,29 +545,16 @@ function AdminFees() {
   const payGroupAll = async (e, group) => {
     e.stopPropagation();
 
-    let unpaidRows = [];
-    if (group.clientId !== "no-client") {
-      unpaidRows = fees.filter(
-        (f) =>
-          f.client_id === group.clientId &&
-          Number(f.current_month_due || 0) > Number(f.paid || 0),
-      );
-    } else {
-      const keys = group.rows.map(getObjectKey);
-      unpaidRows = fees.filter(
-        (f) =>
-          keys.includes(getObjectKey(f)) &&
-          Number(f.current_month_due || 0) > Number(f.paid || 0),
-      );
-    }
+    const rowsToPay = group.rows.filter(
+      (f) => Number(f.total_due || 0) > Number(f.paid || 0),
+    );
 
-    if (unpaidRows.length === 0) {
+    if (rowsToPay.length === 0) {
       return Swal.fire("Информация", "Няма задължения за погасяване.", "info");
     }
 
-    const groupTotal = unpaidRows.reduce(
-      (acc, r) =>
-        acc + (Number(r.current_month_due || 0) - Number(r.paid || 0)),
+    const groupTotal = rowsToPay.reduce(
+      (acc, f) => acc + (Number(f.total_due || 0) - Number(f.paid || 0)),
       0,
     );
 
@@ -535,15 +571,26 @@ function AdminFees() {
 
     if (!result.isConfirmed) return;
 
-    const updates = unpaidRows.map((r) =>
-      supabase
-        .from("fees")
-        .update({ paid: Number(r.current_month_due || 0) })
-        .eq("id", r.id),
-    );
+    const updates = rowsToPay.map((f) => {
+      const newPaid =
+        Number(f.paid || 0) + (Number(f.total_due || 0) - Number(f.paid || 0));
+      return supabase.from("fees").update({ paid: newPaid }).eq("id", f.id);
+    });
 
     try {
       await Promise.all(updates);
+
+      const updatedIds = rowsToPay.map((r) => r.id);
+      setFees((prevFees) =>
+        prevFees.map((f) => {
+          if (updatedIds.includes(f.id)) {
+            const needed = Number(f.total_due || 0) - Number(f.paid || 0);
+            return { ...f, paid: Number(f.paid || 0) + needed };
+          }
+          return f;
+        }),
+      );
+
       Swal.fire({
         title: "Успешно!",
         text: `Успешно са погасени задължения на стойност ${formatDualCurrency(groupTotal, selectedYear)}.`,
@@ -551,49 +598,17 @@ function AdminFees() {
         timer: 1500,
         showConfirmButton: false,
       });
-      refreshDataAfterPay();
     } catch (error) {
       console.error(error);
       Swal.fire("Грешка", "Проблем при отразяване на плащането.", "error");
     }
   };
 
-  const refreshDataAfterPay = (feeId = null) => {
-    fetchFees(selectedBuilding.value, selectedMonth, selectedYear);
-    if (feeId && selectedFeeForModal && selectedFeeForModal.id === feeId)
-      setSelectedFeeForModal(null);
-  };
-
-  const getObjectKey = (row) =>
-    `${row.client_id}|${row.object_number}|${row.type}`;
-
   const currentFees = useMemo(
     () =>
       fees.filter((f) => f.month === selectedMonth && f.year === selectedYear),
     [fees, selectedMonth, selectedYear],
   );
-
-  const remainingByObject = useMemo(() => {
-    const map = {};
-    const historyMap = {};
-    fees.forEach((row) => {
-      const key = getObjectKey(row);
-      if (!historyMap[key]) historyMap[key] = [];
-      historyMap[key].push(row);
-    });
-
-    Object.entries(historyMap).forEach(([key, historyRows]) => {
-      let totalBilled = 0;
-      let totalPaid = 0;
-      historyRows.forEach((r) => {
-        totalBilled += Number(r.current_month_due || 0);
-        totalPaid += Number(r.paid || 0);
-      });
-      map[key] = Math.max(totalBilled - totalPaid, 0);
-    });
-
-    return map;
-  }, [fees]);
 
   const sortedFees = useMemo(() => {
     return [...currentFees].sort((a, b) => {
@@ -641,6 +656,29 @@ function AdminFees() {
     });
     return Array.from(map.values());
   }, [sortedFees]);
+
+  const clientAdvances = useMemo(() => {
+    const clientTotals = {};
+    const advances = {};
+
+    fees.forEach((f) => {
+      const cid = f.client_id;
+      if (!cid) return;
+
+      if (!clientTotals[cid]) {
+        clientTotals[cid] = { billed: 0, paid: 0 };
+      }
+      clientTotals[cid].billed += Number(f.current_month_due || 0);
+      clientTotals[cid].paid += Number(f.paid || 0);
+    });
+
+    Object.keys(clientTotals).forEach((cid) => {
+      const diff = clientTotals[cid].paid - clientTotals[cid].billed;
+      advances[cid] = diff > 0.01 ? diff : 0;
+    });
+
+    return advances;
+  }, [fees]);
 
   const feesByFloor = useMemo(() => {
     const floors = {};
@@ -690,24 +728,27 @@ function AdminFees() {
   }, [currentFees, selectedYear]);
 
   const getFeeStatus = (fee) => {
-    const key = getObjectKey(fee);
-    const totalRem = remainingByObject[key] || 0;
+    const paid = Number(fee.paid || 0);
+    const totalDue = Number(fee.total_due || 0);
 
-    const rowRem = Math.max(
-      Number(fee.current_month_due || 0) - Number(fee.paid || 0),
-      0,
-    );
+    const rowRem = Math.max(totalDue - paid, 0);
 
-    const isPaidCurrent =
-      Number(fee.paid || 0) >= Number(fee.current_month_due || 0) - 0.01 ||
-      rowRem < 0.01;
-    const isFullyPaid = totalRem < 0.01;
+    const isPaidCurrent = totalDue === 0 || paid >= totalDue - 0.01;
+
+    const isFullyPaid = rowRem < 0.01;
 
     let status = "pending";
     if (isFullyPaid) status = "clean";
-    else if (totalRem > rowRem + 0.1) status = "debt";
+    else if (rowRem > 0.01) status = "debt";
 
-    return { status, totalRem, rowRem, isPaidCurrent, isFullyPaid };
+    return {
+      status,
+      totalRem: rowRem,
+      rowRem,
+      isPaidCurrent,
+      isFullyPaid,
+      totalDue,
+    };
   };
 
   const dataToPaginate = groupByClient ? userGroups : sortedFees;
@@ -743,8 +784,13 @@ function AdminFees() {
     );
 
   const renderRow = (fee) => {
-    const { status, totalRem, isPaidCurrent, isFullyPaid } = getFeeStatus(fee);
+    const { status, rowRem, isPaidCurrent, isFullyPaid, totalDue } =
+      getFeeStatus(fee);
+
     const currentDue = Number(fee.current_month_due || 0);
+
+    const hasOldDebts = totalDue > currentDue + 0.01;
+
     let debtClass = isFullyPaid
       ? "val-green"
       : status === "debt"
@@ -776,18 +822,22 @@ function AdminFees() {
           {formatDualCurrency(currentDue, selectedYear)}
         </td>
         <td
-          data-label="Дължи"
+          data-label="Дължи (Крайна)"
           className={`text-right num-font ${debtClass} fw-bold`}
         >
-          {formatDualCurrency(totalRem, selectedYear)}
+          {formatDualCurrency(totalDue, selectedYear)}
         </td>
         <td data-label="Статус" className="text-center">
           <span className={`af-badge ${isPaidCurrent ? "paid" : "unpaid"}`}>
-            {isPaidCurrent ? "Платено" : "Неплатено"}
+            {totalDue === 0
+              ? "Погасено"
+              : isPaidCurrent
+                ? "Платено"
+                : "Неплатено"}
           </span>
         </td>
         <td data-label="Действия" className="af-actions-cell">
-          {!isPaidCurrent && (
+          {!isPaidCurrent && totalDue > 0 && (
             <button
               className="af-btn-small sec"
               onClick={(e) => {
@@ -798,7 +848,8 @@ function AdminFees() {
               Текущо
             </button>
           )}
-          {!isFullyPaid && (
+
+          {!isFullyPaid && hasOldDebts && (
             <button
               className="af-btn-small prim"
               onClick={(e) => {
@@ -809,6 +860,7 @@ function AdminFees() {
               Всичко
             </button>
           )}
+
           {isFullyPaid && (
             <CheckCircle2 size={20} strokeWidth={2.5} className="val-green" />
           )}
@@ -939,7 +991,10 @@ function AdminFees() {
               className={`af-vt-btn af-flex-align ${
                 mobileViewMode === "elevator" ? "active" : ""
               }`}
-              onClick={() => setMobileViewMode("elevator")}
+              onClick={() => {
+                setMobileViewMode("elevator");
+                setCurrentPage(1);
+              }}
               type="button"
             >
               <LayoutDashboard size={16} strokeWidth={2.5} /> Панел
@@ -948,7 +1003,10 @@ function AdminFees() {
               className={`af-vt-btn af-flex-align ${
                 mobileViewMode === "list" ? "active" : ""
               }`}
-              onClick={() => setMobileViewMode("list")}
+              onClick={() => {
+                setMobileViewMode("list");
+                setCurrentPage(1);
+              }}
               type="button"
             >
               <List size={16} strokeWidth={2.5} /> Списък
@@ -960,14 +1018,20 @@ function AdminFees() {
           <div className="af-view-toggle-group">
             <button
               className={`af-vt-btn af-flex-align ${groupByClient ? "active" : ""}`}
-              onClick={() => setGroupByClient(true)}
+              onClick={() => {
+                setGroupByClient(true);
+                setCurrentPage(1);
+              }}
               type="button"
             >
               <Users size={16} strokeWidth={2.5} /> Групи
             </button>
             <button
               className={`af-vt-btn af-flex-align ${!groupByClient ? "active" : ""}`}
-              onClick={() => setGroupByClient(false)}
+              onClick={() => {
+                setGroupByClient(false);
+                setCurrentPage(1);
+              }}
               type="button"
             >
               <List size={16} strokeWidth={2.5} /> Всички
@@ -975,17 +1039,35 @@ function AdminFees() {
           </div>
         </div>
 
-        <div className="af-view-info mobile-view">
-          {mobileViewMode === "elevator"
-            ? `${fees.length} обекта`
-            : `${userGroups.length} клиента`}
-        </div>
-        <div className="af-view-info desktop-view">
-          {groupByClient
-            ? `${userGroups.length} групирани клиента`
-            : `${paginatedData.length} записа на страница`}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            className="af-vt-btn af-flex-align"
+            style={{
+              backgroundColor: "rgba(16, 185, 129, 0.1)",
+              color: "#10b981",
+              border: "1px solid #10b981",
+            }}
+            onClick={() => setIsFeeExportModalOpen(true)}
+            title="Експорт в Excel"
+            type="button"
+          >
+            <Download size={16} strokeWidth={2.5} />
+            <span className="desktop-only">Експорт</span>
+          </button>
+
+          <div className="af-view-info mobile-view">
+            {mobileViewMode === "elevator"
+              ? `${fees.length} обекта`
+              : `${userGroups.length} клиента`}
+          </div>
+          <div className="af-view-info desktop-view">
+            {groupByClient
+              ? `${userGroups.length} групирани клиента`
+              : `${paginatedData.length} записа на страница`}
+          </div>
         </div>
       </div>
+
       <div className="af-table-wrapper desktop-view">
         {loadingFees ? (
           <div className="af-loading">Зареждане...</div>
@@ -1018,8 +1100,7 @@ function AdminFees() {
                 ) : groupByClient ? (
                   paginatedData.map((group) => {
                     const groupTotal = group.rows.reduce(
-                      (sum, r) =>
-                        sum + (remainingByObject[getObjectKey(r)] || 0),
+                      (sum, r) => sum + getFeeStatus(r).rowRem,
                       0,
                     );
                     const groupCurrentDue = group.rows.reduce(
@@ -1031,12 +1112,17 @@ function AdminFees() {
                       0,
                     );
                     const groupTotalDue = group.rows.reduce(
-                      (sum, r) => sum + Number(r.current_month_due || 0),
+                      (sum, r) => sum + Number(r.total_due || 0),
                       0,
                     );
                     const isFullyPaidForMonth =
-                      groupCurrentDue > 0 &&
-                      groupCurrentPaid >= groupCurrentDue - 0.01;
+                      groupTotalDue === 0 ||
+                      (groupTotalDue > 0 &&
+                        groupCurrentPaid >= groupTotalDue - 0.01);
+
+                    const availableAdvance =
+                      clientAdvances[group.clientId] || 0;
+
                     return (
                       <Fragment key={group.clientId}>
                         <tr
@@ -1062,6 +1148,25 @@ function AdminFees() {
                                 {group.rows.length} обекта
                               </span>
                               <div className="group-right-actions">
+                                {availableAdvance > 0 && (
+                                  <span
+                                    className="group-total-text fw-bold"
+                                    style={{
+                                      color: "#9333ea",
+                                      backgroundColor:
+                                        "rgba(147, 51, 234, 0.1)",
+                                      padding: "4px 8px",
+                                      borderRadius: "6px",
+                                    }}
+                                  >
+                                    Свободен аванс:{" "}
+                                    {formatDualCurrency(
+                                      availableAdvance,
+                                      selectedYear,
+                                    )}
+                                  </span>
+                                )}
+
                                 {groupTotal > 0 ? (
                                   <span className="group-total-text">
                                     Дължи:{" "}
@@ -1081,9 +1186,16 @@ function AdminFees() {
                                       selectedYear,
                                     )}
                                   </span>
-                                ) : null}
+                                ) : (
+                                  <span
+                                    className="group-total-text"
+                                    style={{ color: "var(--green-text)" }}
+                                  >
+                                    Погасено от аванс
+                                  </span>
+                                )}
 
-                                {groupCurrentDue > groupCurrentPaid + 0.01 &&
+                                {groupTotalDue > groupCurrentPaid + 0.01 &&
                                   group.clientId !== "no-client" && (
                                     <button
                                       className="af-btn-small sec"
@@ -1174,10 +1286,9 @@ function AdminFees() {
           <div className="af-client-list-view">
             {userGroups.map((group) => {
               const groupTotal = group.rows.reduce(
-                (sum, r) => sum + (remainingByObject[getObjectKey(r)] || 0),
+                (sum, r) => sum + getFeeStatus(r).rowRem,
                 0,
               );
-
               const groupCurrentDue = group.rows.reduce(
                 (sum, r) => sum + Number(r.current_month_due || 0),
                 0,
@@ -1187,14 +1298,16 @@ function AdminFees() {
                 0,
               );
               const groupTotalDue = group.rows.reduce(
-                (sum, r) => sum + Number(r.current_month_due || 0),
+                (sum, r) => sum + Number(r.total_due || 0),
                 0,
               );
               const isFullyPaidForMonth =
-                groupCurrentDue > 0 &&
-                groupCurrentPaid >= groupCurrentDue - 0.01;
+                groupTotalDue === 0 ||
+                (groupTotalDue > 0 && groupCurrentPaid >= groupTotalDue - 0.01);
 
+              const availableAdvance = clientAdvances[group.clientId] || 0;
               const isExpanded = expandedUsers[group.clientId];
+
               return (
                 <div key={group.clientId} className="af-mobile-card">
                   <div
@@ -1207,6 +1320,24 @@ function AdminFees() {
                     }
                   >
                     <div className="af-m-name">{group.name}</div>
+
+                    {availableAdvance > 0 && (
+                      <div style={{ marginTop: "4px", marginBottom: "8px" }}>
+                        <span
+                          className="af-m-debt fw-bold"
+                          style={{
+                            color: "#9333ea",
+                            backgroundColor: "rgba(147, 51, 234, 0.1)",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          Свободен аванс:{" "}
+                          {formatDualCurrency(availableAdvance, selectedYear)}
+                        </span>
+                      </div>
+                    )}
+
                     <div
                       className="af-m-meta"
                       style={{
@@ -1229,9 +1360,16 @@ function AdminFees() {
                           Платено:{" "}
                           {formatDualCurrency(groupTotalDue, selectedYear)}
                         </span>
-                      ) : null}
+                      ) : (
+                        <span
+                          className="af-m-debt"
+                          style={{ color: "var(--green-text)" }}
+                        >
+                          Погасено от аванс
+                        </span>
+                      )}
 
-                      {groupCurrentDue > groupCurrentPaid + 0.01 &&
+                      {groupTotalDue > groupCurrentPaid + 0.01 &&
                         group.clientId !== "no-client" && (
                           <button
                             className="af-btn-small sec"
@@ -1366,6 +1504,14 @@ function AdminFees() {
         onSuccess={() => {
           fetchFees(selectedBuilding.value, selectedMonth, selectedYear);
         }}
+      />
+
+      <FeeExportModal
+        isOpen={isFeeExportModalOpen}
+        onClose={() => setIsFeeExportModalOpen(false)}
+        selectedBuilding={selectedBuilding}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
       />
     </div>
   );

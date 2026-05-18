@@ -98,6 +98,7 @@
   padding: 4px;
   transition: color 0.2s;
 }
+
 .edit-fee-close:hover {
   color: var(--edit-fee-danger);
 }
@@ -117,20 +118,40 @@
 
 .edit-fee-body {
   padding: 24px;
-  display: flex;
-  gap: 24px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--edit-fee-border) transparent;
 }
 
-.edit-fee-form-section {
-  flex: 3;
+.edit-fee-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.edit-fee-body::-webkit-scrollbar-thumb {
+  background-color: var(--edit-fee-border);
+  border-radius: 10px;
+}
+
+.edit-fee-body.grid-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.edit-fee-left-col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+}
+
+.edit-fee-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .edit-fee-breakdown-section {
-  flex: 2;
   background-color: var(--edit-fee-bg-sec);
   border: 1px solid var(--edit-fee-border);
   border-radius: 16px;
@@ -304,6 +325,7 @@
   font-size: 0.9rem;
   color: var(--edit-fee-text-main);
 }
+
 .edit-fee-radio-card.danger.active .radio-title {
   color: var(--edit-fee-danger);
 }
@@ -368,8 +390,6 @@
   z-index: 106005 !important;
 }
 
-
-
 @keyframes editFeeSpinner {
   from {
     transform: rotate(0deg);
@@ -402,28 +422,85 @@
   font-size: 0.9rem;
   color: var(--edit-fee-text-sec);
 }
+
 .math-row span:last-child {
   font-weight: 600;
   color: var(--edit-fee-text-main);
   font-variant-numeric: tabular-nums;
 }
+
 .math-row.rounding {
   font-size: 0.8rem;
   font-style: italic;
   opacity: 0.8;
 }
+
 .math-divider {
   height: 1px;
   background-color: var(--edit-fee-border);
   margin: 6px 0;
 }
+
 .math-row.total {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--edit-fee-text-main);
 }
+
 .math-row.total span:last-child {
   color: var(--edit-fee-primary);
+}
+
+.edit-fee-payment-card {
+  background-color: var(--edit-fee-bg-sec);
+  border: 1px solid var(--edit-fee-border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.edit-fee-payment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--edit-fee-primary);
+  font-weight: 600;
+}
+
+.edit-fee-payment-desc {
+  font-size: 13px;
+  color: var(--edit-fee-text-sec);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.edit-fee-payment-row {
+  display: flex;
+  gap: 12px;
+}
+
+.edit-fee-submit-paid-btn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.edit-fee-submit-paid-btn:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.edit-fee-submit-paid-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
@@ -436,7 +513,11 @@
     max-height: 90vh;
   }
   .edit-fee-body {
-    flex-direction: column;
+    padding: 20px;
+  }
+  .edit-fee-body.grid-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
   .edit-fee-row {
     flex-direction: column;

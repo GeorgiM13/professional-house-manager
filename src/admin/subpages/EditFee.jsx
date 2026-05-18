@@ -26,7 +26,10 @@ import {
   KeyRound,
   Bug,
   History,
+  Wallet,
 } from "lucide-react";
+
+import { recalculateBalancesForward } from "../../algorithms/fees/utils/ledgerUtils";
 import "./styles/EditFee.css";
 
 function EditFee({ isOpen, onClose, fee, onSuccess }) {
@@ -37,6 +40,9 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
   const [actionType, setActionType] = useState("add");
   const [scope, setScope] = useState("single");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [paidInput, setPaidInput] = useState("");
+  const [isSubmittingPaid, setIsSubmittingPaid] = useState(false);
 
   const editableFields = [
     { value: "management_fee", label: "Домоуправител", icon: UserCog },
@@ -62,10 +68,14 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
     { value: "internet", label: "Интернет/Видео", icon: Wifi },
     { value: "access_control", label: "Контрол достъп", icon: KeyRound },
     { value: "previous_debt", label: "Стари задължения", icon: History },
+    { value: "advance_payment", label: "Приспаднат аванс", icon: Wallet },
+    { value: "cash_feed", label: "Захранване на каса", icon: Calculator },
   ];
 
   const feeComponents = fee
     ? [
+        { label: "Стари задължения", value: fee.previous_debt },
+        { label: "Захранване на каса", value: fee.cash_feed },
         { label: "Домоуправител", value: fee.management_fee },
         { label: "Хигиенист", value: fee.cleaner },
         { label: "Консумативи за почистване", value: fee.cleaning_materials },
@@ -105,17 +115,30 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
       ].filter((item) => Number(item.value || 0) > 0)
     : [];
 
+  if (fee && Number(fee.advance_payment || 0) > 0) {
+    feeComponents.push({
+      label: "Приспаднат аванс (от преден месец)",
+      value: -Math.abs(fee.advance_payment),
+      isAdvance: true,
+    });
+  }
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && fee) {
       setAmountInput("");
       setActionType("add");
       setScope("single");
       setSelectedField("repairs");
+      setPaidInput(fee.paid || 0);
     }
-  }, [isOpen]);
+  }, [isOpen, fee]);
 
   const handleOverlayClick = (e) => {
-    if (e.target.classList.contains("edit-fee-overlay") && !isSubmitting) {
+    if (
+      e.target.classList.contains("edit-fee-overlay") &&
+      !isSubmitting &&
+      !isSubmittingPaid
+    ) {
       onClose();
     }
   };
@@ -129,6 +152,53 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
 
   const formatEuro = (amount) => {
     return `${Number(amount || 0).toFixed(2)} €`;
+  };
+
+  const handlePaidSubmit = async () => {
+    const numericPaid = parseFloat(String(paidInput).replace(",", "."));
+
+    if (isNaN(numericPaid) || numericPaid < 0) {
+      return Swal.fire({
+        title: "Внимание",
+        text: "Моля, въведете валидна положителна сума за плащане.",
+        icon: "warning",
+        customClass: { container: "edit-fee-swal-container" },
+      });
+    }
+
+    setIsSubmittingPaid(true);
+
+    try {
+      const { error: currentFeeError } = await supabase
+        .from("fees")
+        .update({ paid: numericPaid })
+        .eq("id", fee.id);
+
+      if (currentFeeError) throw currentFeeError;
+
+      await recalculateBalancesForward(fee.building_id);
+
+      Swal.fire({
+        title: "Успешно!",
+        text: "Платената сума е обновена и балансите са преизчислени.",
+        icon: "success",
+        timer: 2500,
+        showConfirmButton: false,
+        customClass: { container: "edit-fee-swal-container" },
+      });
+
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error("Грешка при обновяване на плащането:", error);
+      Swal.fire({
+        title: "Грешка",
+        text: "Възникна проблем при запазването на плащането.",
+        icon: "error",
+        customClass: { container: "edit-fee-swal-container" },
+      });
+    } finally {
+      setIsSubmittingPaid(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -169,6 +239,8 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
         await updateAllFees(numericAmount);
       }
 
+      await recalculateBalancesForward(fee.building_id);
+
       Swal.fire({
         title: "Успешно!",
         text: "Данните бяха обновени успешно.",
@@ -199,12 +271,24 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
     const newVal = oldVal + diff;
 
     let newCurrentDue = Number(targetFee.current_month_due || 0);
-    let newTotalDue = Number(targetFee.total_due || 0);
 
-    if (selectedField !== "previous_debt") {
+    if (
+      selectedField !== "previous_debt" &&
+      selectedField !== "advance_payment"
+    ) {
       newCurrentDue += diff;
     }
-    newTotalDue += diff;
+
+    let calculatedTotal =
+      newCurrentDue +
+      (selectedField === "previous_debt"
+        ? newVal
+        : Number(targetFee.previous_debt || 0)) -
+      (selectedField === "advance_payment"
+        ? newVal
+        : Number(targetFee.advance_payment || 0));
+
+    let newTotalDue = calculatedTotal > 0 ? calculatedTotal : 0;
 
     const { error } = await supabase
       .from("fees")
@@ -256,9 +340,15 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
       ...base,
       backgroundColor: "var(--edit-fee-bg-main)",
       border: "1px solid var(--edit-fee-border)",
-      zIndex: 106001,
+      zIndex: 106005,
       borderRadius: "8px",
       overflow: "hidden",
+    }),
+    menuList: (base) => ({
+      ...base,
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+      "::-webkit-scrollbar": { display: "none" },
     }),
     option: (base, state) => ({
       ...base,
@@ -270,14 +360,8 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
       color: state.isSelected ? "white" : "var(--edit-fee-text-main)",
       cursor: "pointer",
     }),
-    singleValue: (base) => ({
-      ...base,
-      color: "var(--edit-fee-text-main)",
-    }),
-    input: (base) => ({
-      ...base,
-      color: "var(--edit-fee-text-main)",
-    }),
+    singleValue: (base) => ({ ...base, color: "var(--edit-fee-text-main)" }),
+    input: (base) => ({ ...base, color: "var(--edit-fee-text-main)" }),
   };
 
   if (!isOpen || !fee) return null;
@@ -294,7 +378,7 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
             <button
               className="edit-fee-close"
               onClick={onClose}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSubmittingPaid}
             >
               <X size={24} strokeWidth={2.5} />
             </button>
@@ -304,11 +388,11 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
           </h1>
         </div>
 
-        <div className="edit-fee-body">
-          <div className="edit-fee-form-section">
+        <div className="edit-fee-body grid-layout">
+          <div className="edit-fee-left-col">
             <div className="edit-fee-info-panel">
               <div className="edit-fee-info-col">
-                <span className="edit-fee-info-label">Първоначален обект:</span>
+                <span className="edit-fee-info-label">Обект:</span>
                 <span className="edit-fee-info-value">
                   <User size={16} /> {fee.type} {fee.object_number}
                 </span>
@@ -332,7 +416,7 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
                   formatOptionLabel={formatOptionLabel}
                   styles={customSelectStyles}
                   isSearchable={true}
-                  isDisabled={isSubmitting}
+                  isDisabled={isSubmitting || isSubmittingPaid}
                   placeholder="Търси или избери разход..."
                 />
               </div>
@@ -343,10 +427,9 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
                   <input
                     type="number"
                     className="edit-fee-input"
-                    placeholder=""
                     value={amountInput}
                     onChange={(e) => setAmountInput(e.target.value)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isSubmittingPaid}
                   />
                 </div>
                 <div className="edit-fee-field-group">
@@ -355,7 +438,7 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
                     className="edit-fee-input"
                     value={actionType}
                     onChange={(e) => setActionType(e.target.value)}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isSubmittingPaid}
                     style={{ height: "42px" }}
                   >
                     <option value="add">Добави към текущата</option>
@@ -371,7 +454,9 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
                 <div className="edit-fee-radio-cards">
                   <div
                     className={`edit-fee-radio-card ${scope === "single" ? "active" : ""}`}
-                    onClick={() => !isSubmitting && setScope("single")}
+                    onClick={() =>
+                      !isSubmitting && !isSubmittingPaid && setScope("single")
+                    }
                   >
                     <div className="radio-header">
                       <div className="radio-circle">
@@ -388,7 +473,9 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
 
                   <div
                     className={`edit-fee-radio-card danger ${scope === "all" ? "active" : ""}`}
-                    onClick={() => !isSubmitting && setScope("all")}
+                    onClick={() =>
+                      !isSubmitting && !isSubmittingPaid && setScope("all")
+                    }
                   >
                     <div className="radio-header">
                       <div className="radio-circle">
@@ -414,7 +501,9 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
               <button
                 className="edit-fee-submit-btn"
                 onClick={handleSubmit}
-                disabled={isSubmitting || amountInput.trim() === ""}
+                disabled={
+                  isSubmitting || isSubmittingPaid || amountInput.trim() === ""
+                }
               >
                 {isSubmitting ? (
                   <>
@@ -422,43 +511,101 @@ function EditFee({ isOpen, onClose, fee, onSuccess }) {
                   </>
                 ) : (
                   <>
-                    <Save size={20} /> Запази промените
+                    <Save size={20} /> Запази корекцията
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          <div className="edit-fee-breakdown-section">
-            <span className="edit-fee-section-label">
-              <Calculator size={16} strokeWidth={2.5} /> Текуща разбивка
-            </span>
-            <div className="edit-fee-math-box">
-              {feeComponents.length > 0 ? (
-                feeComponents.map((comp, idx) => (
-                  <div key={idx} className="math-row">
-                    <span>{comp.label}:</span>
-                    <span>{formatEuro(comp.value)}</span>
+          <div className="edit-fee-right-col">
+            <div className="edit-fee-breakdown-section">
+              <span className="edit-fee-section-label">
+                <Calculator size={16} strokeWidth={2.5} /> Текуща разбивка
+              </span>
+              <div className="edit-fee-math-box">
+                {feeComponents.length > 0 ? (
+                  feeComponents.map((comp, idx) => (
+                    <div
+                      key={idx}
+                      className="math-row"
+                      style={
+                        comp.isAdvance
+                          ? {
+                              color: "var(--edit-fee-primary)",
+                              fontWeight: "600",
+                            }
+                          : {}
+                      }
+                    >
+                      <span>{comp.label}:</span>
+                      <span>
+                        {comp.isAdvance
+                          ? `- ${formatEuro(Math.abs(comp.value))}`
+                          : formatEuro(comp.value)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="math-row">
+                    <span style={{ fontStyle: "italic", opacity: 0.7 }}>
+                      Няма начислени компоненти
+                    </span>
                   </div>
-                ))
-              ) : (
-                <div className="math-row">
-                  <span style={{ fontStyle: "italic", opacity: 0.7 }}>
-                    Няма начислени компоненти
-                  </span>
-                </div>
-              )}
+                )}
 
-              {Number(fee.rounding_remainder || 0) > 0 && (
-                <div className="math-row rounding">
-                  <span>Корекция от закръгляне:</span>
-                  <span>+ {formatEuro(fee.rounding_remainder)}</span>
+                {Number(fee.rounding_remainder || 0) > 0 && (
+                  <div className="math-row rounding">
+                    <span>Корекция от закръгляне:</span>
+                    <span>+ {formatEuro(fee.rounding_remainder)}</span>
+                  </div>
+                )}
+                <div className="math-divider"></div>
+                <div className="math-row total">
+                  <span>Общо дължимо:</span>
+                  <span>{formatEuro(fee.total_due)}</span>
                 </div>
-              )}
-              <div className="math-divider"></div>
-              <div className="math-row total">
-                <span>Общо:</span>
-                <span>{formatEuro(fee.current_month_due)}</span>
+              </div>
+            </div>
+
+            <div className="edit-fee-payment-card">
+              <div className="edit-fee-payment-header">
+                <Wallet size={18} className="edit-fee-payment-icon" />
+                <span className="edit-fee-payment-title">
+                  Регистриране на плащане
+                </span>
+              </div>
+              <p className="edit-fee-payment-desc">
+                Въведете реално платената сума от клиента. Ако е по-голяма от
+                дължимото, остатъкът ще се прехвърли автоматично като аванс за
+                следващия месец.
+              </p>
+              <div className="edit-fee-payment-row">
+                <input
+                  type="number"
+                  className="edit-fee-input"
+                  placeholder="0.00"
+                  value={paidInput}
+                  onChange={(e) => setPaidInput(e.target.value)}
+                  disabled={isSubmittingPaid || isSubmitting}
+                />
+                <button
+                  className="edit-fee-submit-paid-btn"
+                  onClick={handlePaidSubmit}
+                  disabled={
+                    isSubmittingPaid || isSubmitting || paidInput === ""
+                  }
+                >
+                  {isSubmittingPaid ? (
+                    <>
+                      <Loader2 className="edit-fee-spin" size={16} /> Запис...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} /> Плащане
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

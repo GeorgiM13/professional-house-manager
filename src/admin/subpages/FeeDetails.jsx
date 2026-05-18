@@ -12,6 +12,7 @@ import {
   Edit,
   CreditCard,
   RotateCcw,
+  CheckCircle,
 } from "lucide-react";
 import "./styles/FeeDetails.css";
 
@@ -103,11 +104,12 @@ function FeeDetails({
   if (!isOpen) return null;
 
   const isPaidCurrent = fee
-    ? Number(fee.paid || 0) >= Number(fee.current_month_due || 0) - 0.01
+    ? Number(fee.paid || 0) >= Number(fee.total_due || 0) - 0.01
     : false;
 
   const feeComponents = fee
     ? [
+        { label: "Захранване на каса", value: fee.cash_feed },
         { label: "Такса Управление", value: fee.management_fee },
         { label: "Хигиенист", value: fee.cleaner },
         { label: "Консумативи за чистене", value: fee.cleaning_materials },
@@ -172,7 +174,7 @@ function FeeDetails({
             <div className="adm-feed-card-header">
               <div className="adm-feed-header-top adm-feed-flex-align-between">
                 <div
-                  className={`adm-feed-status-pill ${getStatusClass(fee.paid, fee.current_month_due)}`}
+                  className={`adm-feed-status-pill ${getStatusClass(fee.paid, fee.total_due)}`}
                 >
                   {isPaidCurrent ? "ПЛАТЕНО" : "НЕПЛАТЕНО"}
                 </div>
@@ -252,6 +254,20 @@ function FeeDetails({
                 </div>
               )}
 
+              {Number(fee.advance_payment || 0) > 0 && (
+                <div className="adm-feed-advance-banner adm-feed-flex-align">
+                  <CheckCircle size={24} strokeWidth={2.5} />
+                  <div>
+                    <div className="adm-feed-advance-label">
+                      Прехвърлен аванс от преден период:
+                    </div>
+                    <div className="adm-feed-advance-value">
+                      {formatDualCurrency(fee.advance_payment, fee.year)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="adm-feed-section">
                 <span className="adm-feed-section-label adm-feed-flex-align">
                   <Calculator size={16} strokeWidth={2.5} /> Детайлна разбивка
@@ -282,12 +298,49 @@ function FeeDetails({
                       </span>
                     </div>
                   )}
+
                   <div className="math-divider"></div>
-                  <div className="math-row total">
-                    <span>Текуща такса за месеца:</span>
+
+                  <div className="math-row" style={{ fontWeight: "600" }}>
+                    <span>Месечно начисление:</span>
                     <span>
                       {formatDualCurrency(fee.current_month_due, fee.year)}
                     </span>
+                  </div>
+
+                  {Number(fee.advance_payment || 0) > 0 && (
+                    <div
+                      className="math-row adm-feed-math-advance"
+                      style={{ marginTop: "6px" }}
+                    >
+                      <span>- Приспаднат аванс:</span>
+                      <span>
+                        {formatDualCurrency(fee.advance_payment, fee.year)}
+                      </span>
+                    </div>
+                  )}
+
+                  {Number(fee.previous_debt || 0) > 0 && (
+                    <div
+                      className="math-row"
+                      style={{
+                        color: "var(--red-text)",
+                        fontWeight: "600",
+                        marginTop: "6px",
+                      }}
+                    >
+                      <span>+ Стари задължения:</span>
+                      <span>
+                        {formatDualCurrency(fee.previous_debt, fee.year)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="math-divider"></div>
+
+                  <div className="math-row total">
+                    <span>Общо дължимо (Крайна сума):</span>
+                    <span>{formatDualCurrency(fee.total_due, fee.year)}</span>
                   </div>
                 </div>
               </div>

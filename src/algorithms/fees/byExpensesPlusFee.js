@@ -1,10 +1,12 @@
 import { supabase } from "../../supabaseClient";
+import { recalculateBalancesForward } from "./utils/ledgerUtils";
 
 /**
  * Алгоритъм: byExpensesPlusFee
  * - Всички междинни изчисления се правят с точност до 1 цент.
  * - Крайната сума за месеца се закръгля ВИНАГИ НАГОРЕ до 10 цента.
  * - Разликата (положителна) се запазва в колона rounding_remainder за модул Каса.
+ * - АВТОМАТИЗИРАН АВАНС: Изчислява се нетен баланс от минали месеци. Надплатеното става advance_payment.
  */
 export async function byExpensesPlusFee(buildingId, month, year) {
   console.group(
@@ -64,11 +66,11 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     .eq("building_id", buildingId)
     .or(`year.lt.${year},and(year.eq.${year},month.lt.${month})`);
 
-  const debts = {};
+  const balances = {};
   (pastFees || []).forEach((f) => {
     const key = `${f.client_id}_${f.object_number}`;
-    if (!debts[key]) debts[key] = 0;
-    debts[key] += Number(f.current_month_due || 0) - Number(f.paid || 0);
+    if (!balances[key]) balances[key] = 0;
+    balances[key] += Number(f.current_month_due || 0) - Number(f.paid || 0);
   });
 
   const aptObjs = apartments.map((o) => ({
@@ -166,7 +168,11 @@ export async function byExpensesPlusFee(buildingId, month, year) {
   const feesToInsert = allObjects.map((obj) => {
     const area = Number(obj.area || 0);
     const mngFee = round2(area * managementRate);
-    const previousDebt = round2(debts[`${obj.user_id}_${obj.number}`] || 0);
+
+    const netBalance = round2(balances[`${obj.user_id}_${obj.number}`] || 0);
+
+    const previousDebt = netBalance > 0 ? netBalance : 0;
+    const advancePayment = netBalance < 0 ? Math.abs(netBalance) : 0;
 
     let row = {
       building_id: buildingId,
@@ -179,6 +185,7 @@ export async function byExpensesPlusFee(buildingId, month, year) {
       paid: 0,
       management_fee: mngFee,
       previous_debt: previousDebt,
+      advance_payment: advancePayment,
       rounding_remainder: 0,
       electricity_ventilation: 0,
       cleaner: 0,
@@ -296,7 +303,9 @@ export async function byExpensesPlusFee(buildingId, month, year) {
       row.current_month_due - exactCurrentMonthDue,
     );
 
-    row.total_due = round2(row.current_month_due + row.previous_debt);
+    const calculatedTotal =
+      row.current_month_due + row.previous_debt - row.advance_payment;
+    row.total_due = calculatedTotal > 0 ? round2(calculatedTotal) : 0;
 
     return row;
   });
@@ -332,6 +341,7 @@ export async function byExpensesPlusFee(buildingId, month, year) {
       `✅ Всички разходи за ${month}/${year} са отбелязани като "Платено".`,
     );
   }
+  await recalculateBalancesForward(buildingId);
 
   console.groupEnd();
   return feesToInsert.length;

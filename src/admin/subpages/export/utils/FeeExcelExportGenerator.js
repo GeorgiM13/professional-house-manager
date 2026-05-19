@@ -171,11 +171,13 @@ export const generateFeeExcelReport = async ({
     const getArea = (type, number) => {
       const t = (type || "").toLowerCase();
       let collection = [];
-      if (t.includes("ап")) collection = aptsRes.data || [];
-      else if (t.includes("оф")) collection = offsRes.data || [];
-      else if (t.includes("гар") || t.includes("пар"))
+      if (t === "apartments" || t.includes("ап"))
+        collection = aptsRes.data || [];
+      else if (t === "offices" || t.includes("оф"))
+        collection = offsRes.data || [];
+      else if (t === "garages" || t.includes("гар") || t.includes("пар"))
         collection = garsRes.data || [];
-      else if (t.includes("ret") || t.includes("рит"))
+      else if (t === "retails" || t.includes("ret") || t.includes("рит"))
         collection = retsRes.data || [];
 
       const found = collection.find((x) => String(x.number) === String(number));
@@ -186,7 +188,7 @@ export const generateFeeExcelReport = async ({
     workbook.creator = "Профи Дом";
 
     const sheet1 = workbook.addWorksheet("Обекти и Такси", {
-      views: [{ state: "frozen", xSplit: 5, ySplit: 1 }],
+      views: [{ state: "frozen", xSplit: 2, ySplit: 1 }],
     });
 
     const objectsMap = new Map();
@@ -194,6 +196,42 @@ export const generateFeeExcelReport = async ({
     const activeFeeExpenseKeys = new Set();
 
     dataToProcess.forEach((row) => {
+      const rounding = Number(row.rounding_remainder || 0);
+      if (rounding !== 0) {
+        const typeMatch = String(row.type || "")
+          .toLowerCase()
+          .trim();
+        let targetKey = "electricity_light";
+
+        if (
+          [
+            "garages",
+            "parkings",
+            "гараж",
+            "гаражи",
+            "паркинг",
+            "паркомясто",
+          ].includes(typeMatch)
+        ) {
+          targetKey = "electricity_garages";
+        } else if (
+          ["retails", "търговски", "ритейл", "магазин", "retail"].includes(
+            typeMatch,
+          )
+        ) {
+          targetKey = "management_fee";
+        } else if (["offices", "офис", "офиси"].includes(typeMatch)) {
+          targetKey = "electricity_elevator_offices";
+        } else if (
+          ["apartments", "апартамент", "апартаменти"].includes(typeMatch)
+        ) {
+          targetKey = "electricity_elevator_apartments";
+        }
+
+        row[targetKey] = Number(row[targetKey] || 0) + rounding;
+        row.rounding_remainder = 0;
+      }
+
       const objectKey = `${row.type}|${row.object_number}`;
       if (!objectsMap.has(objectKey)) {
         const ownerName = row.users
@@ -226,7 +264,11 @@ export const generateFeeExcelReport = async ({
 
       EXPENSE_FIELDS.forEach((field) => {
         const val = Number(row[field.key] || 0);
-        if (val !== 0) {
+        if (val !== 0 && field.key !== "rounding_remainder") {
+          if (field.key === "cash_feed" && netBal <= 0.01) {
+            return;
+          }
+
           activeFeeExpenseKeys.add(field.key);
           if (!obj.expenses[field.key]) obj.expenses[field.key] = [];
           obj.expenses[field.key].push(val);
@@ -270,8 +312,8 @@ export const generateFeeExcelReport = async ({
         netBal < 0 ? Math.abs(netBal) : 0;
     });
 
-    const activeFeeExpenses = EXPENSE_FIELDS.filter((f) =>
-      activeFeeExpenseKeys.has(f.key),
+    const activeFeeExpenses = EXPENSE_FIELDS.filter(
+      (f) => activeFeeExpenseKeys.has(f.key) && f.key !== "rounding_remainder",
     );
 
     const sheet1Columns = [
@@ -283,36 +325,24 @@ export const generateFeeExcelReport = async ({
     ];
 
     activeFeeExpenses.forEach((exp) => {
-      sheet1Columns.push({ header: exp.label, key: exp.key, width: 18 });
+      const label =
+        exp.key === "cash_feed" ? "Дължими по авансово плащане" : exp.label;
+      sheet1Columns.push({ header: label, key: exp.key, width: 22 });
     });
 
-    sheet1Columns.push({ header: "Начислени", key: "due", width: 15 });
-    sheet1Columns.push({ header: "Платени", key: "paid", width: 15 });
-    sheet1Columns.push({ header: "Ост. Дълг", key: "remaining", width: 15 });
     sheet1Columns.push({
-      header: "Наличен Аванс",
-      key: "advance_payment",
-      width: 15,
+      header: "Оставащо дължимо",
+      key: "remaining",
+      width: 20,
     });
 
     sheet1.columns = sheet1Columns;
     sheet1.autoFilter = {
       from: { row: 1, column: 1 },
-      to: { row: 1, column: sheet1.columns.length },
+      to: { row: 1, column: sheet1Columns.length },
     };
 
-    for (let i = 6; i <= 5 + activeFeeExpenses.length; i++) {
-      sheet1.getColumn(i).outlineLevel = 1;
-    }
-    sheet1.properties.outlineProperties = {
-      summaryBelow: false,
-      summaryRight: true,
-    };
-
-    const dueColIdx1 = 6 + activeFeeExpenses.length;
-    const paidColIdx1 = 7 + activeFeeExpenses.length;
-    const remColIdx1 = 8 + activeFeeExpenses.length;
-    const advPayColIdx1 = 9 + activeFeeExpenses.length;
+    const remColIdx1 = 5 + activeFeeExpenses.length + 1;
 
     sheet1.getRow(1).font = { bold: true };
     sheet1.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
@@ -323,31 +353,14 @@ export const generateFeeExcelReport = async ({
           pattern: "solid",
           fgColor: { argb: "FFFCD5B4" },
         };
-      else if (colNum === dueColIdx1)
+      else if (colNum === remColIdx1) {
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FFCBD5E1" },
+          fgColor: { argb: "FFDC2626" },
         };
-      else if (colNum === paidColIdx1)
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFBAE6FD" },
-        };
-      else if (colNum === remColIdx1)
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFECACA" },
-        };
-      else if (colNum === advPayColIdx1)
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFD1FAE5" },
-        };
-      else
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      } else if (colNum < remColIdx1)
         cell.fill = {
           type: "pattern",
           pattern: "solid",
@@ -368,9 +381,12 @@ export const generateFeeExcelReport = async ({
         area: obj.area,
       };
 
+      const finalBalance = obj.final_net_balance;
+
       activeFeeExpenses.forEach((exp) => {
         const values = obj.expenses[exp.key] || [];
         const sum = values.reduce((a, b) => a + b, 0);
+
         if (sum === 0) rowData[exp.key] = null;
         else if (values.length === 1) rowData[exp.key] = values[0];
         else
@@ -379,30 +395,9 @@ export const generateFeeExcelReport = async ({
           };
       });
 
+      rowData.remaining = finalBalance !== 0 ? finalBalance : null;
+
       const excelRow = sheet1.addRow(rowData);
-      const rowNum = excelRow.number;
-
-      const startLetter = getColLetter(6);
-      const endLetter = getColLetter(5 + activeFeeExpenses.length);
-
-      if (activeFeeExpenses.length > 0) {
-        excelRow.getCell(dueColIdx1).value = {
-          formula: `SUM(${startLetter}${rowNum}:${endLetter}${rowNum})`,
-        };
-      } else {
-        excelRow.getCell(dueColIdx1).value = 0;
-      }
-
-      excelRow.getCell(paidColIdx1).value = obj.paid;
-
-      const finalDebt =
-        obj.final_net_balance > 0 ? obj.final_net_balance : null;
-      const finalAdvance =
-        obj.final_net_balance < 0 ? Math.abs(obj.final_net_balance) : null;
-
-      excelRow.getCell(remColIdx1).value = finalDebt;
-      excelRow.getCell(advPayColIdx1).value = finalAdvance;
-
       const isEven = index % 2 === 0;
       const rowBgColor = isEven ? "FFFFFFFF" : "FFF9FAFB";
 
@@ -413,40 +408,21 @@ export const generateFeeExcelReport = async ({
             pattern: "solid",
             fgColor: { argb: "FFFFE6D0" },
           };
-        } else if (colNum === dueColIdx1 || colNum === paidColIdx1) {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor:
-              colNum === dueColIdx1
-                ? { argb: "FFF8FAFC" }
-                : { argb: "FFF0F9FF" },
-          };
-          cell.font = { bold: true };
         } else if (colNum === remColIdx1) {
-          if (finalDebt && finalDebt > 0.01) {
+          if (finalBalance > 0.01) {
             cell.fill = {
               type: "pattern",
               pattern: "solid",
               fgColor: { argb: "FFFEF2F2" },
             };
             cell.font = { color: { argb: "FFDC2626" }, bold: true };
-          } else {
+          } else if (finalBalance < -0.01) {
             cell.fill = {
               type: "pattern",
               pattern: "solid",
               fgColor: { argb: "FFF0FDF4" },
             };
             cell.font = { color: { argb: "FF16A34A" }, bold: true };
-          }
-        } else if (colNum === advPayColIdx1) {
-          if (finalAdvance && finalAdvance > 0.01) {
-            cell.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FFF0FDF4" },
-            };
-            cell.font = { color: { argb: "FF059669" }, bold: true };
           } else {
             cell.fill = {
               type: "pattern",
@@ -454,7 +430,7 @@ export const generateFeeExcelReport = async ({
               fgColor: { argb: rowBgColor },
             };
           }
-        } else {
+        } else if (colNum < remColIdx1) {
           cell.fill = {
             type: "pattern",
             pattern: "solid",
@@ -470,7 +446,7 @@ export const generateFeeExcelReport = async ({
     totalRowSheet1.getCell(1).font = { bold: true };
 
     totalRowSheet1.getCell(5).value =
-      t1Row > 2 ? { formula: `SUM(E2:E${t1Row - 1})` } : 0;
+      t1Row > 2 ? { formula: `SUBTOTAL(9, E2:E${t1Row - 1})` } : 0;
     totalRowSheet1.getCell(5).font = { bold: true };
     totalRowSheet1.getCell(5).fill = {
       type: "pattern",
@@ -478,11 +454,11 @@ export const generateFeeExcelReport = async ({
       fgColor: { argb: "FFFFD700" },
     };
 
-    for (let i = 6; i <= advPayColIdx1; i++) {
+    for (let i = 6; i <= remColIdx1; i++) {
       const colLetter = getColLetter(i);
       totalRowSheet1.getCell(i).value =
         t1Row > 2
-          ? { formula: `SUM(${colLetter}2:${colLetter}${t1Row - 1})` }
+          ? { formula: `SUBTOTAL(9, ${colLetter}2:${colLetter}${t1Row - 1})` }
           : 0;
       totalRowSheet1.getCell(i).font = { bold: true };
       totalRowSheet1.getCell(i).fill = {
@@ -491,6 +467,82 @@ export const generateFeeExcelReport = async ({
         fgColor: { argb: "FFFFD700" },
       };
     }
+
+    const expStartCol = remColIdx1 + 3;
+
+    sheet1.getCell(1, expStartCol).value = "Сума на разпределените такси:";
+    sheet1.getCell(1, expStartCol).font = { bold: true, underline: true };
+    sheet1.getCell(1, expStartCol).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE5E7EB" },
+    };
+
+    periods.forEach((p, pIdx) => {
+      const cell = sheet1.getCell(1, expStartCol + 1 + pIdx);
+      cell.value = p.label;
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE5E7EB" },
+      };
+    });
+
+    let expRowIndex = 2;
+    const summaryStartRowIndex = 2;
+
+    activeFeeExpenses.forEach((exp) => {
+      let hasValueForAnyMonth = false;
+      const tempVals = [];
+
+      periods.forEach((p) => {
+        const sumForMonth = dataToProcess
+          .filter((r) => r.month === p.month && r.year === p.year)
+          .reduce((acc, r) => acc + Number(r[exp.key] || 0), 0);
+        tempVals.push(sumForMonth);
+        if (sumForMonth !== 0) hasValueForAnyMonth = true;
+      });
+
+      if (hasValueForAnyMonth) {
+        sheet1.getCell(expRowIndex, expStartCol).value = exp.label;
+        tempVals.forEach((v, i) => {
+          const cell = sheet1.getCell(expRowIndex, expStartCol + 1 + i);
+          cell.value = v === 0 ? null : v;
+        });
+        expRowIndex++;
+      }
+    });
+
+    sheet1.getCell(expRowIndex, expStartCol).value = "Общо:";
+    sheet1.getCell(expRowIndex, expStartCol).font = { bold: true };
+    sheet1.getCell(expRowIndex, expStartCol).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFFD700" },
+    };
+
+    periods.forEach((p, i) => {
+      const colL = getColLetter(expStartCol + 1 + i);
+      const cell = sheet1.getCell(expRowIndex, expStartCol + 1 + i);
+      cell.value =
+        expRowIndex > summaryStartRowIndex
+          ? {
+              formula: `SUM(${colL}${summaryStartRowIndex}:${colL}${expRowIndex - 1})`,
+            }
+          : 0;
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFD700" },
+      };
+    });
+
+    sheet1.getColumn(expStartCol).width = 30;
+    periods.forEach((p, i) => {
+      sheet1.getColumn(expStartCol + 1 + i).width = 15;
+    });
 
     const sheet2 = workbook.addWorksheet("Такси по Клиенти", {
       views: [{ state: "frozen", xSplit: 3, ySplit: 1 }],
@@ -730,18 +782,18 @@ export const generateFeeExcelReport = async ({
       };
     });
 
-    const expStartCol = lastClientTableColIdx + 3;
+    const expStartColSheet2 = lastClientTableColIdx + 3;
 
-    sheet2.getCell(1, expStartCol).value = "Реални фактури по месеци:";
-    sheet2.getCell(1, expStartCol).font = { bold: true, underline: true };
-    sheet2.getCell(1, expStartCol).fill = {
+    sheet2.getCell(1, expStartColSheet2).value = "Реални фактури по месеци:";
+    sheet2.getCell(1, expStartColSheet2).font = { bold: true, underline: true };
+    sheet2.getCell(1, expStartColSheet2).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FFE5E7EB" },
     };
 
     periods.forEach((p, pIdx) => {
-      const cell = sheet2.getCell(1, expStartCol + 1 + pIdx);
+      const cell = sheet2.getCell(1, expStartColSheet2 + 1 + pIdx);
       cell.value = p.label;
       cell.font = { bold: true };
       cell.fill = {
@@ -751,7 +803,7 @@ export const generateFeeExcelReport = async ({
       };
     });
 
-    let currentExpRow = 2;
+    let currentExpRowSheet2 = 2;
 
     const managementDuesByPeriod = {};
     let hasManagementFee = false;
@@ -764,13 +816,14 @@ export const generateFeeExcelReport = async ({
     });
 
     if (hasManagementFee) {
-      sheet2.getCell(currentExpRow, expStartCol).value = "Домоуправител";
+      sheet2.getCell(currentExpRowSheet2, expStartColSheet2).value =
+        "Домоуправител";
       periods.forEach((p, i) => {
         const val = managementDuesByPeriod[p.label] || 0;
-        sheet2.getCell(currentExpRow, expStartCol + 1 + i).value =
+        sheet2.getCell(currentExpRowSheet2, expStartColSheet2 + 1 + i).value =
           val === 0 ? null : val;
       });
-      currentExpRow++;
+      currentExpRowSheet2++;
     }
 
     const categoryLabels = {
@@ -780,7 +833,6 @@ export const generateFeeExcelReport = async ({
       common: "Общи",
       management: "Управление",
     };
-
     const activeGlobalExpenseKeys = new Set();
     const expenseDataByPeriod = {};
 
@@ -802,118 +854,48 @@ export const generateFeeExcelReport = async ({
       }
 
       const periodKey = `${exp.month.toString().padStart(2, "0")}/${exp.year}`;
-      if (!expenseDataByPeriod[periodKey]) {
-        expenseDataByPeriod[periodKey] = {};
-      }
-      if (!expenseDataByPeriod[periodKey][fullKey]) {
+      if (!expenseDataByPeriod[periodKey]) expenseDataByPeriod[periodKey] = {};
+      if (!expenseDataByPeriod[periodKey][fullKey])
         expenseDataByPeriod[periodKey][fullKey] = 0;
-      }
       expenseDataByPeriod[periodKey][fullKey] += val;
     });
 
     const sortedActiveExpenses = Array.from(activeGlobalExpenseKeys)
-      .map((key) => ({
-        key,
-        label: activeGlobalExpenseKeys[key],
-      }))
+      .map((key) => ({ key, label: activeGlobalExpenseKeys[key] }))
       .sort((a, b) => a.label.localeCompare(b.label, "bg"));
 
     sortedActiveExpenses.forEach((exp) => {
-      sheet2.getCell(currentExpRow, expStartCol).value = exp.label;
+      sheet2.getCell(currentExpRowSheet2, expStartColSheet2).value = exp.label;
       periods.forEach((p, i) => {
         const val = expenseDataByPeriod[p.label]
           ? expenseDataByPeriod[p.label][exp.key] || 0
           : 0;
-        sheet2.getCell(currentExpRow, expStartCol + 1 + i).value =
+        sheet2.getCell(currentExpRowSheet2, expStartColSheet2 + 1 + i).value =
           val === 0 ? null : val;
       });
-      currentExpRow++;
+      currentExpRowSheet2++;
     });
 
-    sheet2.getCell(currentExpRow, expStartCol).value = "Общо реални разходи:";
-    sheet2.getCell(currentExpRow, expStartCol).font = { bold: true };
-    sheet2.getCell(currentExpRow, expStartCol).fill = {
+    sheet2.getCell(currentExpRowSheet2, expStartColSheet2).value =
+      "Общо реални разходи:";
+    sheet2.getCell(currentExpRowSheet2, expStartColSheet2).font = {
+      bold: true,
+    };
+    sheet2.getCell(currentExpRowSheet2, expStartColSheet2).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FFFFD700" },
     };
 
     periods.forEach((p, i) => {
-      const colL = getColLetter(expStartCol + 1 + i);
-      const cell = sheet2.getCell(currentExpRow, expStartCol + 1 + i);
+      const colL = getColLetter(expStartColSheet2 + 1 + i);
+      const cell = sheet2.getCell(
+        currentExpRowSheet2,
+        expStartColSheet2 + 1 + i,
+      );
       cell.value =
-        currentExpRow > 2
-          ? { formula: `SUM(${colL}2:${colL}${currentExpRow - 1})` }
-          : 0;
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFD700" },
-      };
-    });
-
-    const sheet3 = workbook.addWorksheet("Разпределени Разходи", {
-      views: [{ state: "frozen", xSplit: 1, ySplit: 1 }],
-    });
-
-    sheet3.getCell(1, 1).value = "Сума на разпределените такси:";
-    sheet3.getCell(1, 1).font = { bold: true, underline: true };
-    sheet3.getCell(1, 1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFE5E7EB" },
-    };
-
-    periods.forEach((p, pIdx) => {
-      const cell = sheet3.getCell(1, 1 + 1 + pIdx);
-      cell.value = p.label;
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFE5E7EB" },
-      };
-    });
-
-    let currentS3Row = 2;
-
-    activeFeeExpenses.forEach((exp) => {
-      let hasValueForAnyMonth = false;
-      const tempVals = [];
-
-      periods.forEach((p) => {
-        const sumForMonth = dataToProcess
-          .filter((r) => r.month === p.month && r.year === p.year)
-          .reduce((acc, r) => acc + Number(r[exp.key] || 0), 0);
-
-        tempVals.push(sumForMonth);
-        if (sumForMonth !== 0) hasValueForAnyMonth = true;
-      });
-
-      if (hasValueForAnyMonth) {
-        sheet3.getCell(currentS3Row, 1).value = exp.label;
-        tempVals.forEach((v, i) => {
-          sheet3.getCell(currentS3Row, 1 + 1 + i).value = v === 0 ? null : v;
-        });
-        currentS3Row++;
-      }
-    });
-
-    sheet3.getCell(currentS3Row, 1).value = "Общо:";
-    sheet3.getCell(currentS3Row, 1).font = { bold: true };
-    sheet3.getCell(currentS3Row, 1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFFFD700" },
-    };
-
-    periods.forEach((p, i) => {
-      const colL = getColLetter(1 + 1 + i);
-      const cell = sheet3.getCell(currentS3Row, 1 + 1 + i);
-      cell.value =
-        currentS3Row > 2
-          ? { formula: `SUM(${colL}2:${colL}${currentS3Row - 1})` }
+        currentExpRowSheet2 > 2
+          ? { formula: `SUM(${colL}2:${colL}${currentExpRowSheet2 - 1})` }
           : 0;
       cell.font = { bold: true };
       cell.fill = {
@@ -926,31 +908,55 @@ export const generateFeeExcelReport = async ({
     sheet2.getColumn(1).width = 30;
     sheet2.getColumn(2).width = 12;
     sheet2.getColumn(3).width = 12;
-    for (let i = 4; i <= lastClientTableColIdx; i++) {
+    for (let i = 4; i <= lastClientTableColIdx; i++)
       sheet2.getColumn(i).width = 16;
-    }
-    sheet2.getColumn(expStartCol).width = 32;
-    for (let i = expStartCol + 1; i <= expStartCol + periods.length; i++) {
+    sheet2.getColumn(expStartColSheet2).width = 32;
+    for (
+      let i = expStartColSheet2 + 1;
+      i <= expStartColSheet2 + periods.length;
+      i++
+    )
       sheet2.getColumn(i).width = 15;
-    }
 
-    sheet3.getColumn(1).width = 30;
-    for (let i = 2; i <= 1 + periods.length; i++) {
-      sheet3.getColumn(i).width = 15;
-    }
-
-    [sheet1, sheet2, sheet3].forEach((sheet, sheetIndex) => {
+    [sheet1, sheet2].forEach((sheet, sheetIndex) => {
       sheet.eachRow((row, rowNumber) => {
         row.eachCell((cell, colNumber) => {
           if (sheetIndex === 0) {
-            if (colNumber < 5) return;
-            if (colNumber === 5 && rowNumber > 1) {
-              cell.numFmt = "#,##0.00";
-              cell.alignment = { horizontal: "center" };
-            } else if (colNumber > 5 && rowNumber > 1) {
-              if (cell.value !== null && cell.value !== undefined) {
-                cell.numFmt = "#,##0.00 €";
-                cell.alignment = { horizontal: "right" };
+            if (rowNumber <= t1Row) {
+              if (colNumber === 5 && rowNumber > 1) {
+                cell.numFmt = "#,##0.00";
+                cell.alignment = { horizontal: "center" };
+              } else if (
+                colNumber > 5 &&
+                colNumber <= remColIdx1 &&
+                rowNumber > 1 &&
+                cell.value !== null &&
+                cell.value !== undefined
+              ) {
+                if (
+                  typeof cell.value === "number" ||
+                  typeof cell.value === "object"
+                ) {
+                  cell.numFmt = '#,##0.00" €"';
+                }
+              }
+            }
+            if (colNumber >= expStartCol) {
+              if (colNumber === expStartCol && rowNumber > 1) {
+                cell.alignment = { horizontal: "left" };
+              } else if (
+                colNumber > expStartCol &&
+                rowNumber > 1 &&
+                cell.value !== null &&
+                cell.value !== undefined
+              ) {
+                if (
+                  typeof cell.value === "number" ||
+                  typeof cell.value === "object"
+                ) {
+                  cell.numFmt = '#,##0.00" €"';
+                  cell.alignment = { horizontal: "right" };
+                }
               }
             }
           }
@@ -966,22 +972,13 @@ export const generateFeeExcelReport = async ({
               rowNumber > 1
             ) {
               if (cell.value !== null && cell.value !== undefined) {
-                cell.numFmt = "#,##0.00 €";
+                cell.numFmt = '#,##0.00" €"';
                 cell.alignment = { horizontal: "right" };
               }
             }
-            if (colNumber >= expStartCol + 1 && rowNumber > 1) {
+            if (colNumber >= expStartColSheet2 + 1 && rowNumber > 1) {
               if (cell.value !== null && cell.value !== undefined) {
-                cell.numFmt = "#,##0.00 €";
-                cell.alignment = { horizontal: "right" };
-              }
-            }
-          }
-
-          if (sheetIndex === 2) {
-            if (colNumber >= 2 && rowNumber > 1) {
-              if (cell.value !== null && cell.value !== undefined) {
-                cell.numFmt = "#,##0.00 €";
+                cell.numFmt = '#,##0.00" €"';
                 cell.alignment = { horizontal: "right" };
               }
             }

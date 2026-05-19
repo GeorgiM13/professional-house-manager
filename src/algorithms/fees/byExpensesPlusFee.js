@@ -2,15 +2,15 @@ import { supabase } from "../../supabaseClient";
 import { recalculateBalancesForward } from "./utils/ledgerUtils";
 
 /**
- * Алгоритъм: byExpensesPlusFee
- * - Всички междинни изчисления се правят с точност до 1 цент.
+ * Алгоритъм: byExpensesPlusFee (Разпределение по КВАДРАТУРА с винаги закръгляне НАГОРЕ)
+ * - Всички междинни изчисления (перата) се закръглят ВИНАГИ НАГОРЕ до 1 цент.
  * - Крайната сума за месеца се закръгля ВИНАГИ НАГОРЕ до 10 цента.
  * - Разликата (положителна) се запазва в колона rounding_remainder за модул Каса.
  * - АВТОМАТИЗИРАН АВАНС: Изчислява се нетен баланс от минали месеци. Надплатеното става advance_payment.
  */
 export async function byExpensesPlusFee(buildingId, month, year) {
   console.group(
-    `🚀 СТАРТ НА АЛГОРИТЪМА: Сграда ${buildingId} | ${month}/${year}`,
+    `🚀 СТАРТ НА АЛГОРИТЪМА (По площ, Закръгляне НАГОРЕ): Сграда ${buildingId} | ${month}/${year}`,
   );
 
   const { data: expenses, error: expError } = await supabase
@@ -62,13 +62,13 @@ export async function byExpensesPlusFee(buildingId, month, year) {
 
   const { data: pastFees } = await supabase
     .from("fees")
-    .select("client_id, object_number, current_month_due, paid")
+    .select("client_id, object_number, current_month_due, paid, type")
     .eq("building_id", buildingId)
     .or(`year.lt.${year},and(year.eq.${year},month.lt.${month})`);
 
   const balances = {};
   (pastFees || []).forEach((f) => {
-    const key = `${f.client_id}_${f.object_number}`;
+    const key = `${f.client_id}_${f.type}_${f.object_number}`;
     if (!balances[key]) balances[key] = 0;
     balances[key] += Number(f.current_month_due || 0) - Number(f.paid || 0);
   });
@@ -95,15 +95,20 @@ export async function byExpensesPlusFee(buildingId, month, year) {
   }));
 
   const allObjects = [...aptObjs, ...offObjs, ...garObjs, ...retObjs];
-  const counts = {
-    apartments: aptObjs.length,
-    offices: offObjs.length,
-    garages: garObjs.length,
-    nonRetail: aptObjs.length + offObjs.length + garObjs.length,
-    all: allObjects.length,
-  };
 
-  if (counts.all === 0) {
+  const totalAreas = {
+    apartments: aptObjs.reduce((sum, obj) => sum + Number(obj.area || 0), 0),
+    offices: offObjs.reduce((sum, obj) => sum + Number(obj.area || 0), 0),
+    garages: garObjs.reduce((sum, obj) => sum + Number(obj.area || 0), 0),
+    retails: retObjs.reduce((sum, obj) => sum + Number(obj.area || 0), 0),
+    nonRetail: 0,
+    all: 0,
+  };
+  totalAreas.nonRetail =
+    totalAreas.apartments + totalAreas.offices + totalAreas.garages;
+  totalAreas.all = totalAreas.nonRetail + totalAreas.retails;
+
+  if (allObjects.length === 0) {
     console.groupEnd();
     throw new Error("❌ Сградата няма дефинирани обекти.");
   }
@@ -157,19 +162,25 @@ export async function byExpensesPlusFee(buildingId, month, year) {
 
   const round2 = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
 
+  const ceilTo1Cent = (num) => Math.ceil(Math.round(num * 1000) / 10) / 100;
+
   const roundUpTo10Cents = (num) => {
     const safeNum = Math.round(num * 100);
     return Math.ceil(safeNum / 10) / 10;
   };
 
-  const distributeEvenly = (totalAmount, count) =>
-    count <= 0 ? 0 : round2(totalAmount / count);
+  const distributeByArea = (totalAmount, objectArea, totalCategoryArea) => {
+    if (totalCategoryArea <= 0) return 0;
+    return ceilTo1Cent((totalAmount * objectArea) / totalCategoryArea);
+  };
 
   const feesToInsert = allObjects.map((obj) => {
     const area = Number(obj.area || 0);
-    const mngFee = round2(area * managementRate);
+    const mngFee = ceilTo1Cent(area * managementRate);
 
-    const netBalance = round2(balances[`${obj.user_id}_${obj.number}`] || 0);
+    const netBalance = round2(
+      balances[`${obj.user_id}_${obj.type}_${obj.number}`] || 0,
+    );
 
     const previousDebt = netBalance > 0 ? netBalance : 0;
     const advancePayment = netBalance < 0 ? Math.abs(netBalance) : 0;
@@ -210,66 +221,95 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     let distributedForObj = 0;
 
     if (obj.type !== "ритейл") {
-      row.electricity_ventilation = distributeEvenly(
+      row.electricity_ventilation = distributeByArea(
         dist.electricity_ventilation,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.cleaner = distributeEvenly(dist.cleaner, counts.nonRetail);
-      row.electricity_light = distributeEvenly(
+      row.cleaner = distributeByArea(dist.cleaner, area, totalAreas.nonRetail);
+      row.electricity_light = distributeByArea(
         dist.electricity_light,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.electricity_lift = distributeEvenly(
+      row.electricity_lift = distributeByArea(
         dist.electricity_lift,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.fee_lift = distributeEvenly(dist.fee_lift, counts.nonRetail);
-      row.repairs = distributeEvenly(
+      row.fee_lift = distributeByArea(
+        dist.fee_lift,
+        area,
+        totalAreas.nonRetail,
+      );
+      row.repairs = distributeByArea(
         dist.repairs + dist.other,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.water_common = distributeEvenly(
+      row.water_common = distributeByArea(
         dist.water_building,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.cleaning_materials = distributeEvenly(
+      row.cleaning_materials = distributeByArea(
         dist.cleaning_supplies,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.elevator_inspection = distributeEvenly(
+      row.elevator_inspection = distributeByArea(
         dist.fee_annual_review,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.internet = distributeEvenly(dist.internet_video, counts.nonRetail);
-      row.access_control = distributeEvenly(
+      row.internet = distributeByArea(
+        dist.internet_video,
+        area,
+        totalAreas.nonRetail,
+      );
+      row.access_control = distributeByArea(
         dist.access_control,
-        counts.nonRetail,
+        area,
+        totalAreas.nonRetail,
       );
-      row.disinsection = distributeEvenly(dist.pest_control, counts.nonRetail);
-      row.lighting_supplies = distributeEvenly(dist.lighting, counts.nonRetail);
+      row.disinsection = distributeByArea(
+        dist.pest_control,
+        area,
+        totalAreas.nonRetail,
+      );
+      row.lighting_supplies = distributeByArea(
+        dist.lighting,
+        area,
+        totalAreas.nonRetail,
+      );
 
       if (obj.category === "apartments") {
-        row.electricity_staircase_apartments = distributeEvenly(
+        row.electricity_staircase_apartments = distributeByArea(
           dist.apt_stair,
-          counts.apartments,
+          area,
+          totalAreas.apartments,
         );
-        row.electricity_elevator_apartments = distributeEvenly(
+        row.electricity_elevator_apartments = distributeByArea(
           dist.apt_elev,
-          counts.apartments,
+          area,
+          totalAreas.apartments,
         );
       } else if (obj.category === "offices") {
-        row.electricity_staircase_offices = distributeEvenly(
+        row.electricity_staircase_offices = distributeByArea(
           dist.off_stair,
-          counts.offices,
+          area,
+          totalAreas.offices,
         );
-        row.electricity_elevator_offices = distributeEvenly(
+        row.electricity_elevator_offices = distributeByArea(
           dist.off_elev,
-          counts.offices,
+          area,
+          totalAreas.offices,
         );
       } else if (obj.category === "garages") {
-        row.electricity_garages = distributeEvenly(
+        row.electricity_garages = distributeByArea(
           dist.gar_elect,
-          counts.garages,
+          area,
+          totalAreas.garages,
         );
       }
 

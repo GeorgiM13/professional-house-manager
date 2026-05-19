@@ -22,23 +22,21 @@ export async function recalculateBalancesForward(buildingId) {
   const balances = {};
   const updatePromises = [];
 
+  const round2 = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+
   for (const fee of allFees) {
     const safeClientId = fee.client_id || "noclient";
     const key = `${safeClientId}_${fee.type}_${fee.object_number}`;
 
     const currentNetBalance = balances[key] || 0;
 
-    const expectedDebt =
-      currentNetBalance > 0 ? Number(currentNetBalance.toFixed(2)) : 0;
+    const expectedDebt = currentNetBalance > 0 ? round2(currentNetBalance) : 0;
     const expectedAdvance =
-      currentNetBalance < 0
-        ? Number(Math.abs(currentNetBalance).toFixed(2))
-        : 0;
+      currentNetBalance < 0 ? round2(Math.abs(currentNetBalance)) : 0;
 
     const calculatedTotal =
       Number(fee.current_month_due || 0) + expectedDebt - expectedAdvance;
-    const expectedTotalDue =
-      calculatedTotal > 0 ? Number(calculatedTotal.toFixed(2)) : 0;
+    const expectedTotalDue = calculatedTotal > 0 ? round2(calculatedTotal) : 0;
 
     if (
       Number(fee.previous_debt || 0) !== expectedDebt ||
@@ -57,10 +55,11 @@ export async function recalculateBalancesForward(buildingId) {
       updatePromises.push(promise);
     }
 
-    balances[key] =
+    balances[key] = round2(
       currentNetBalance +
-      Number(fee.current_month_due || 0) -
-      Number(fee.paid || 0);
+        Number(fee.current_month_due || 0) -
+        Number(fee.paid || 0),
+    );
   }
 
   if (updatePromises.length > 0) {

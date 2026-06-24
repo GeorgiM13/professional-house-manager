@@ -118,9 +118,19 @@ export async function byExpensesPlusFee(buildingId, month, year) {
   const dist = {
     apt_stair: 0,
     apt_elev: 0,
+    apt_cleaner: 0,
+    apt_repairs: 0,
+    apt_other: 0,
+
     off_stair: 0,
     off_elev: 0,
+    off_cleaner: 0,
+    off_repairs: 0,
+    off_other: 0,
+
     gar_elect: 0,
+    gar_other: 0,
+
     electricity_ventilation: 0,
     cleaner: 0,
     electricity_light: 0,
@@ -140,20 +150,26 @@ export async function byExpensesPlusFee(buildingId, month, year) {
   expenses.forEach((exp) => {
     const val = Number(exp.current_month || 0);
     const type = exp.type;
-    const cat = exp.cost_category;
+    const cat = exp.cost_category || "common";
 
     if (cat === "apartments") {
       if (type === "electricity_light") dist.apt_stair += val;
       else if (type === "electricity_lift" || type === "fee_lift")
         dist.apt_elev += val;
-      else dist.other += val;
+      else if (type === "cleaner") dist.apt_cleaner += val;
+      else if (type === "repairs") dist.apt_repairs += val;
+      else dist.apt_other += val;
     } else if (cat === "offices") {
       if (type === "electricity_light") dist.off_stair += val;
       else if (type === "electricity_lift" || type === "fee_lift")
         dist.off_elev += val;
-      else dist.other += val;
+      else if (type === "cleaner") dist.off_cleaner += val;
+      else if (type === "repairs") dist.off_repairs += val;
+      else dist.off_other += val;
     } else if (cat === "garages") {
-      dist.gar_elect += val;
+      if (type === "electricity_light" || type === "electricity_garages")
+        dist.gar_elect += val;
+      else dist.gar_other += val;
     } else {
       if (dist[type] !== undefined) dist[type] += val;
       else dist.other += val;
@@ -294,6 +310,16 @@ export async function byExpensesPlusFee(buildingId, month, year) {
           area,
           totalAreas.apartments,
         );
+        row.cleaner += distributeByArea(
+          dist.apt_cleaner,
+          area,
+          totalAreas.apartments,
+        );
+        row.repairs += distributeByArea(
+          dist.apt_repairs + dist.apt_other,
+          area,
+          totalAreas.apartments,
+        );
       } else if (obj.category === "offices") {
         row.electricity_staircase_offices = distributeByArea(
           dist.off_stair,
@@ -305,9 +331,24 @@ export async function byExpensesPlusFee(buildingId, month, year) {
           area,
           totalAreas.offices,
         );
+        row.cleaner += distributeByArea(
+          dist.off_cleaner,
+          area,
+          totalAreas.offices,
+        );
+        row.repairs += distributeByArea(
+          dist.off_repairs + dist.off_other,
+          area,
+          totalAreas.offices,
+        );
       } else if (obj.category === "garages") {
         row.electricity_garages = distributeByArea(
           dist.gar_elect,
+          area,
+          totalAreas.garages,
+        );
+        row.repairs += distributeByArea(
+          dist.gar_other,
           area,
           totalAreas.garages,
         );

@@ -377,22 +377,24 @@ export async function byExpensesPlusFee(buildingId, month, year) {
 
     const exactCurrentMonthDue = round2(row.management_fee + distributedForObj);
 
-    row.current_month_due = roundUpTo10Cents(exactCurrentMonthDue);
-
-    row.rounding_remainder = round2(
-      row.current_month_due - exactCurrentMonthDue,
-    );
+    // --- ПРОМЯНА: Проверяваме месеца ПРЕДИ да приложим закръглянето ---
+    if (month === 1 && year === 2026) {
+      // За Януари 2026: ползваме точната сума без закръгляне
+      row.current_month_due = exactCurrentMonthDue;
+      row.rounding_remainder = 0;
+      row.cash_feed = exactCurrentMonthDue; // Захранването на касата е с точната сума
+    } else {
+      // За всички останали месеци: стандартно закръгляне нагоре към 10 стотинки
+      row.current_month_due = roundUpTo10Cents(exactCurrentMonthDue);
+      row.rounding_remainder = round2(
+        row.current_month_due - exactCurrentMonthDue,
+      );
+    }
+    // -------------------------------------------------------------------
 
     const calculatedTotal =
       row.current_month_due + row.previous_debt - row.advance_payment;
     row.total_due = calculatedTotal > 0 ? round2(calculatedTotal) : 0;
-
-    // --- НОВО: ИЗКЛЮЧЕНИЕ САМО ЗА ЯНУАРИ 2026 ---
-    if (month === 1 && year === 2026) {
-      // Прехвърляме цялата стойност (разходи + такса + закръгляне) към захранване на каса
-      row.cash_feed = row.current_month_due;
-    }
-    // ---------------------------------------------
 
     return row;
   });

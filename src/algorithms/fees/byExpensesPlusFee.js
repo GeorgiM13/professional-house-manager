@@ -177,9 +177,7 @@ export async function byExpensesPlusFee(buildingId, month, year) {
   });
 
   const round2 = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
-
   const ceilTo1Cent = (num) => Math.ceil(Math.round(num * 1000) / 10) / 100;
-
   const roundUpTo10Cents = (num) => {
     const safeNum = Math.round(num * 100);
     return Math.ceil(safeNum / 10) / 10;
@@ -232,6 +230,7 @@ export async function byExpensesPlusFee(buildingId, month, year) {
       electricity_staircase_offices: 0,
       electricity_elevator_offices: 0,
       electricity_garages: 0,
+      cash_feed: 0, // Инициализираме го на 0 за всеки случай
     };
 
     let distributedForObj = 0;
@@ -387,6 +386,13 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     const calculatedTotal =
       row.current_month_due + row.previous_debt - row.advance_payment;
     row.total_due = calculatedTotal > 0 ? round2(calculatedTotal) : 0;
+
+    // --- НОВО: ИЗКЛЮЧЕНИЕ САМО ЗА ЯНУАРИ 2026 ---
+    if (month === 1 && year === 2026) {
+      // Прехвърляме цялата стойност (разходи + такса + закръгляне) към захранване на каса
+      row.cash_feed = row.current_month_due;
+    }
+    // ---------------------------------------------
 
     return row;
   });

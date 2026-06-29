@@ -21,12 +21,9 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     .eq("year", year);
 
   if (expError) throw new Error("Грешка при зареждане на разходите!");
-
-  // --- ПРОМЯНА: Спираме генерирането при липсващи разходи, ОСВЕН ако не е Януари 2026 ---
-  if ((!expenses || expenses.length === 0) && !(month === 1 && year === 2026)) {
+  if (!expenses || expenses.length === 0)
     throw new Error("❌ Няма въведени разходи за избрания месец.");
-  }
-  // -------------------------------------------------------------------------------------
+
   const [
     { data: apartmentsRaw },
     { data: officesRaw },
@@ -180,7 +177,9 @@ export async function byExpensesPlusFee(buildingId, month, year) {
   });
 
   const round2 = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+
   const ceilTo1Cent = (num) => Math.ceil(Math.round(num * 1000) / 10) / 100;
+
   const roundUpTo10Cents = (num) => {
     const safeNum = Math.round(num * 100);
     return Math.ceil(safeNum / 10) / 10;
@@ -233,7 +232,6 @@ export async function byExpensesPlusFee(buildingId, month, year) {
       electricity_staircase_offices: 0,
       electricity_elevator_offices: 0,
       electricity_garages: 0,
-      cash_feed: 0, // Инициализираме го на 0 за всеки случай
     };
 
     let distributedForObj = 0;
@@ -380,20 +378,11 @@ export async function byExpensesPlusFee(buildingId, month, year) {
 
     const exactCurrentMonthDue = round2(row.management_fee + distributedForObj);
 
-    // --- ПРОМЯНА: Проверяваме месеца ПРЕДИ да приложим закръглянето ---
-    if (month === 1 && year === 2026) {
-      // За Януари 2026: ползваме точната сума без закръгляне
-      row.current_month_due = exactCurrentMonthDue;
-      row.rounding_remainder = 0;
-      row.cash_feed = exactCurrentMonthDue; // Захранването на касата е с точната сума
-    } else {
-      // За всички останали месеци: стандартно закръгляне нагоре към 10 стотинки
-      row.current_month_due = roundUpTo10Cents(exactCurrentMonthDue);
-      row.rounding_remainder = round2(
-        row.current_month_due - exactCurrentMonthDue,
-      );
-    }
-    // -------------------------------------------------------------------
+    row.current_month_due = roundUpTo10Cents(exactCurrentMonthDue);
+
+    row.rounding_remainder = round2(
+      row.current_month_due - exactCurrentMonthDue,
+    );
 
     const calculatedTotal =
       row.current_month_due + row.previous_debt - row.advance_payment;

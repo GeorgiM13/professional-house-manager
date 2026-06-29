@@ -21,9 +21,12 @@ export async function byExpensesPlusFee(buildingId, month, year) {
     .eq("year", year);
 
   if (expError) throw new Error("Грешка при зареждане на разходите!");
-  if (!expenses || expenses.length === 0)
-    throw new Error("❌ Няма въведени разходи за избрания месец.");
 
+  // --- ПРОМЯНА: Спираме генерирането при липсващи разходи, ОСВЕН ако не е Януари 2026 ---
+  if ((!expenses || expenses.length === 0) && !(month === 1 && year === 2026)) {
+    throw new Error("❌ Няма въведени разходи за избрания месец.");
+  }
+  // -------------------------------------------------------------------------------------
   const [
     { data: apartmentsRaw },
     { data: officesRaw },
